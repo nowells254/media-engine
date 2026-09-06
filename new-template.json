@@ -1,0 +1,4 @@
+{
+  "template_name": "Product Banner",
+  "html_content": "<html><body style='margin:0;width:800px;height:400px;background:#2b2d42;display:flex;align-items:center;justify-content:space-between;font-family:Arial;padding:40px;box-sizing:border-box;'><div style='color:white;'><h1>{{title}}</h1><p style='color:#ef233c;font-size:32px;'>{{price}}</p></div><img src='{{imageUrl}}' style='max-width:300px;border-radius:12px;' /></body></html>"
+}
