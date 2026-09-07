@@ -150,5 +150,5 @@ app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (
   res.sendStatus(200);
 });
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);-
+  console.log(`Server is running at http://localhost:${PORT}`);
 });
