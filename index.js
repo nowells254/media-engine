@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const { generateImage } = require('./render');
 const supabase = require('./supabaseClient');
 const axios = require('axios');
@@ -7,8 +8,35 @@ const axios = require('axios');
 const app = express();
 const PORT = 3000;
 
+// Webhook route MUST come before express.json() so it gets the raw body
+app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (req, res) => {
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  const hash = crypto.createHmac('sha512', secret).update(req.body).digest('hex');
+
+  if (hash !== req.headers['x-paystack-signature']) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  const event = JSON.parse(req.body);
+
+  if (event.event === 'charge.success') {
+    const { user_id, plan } = event.data.metadata;
+    const reference = event.data.reference;
+
+    await supabase.from('subscriptions').insert([{
+      user_id: user_id,
+      plan: plan,
+      status: 'active',
+      paystack_reference: reference
+    }]);
+
+    console.log('Subscription activated for user:', user_id);
+  }
+
+  res.sendStatus(200);
+});
+
 app.use(express.json());
-const crypto = require('crypto');
 app.use('/generated', express.static(path.join(__dirname, 'generated')));
 
 app.get('/', (req, res) => {
@@ -96,7 +124,6 @@ app.post('/generate', requireAuth, async (req, res) => {
   res.json({ url: fileUrl, generatedBy: req.user.email });
 });
 
-// New: start a subscription payment
 app.post('/subscribe', requireAuth, async (req, res) => {
   const { plan, amount } = req.body;
 
@@ -122,33 +149,7 @@ app.post('/subscribe', requireAuth, async (req, res) => {
     res.status(500).json({ success: false, error: error.response ? error.response.data : error.message });
   }
 });
-// New: Paystack webhook - automatically updates subscriptions when a payment succeeds
-app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (req, res) => {
-  const secret = process.env.PAYSTACK_SECRET_KEY;
-  const hash = crypto.createHmac('sha512', secret).update(req.body).digest('hex');
 
-  if (hash !== req.headers['x-paystack-signature']) {
-    return res.status(401).send('Invalid signature');
-  }
-
-  const event = JSON.parse(req.body);
-
-  if (event.event === 'charge.success') {
-    const { user_id, plan } = event.data.metadata;
-    const reference = event.data.reference;
-
-    await supabase.from('subscriptions').insert([{
-      user_id: user_id,
-      plan: plan,
-      status: 'active',
-      paystack_reference: reference
-    }]);
-
-    console.log('Subscription activated for user:', user_id);
-  }
-
-  res.sendStatus(200);
-});
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
