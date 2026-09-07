@@ -2,11 +2,13 @@ const express = require('express');
 const path = require('path');
 const { generateImage } = require('./render');
 const supabase = require('./supabaseClient');
+const axios = require('axios');
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+const crypto = require('crypto');
 app.use('/generated', express.static(path.join(__dirname, 'generated')));
 
 app.get('/', (req, res) => {
@@ -41,7 +43,6 @@ async function requireAuth(req, res, next) {
   next();
 }
 
-// New: save a template to the database
 app.post('/templates', requireAuth, async (req, res) => {
   const { template_name, html_content } = req.body;
 
@@ -55,7 +56,6 @@ app.post('/templates', requireAuth, async (req, res) => {
   res.json({ success: true, template: data[0] });
 });
 
-// New: list this user's templates
 app.get('/templates', requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from('templates')
@@ -67,7 +67,6 @@ app.get('/templates', requireAuth, async (req, res) => {
   res.json({ success: true, templates: data });
 });
 
-// Updated: generate now requires a template_id and looks up that template's HTML
 app.post('/generate', requireAuth, async (req, res) => {
   const { template_id, data } = req.body;
 
@@ -88,7 +87,6 @@ app.post('/generate', requireAuth, async (req, res) => {
   const filename = await generateImage(templateRows.html_content, data);
   const fileUrl = `http://localhost:${PORT}/generated/${filename}`;
 
-  // Log this generation
   await supabase.from('generations').insert([{
     template_id: template_id,
     image_url: fileUrl,
@@ -98,6 +96,59 @@ app.post('/generate', requireAuth, async (req, res) => {
   res.json({ url: fileUrl, generatedBy: req.user.email });
 });
 
+// New: start a subscription payment
+app.post('/subscribe', requireAuth, async (req, res) => {
+  const { plan, amount } = req.body;
+
+  try {
+    const response = await axios.post(
+      'https://api.paystack.co/transaction/initialize',
+      {
+        email: req.user.email,
+        amount: amount * 100,
+        currency: 'KES',
+        metadata: { user_id: req.user.id, plan: plan }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.json({ success: true, authorization_url: response.data.data.authorization_url, reference: response.data.data.reference });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response ? error.response.data : error.message });
+  }
+});
+// New: Paystack webhook - automatically updates subscriptions when a payment succeeds
+app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (req, res) => {
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  const hash = crypto.createHmac('sha512', secret).update(req.body).digest('hex');
+
+  if (hash !== req.headers['x-paystack-signature']) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  const event = JSON.parse(req.body);
+
+  if (event.event === 'charge.success') {
+    const { user_id, plan } = event.data.metadata;
+    const reference = event.data.reference;
+
+    await supabase.from('subscriptions').insert([{
+      user_id: user_id,
+      plan: plan,
+      status: 'active',
+      paystack_reference: reference
+    }]);
+
+    console.log('Subscription activated for user:', user_id);
+  }
+
+  res.sendStatus(200);
+});
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Server is running at http://localhost:${PORT}`);-
 });
