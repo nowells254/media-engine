@@ -129,7 +129,8 @@ app.post('/generate', requireAuth, requireSubscription, async (req, res) => {
   }
 
   const filename = await generateImage(templateRows.html_content, data);
-  const fileUrl = `http://localhost:${PORT}/generated/${filename}`;
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+const fileUrl = `${baseUrl}/generated/${filename}`;
 
   await supabase.from('generations').insert([{
     template_id: template_id,
