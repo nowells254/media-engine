@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
 
 async function generateImage(htmlContent, data) {
   let finalHtml = htmlContent;
@@ -17,11 +18,15 @@ async function generateImage(htmlContent, data) {
   await page.setViewport({ width: 800, height: 1200 });
   await page.setContent(finalHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-  // Give any images inside the page a moment to actually finish loading
   await new Promise(resolve => setTimeout(resolve, 1500));
 
+  const generatedDir = path.join(__dirname, 'generated');
+  if (!fs.existsSync(generatedDir)) {
+    fs.mkdirSync(generatedDir, { recursive: true });
+  }
+
   const filename = `${crypto.randomUUID()}.png`;
-  const outputPath = path.join(__dirname, 'generated', filename);
+  const outputPath = path.join(generatedDir, filename);
 
   await page.screenshot({ path: outputPath, fullPage: true });
   await browser.close();
