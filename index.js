@@ -71,6 +71,22 @@ async function requireAuth(req, res, next) {
   next();
 }
 
+// New: checks the user has an active subscription
+async function requireSubscription(req, res, next) {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .eq('status', 'active')
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    return res.status(403).json({ success: false, error: 'An active subscription is required to generate images' });
+  }
+
+  next();
+}
+
 app.post('/templates', requireAuth, async (req, res) => {
   const { template_name, html_content } = req.body;
 
@@ -95,7 +111,7 @@ app.get('/templates', requireAuth, async (req, res) => {
   res.json({ success: true, templates: data });
 });
 
-app.post('/generate', requireAuth, async (req, res) => {
+app.post('/generate', requireAuth, requireSubscription, async (req, res) => {
   const { template_id, data } = req.body;
 
   if (!template_id || !data) {
