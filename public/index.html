@@ -4,7 +4,7 @@
   <title>Media Engine</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; }
-    input, button { display: block; width: 100%; margin: 8px 0; padding: 10px; box-sizing: border-box; }
+    input, button, select { display: block; width: 100%; margin: 8px 0; padding: 10px; box-sizing: border-box; }
     button { background: #2b2d42; color: white; border: none; cursor: pointer; }
     #result img { max-width: 100%; margin-top: 15px; }
     .section { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
@@ -25,7 +25,16 @@
   </div>
 
   <div class="section">
-    <h2>2. Generate an Image</h2>
+    <h2>2. Subscribe</h2>
+    <select id="planSelect">
+      <option value="starter" data-amount="10">Starter - KES 10 (test)</option>
+    </select>
+    <button onclick="subscribe()">Subscribe Now</button>
+    <p id="subscribeStatus"></p>
+  </div>
+
+  <div class="section">
+    <h2>3. Generate an Image</h2>
     <input type="number" id="templateId" placeholder="Template ID (e.g. 2)" value="2">
     <input type="text" id="title" placeholder="Title" value="My Banner">
     <input type="text" id="price" placeholder="Price" value="$19.99">
@@ -69,6 +78,32 @@
       }
     }
 
+    async function subscribe() {
+      if (!token) {
+        document.getElementById('subscribeStatus').innerText = 'Please log in first.';
+        return;
+      }
+      const select = document.getElementById('planSelect');
+      const plan = select.value;
+      const amount = select.selectedOptions[0].dataset.amount;
+
+      const res = await fetch(`${API_BASE}/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ plan, amount: parseInt(amount) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('subscribeStatus').innerText = 'Redirecting to payment...';
+        window.location.href = data.authorization_url;
+      } else {
+        document.getElementById('subscribeStatus').innerText = 'Error: ' + JSON.stringify(data.error);
+      }
+    }
+
     async function generate() {
       if (!token) {
         document.getElementById('result').innerText = 'Please log in first.';
@@ -78,6 +113,8 @@
       const title = document.getElementById('title').value;
       const price = document.getElementById('price').value;
       const imageUrl = document.getElementById('imageUrl').value;
+
+      document.getElementById('result').innerText = 'Generating... this can take up to 15 seconds.';
 
       const res = await fetch(`${API_BASE}/generate`, {
         method: 'POST',
