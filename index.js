@@ -37,11 +37,8 @@ app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (
 });
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/generated', express.static(path.join(__dirname, 'generated')));
-
-app.get('/', (req, res) => {
-  res.send('Media engine server is running!');
-});
 
 app.post('/signup', async (req, res) => {
   const { email, password } = req.body;
@@ -71,7 +68,6 @@ async function requireAuth(req, res, next) {
   next();
 }
 
-// New: checks the user has an active subscription
 async function requireSubscription(req, res, next) {
   const { data, error } = await supabase
     .from('subscriptions')
@@ -130,7 +126,7 @@ app.post('/generate', requireAuth, requireSubscription, async (req, res) => {
 
   const filename = await generateImage(templateRows.html_content, data);
   const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-const fileUrl = `${baseUrl}/generated/${filename}`;
+  const fileUrl = `${baseUrl}/generated/${filename}`;
 
   await supabase.from('generations').insert([{
     template_id: template_id,

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Media Engine</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; }
+    input, button { display: block; width: 100%; margin: 8px 0; padding: 10px; box-sizing: border-box; }
+    button { background: #2b2d42; color: white; border: none; cursor: pointer; }
+    #result img { max-width: 100%; margin-top: 15px; }
+    .section { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    h2 { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+  <h1>Media Engine</h1>
+
+  <div class="section">
+    <h2>1. Sign Up / Log In</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <button onclick="login()">Log In</button>
+    <p id="authStatus"></p>
+  </div>
+
+  <div class="section">
+    <h2>2. Generate an Image</h2>
+    <input type="number" id="templateId" placeholder="Template ID (e.g. 2)" value="2">
+    <input type="text" id="title" placeholder="Title" value="My Banner">
+    <input type="text" id="price" placeholder="Price" value="$19.99">
+    <input type="text" id="imageUrl" placeholder="Image URL (optional)">
+    <button onclick="generate()">Generate</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let token = '';
+
+    async function signup() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const res = await fetch(`${API_BASE}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      document.getElementById('authStatus').innerText = data.success
+        ? 'Signed up! Now check your email to confirm, then log in.'
+        : 'Error: ' + data.error;
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        token = data.session.access_token;
+        document.getElementById('authStatus').innerText = 'Logged in!';
+      } else {
+        document.getElementById('authStatus').innerText = 'Error: ' + data.error;
+      }
+    }
+
+    async function generate() {
+      if (!token) {
+        document.getElementById('result').innerText = 'Please log in first.';
+        return;
+      }
+      const template_id = parseInt(document.getElementById('templateId').value);
+      const title = document.getElementById('title').value;
+      const price = document.getElementById('price').value;
+      const imageUrl = document.getElementById('imageUrl').value;
+
+      const res = await fetch(`${API_BASE}/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ template_id, data: { title, price, imageUrl } })
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        document.getElementById('result').innerText = 'Error: ' + data.error;
+      } else {
+        document.getElementById('result').innerHTML = `<img src="${data.url}">`;
+      }
+    }
+  </script>
+
+</body>
+</html>
