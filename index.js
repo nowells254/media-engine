@@ -20,17 +20,39 @@ app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (
   const event = JSON.parse(req.body);
 
   if (event.event === 'charge.success') {
-    const { user_id, plan } = event.data.metadata;
+    const { user_id, plan, type, credits } = event.data.metadata;
     const reference = event.data.reference;
 
-    await supabase.from('subscriptions').insert([{
-      user_id: user_id,
-      plan: plan,
-      status: 'active',
-      paystack_reference: reference
-    }]);
+    if (type === 'credits') {
+      // This payment was for extra generations, not a new subscription
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('status', 'active')
+        .order('id', { ascending: false })
+        .limit(1)
+        .single();
 
-    console.log('Subscription activated for user:', user_id);
+      if (sub) {
+        await supabase
+          .from('subscriptions')
+          .update({ extra_credits: sub.extra_credits + parseInt(credits) })
+          .eq('id', sub.id);
+      }
+      console.log('Added', credits, 'extra credits for user:', user_id);
+    } else {
+      // A normal new subscription payment
+      await supabase.from('subscriptions').insert([{
+        user_id: user_id,
+        plan: plan,
+        status: 'active',
+        paystack_reference: reference,
+        generation_limit: 1000,
+        extra_credits: 0
+      }]);
+      console.log('Subscription activated for user:', user_id);
+    }
   }
 
   res.sendStatus(200);
@@ -68,16 +90,39 @@ async function requireAuth(req, res, next) {
   next();
 }
 
+// Checks the user has an active subscription AND is within their usage allowance
 async function requireSubscription(req, res, next) {
-  const { data, error } = await supabase
+  const { data: subs, error } = await supabase
     .from('subscriptions')
     .select('*')
     .eq('user_id', req.user.id)
     .eq('status', 'active')
+    .order('id', { ascending: false })
     .limit(1);
 
-  if (error || !data || data.length === 0) {
+  if (error || !subs || subs.length === 0) {
     return res.status(403).json({ success: false, error: 'An active subscription is required to generate images' });
+  }
+
+  const subscription = subs[0];
+
+  const { count, error: countError } = await supabase
+    .from('generations')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', req.user.id);
+
+  if (countError) {
+    return res.status(500).json({ success: false, error: 'Could not check usage' });
+  }
+
+  const totalAllowed = subscription.generation_limit + subscription.extra_credits;
+
+  if (count >= totalAllowed) {
+    return res.status(402).json({
+      success: false,
+      error: 'You have reached your plan limit. Purchase extra generations to continue.',
+      needsCredits: true
+    });
   }
 
   next();
@@ -161,6 +206,63 @@ app.post('/subscribe', requireAuth, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.response ? error.response.data : error.message });
   }
+});
+
+// New: buy extra generations once over the plan limit
+app.post('/buy-credits', requireAuth, async (req, res) => {
+  const { credits, amount } = req.body;
+
+  try {
+    const response = await axios.post(
+      'https://api.paystack.co/transaction/initialize',
+      {
+        email: req.user.email,
+        amount: amount * 100,
+        currency: 'KES',
+        metadata: { user_id: req.user.id, type: 'credits', credits: credits }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.json({ success: true, authorization_url: response.data.data.authorization_url });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response ? error.response.data : error.message });
+  }
+});
+
+// New: check current usage
+app.get('/usage', requireAuth, async (req, res) => {
+  const { data: subs } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .eq('status', 'active')
+    .order('id', { ascending: false })
+    .limit(1);
+
+  const { count } = await supabase
+    .from('generations')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', req.user.id);
+
+  if (!subs || subs.length === 0) {
+    return res.json({ success: true, hasSubscription: false, used: count || 0 });
+  }
+
+  const sub = subs[0];
+  res.json({
+    success: true,
+    hasSubscription: true,
+    used: count || 0,
+    limit: sub.generation_limit,
+    extraCredits: sub.extra_credits,
+    totalAllowed: sub.generation_limit + sub.extra_credits
+  });
 });
 
 app.listen(PORT, () => {
