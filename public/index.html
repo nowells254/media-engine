@@ -9,6 +9,9 @@
     #result img { max-width: 100%; margin-top: 15px; }
     .section { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
     h2 { margin-top: 0; }
+    .template-item { padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
+    .template-item:hover { background: #f5f5f5; }
+    .template-item.selected { border-color: #2b2d42; background: #f0f0f5; }
   </style>
 </head>
 <body>
@@ -34,18 +37,44 @@
   </div>
 
   <div class="section">
-    <h2>3. Generate an Image</h2>
-    <input type="number" id="templateId" placeholder="Template ID (e.g. 2)" value="2">
+    <h2>3. My Templates</h2>
+    <div id="templateList"><p>Log in to see your templates.</p></div>
+
+    <h3>Create a New Template</h3>
+    <input type="text" id="newTemplateName" placeholder="Template name (e.g. Summer Sale Banner)">
+    <select id="presetSelect">
+      <option value="banner">Product Banner</option>
+      <option value="certificate">Certificate</option>
+      <option value="poster">Event Poster</option>
+      <option value="quote">Quote Card</option>
+    </select>
+    <button onclick="createTemplate()">Save Template</button>
+    <p id="templateStatus"></p>
+  </div>
+
+  <div class="section">
+    <h2>4. Generate an Image</h2>
+    <p id="selectedTemplateLabel">No template selected above.</p>
     <input type="text" id="title" placeholder="Title" value="My Banner">
-    <input type="text" id="price" placeholder="Price" value="$19.99">
+    <input type="text" id="price" placeholder="Subtitle / Price / Date">
     <input type="text" id="imageUrl" placeholder="Image URL (optional)">
     <button onclick="generate()">Generate</button>
     <div id="result"></div>
   </div>
 
+  <p style="text-align:center; color:#666; font-size:14px; margin-top:40px;"><a href="/privacy.html" style="color:#666;">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html" style="color:#666;">Terms of Service</a></p>
+
   <script>
     const API_BASE = window.location.origin;
     let token = '';
+    let selectedTemplateId = null;
+
+    const PRESETS = {
+      banner: "<html><body style='margin:0;width:800px;height:400px;background:#2b2d42;display:flex;align-items:center;justify-content:space-between;font-family:Arial;padding:40px;box-sizing:border-box;'><div style='color:white;'><h1>{{title}}</h1><p style='color:#ef233c;font-size:32px;'>{{price}}</p></div><img src='{{imageUrl}}' style='max-width:300px;border-radius:12px;' /></body></html>",
+      certificate: "<html><body style='margin:0;width:800px;height:600px;background:#fdfaf3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;border:15px solid #c9a24b;box-sizing:border-box;'><p style='letter-spacing:4px;color:#c9a24b;font-size:18px;'>CERTIFICATE OF ACHIEVEMENT</p><h1 style='font-size:44px;color:#2b2d42;margin:20px 0;'>{{title}}</h1><p style='font-size:20px;color:#555;'>{{price}}</p><img src='{{imageUrl}}' style='width:80px;height:80px;border-radius:50%;margin-top:30px;object-fit:cover;' /></body></html>",
+      poster: "<html><body style='margin:0;width:600px;height:800px;background:linear-gradient(135deg,#7209b7,#3a0ca3);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Arial;color:white;box-sizing:border-box;padding:40px;'><img src='{{imageUrl}}' style='width:100%;max-height:300px;object-fit:cover;border-radius:12px;margin-bottom:30px;' /><h1 style='font-size:48px;margin:0;'>{{title}}</h1><p style='font-size:24px;margin-top:15px;'>{{price}}</p></body></html>",
+      quote: "<html><body style='margin:0;width:800px;height:500px;background:#1d1d2c;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;color:white;padding:60px;box-sizing:border-box;'><p style='font-size:36px;line-height:1.4;'>\u201c{{title}}\u201d</p><img src='{{imageUrl}}' style='width:60px;height:60px;border-radius:50%;margin-top:30px;object-fit:cover;' /><p style='font-size:18px;color:#aaa;margin-top:10px;'>{{price}}</p></body></html>"
+    };
 
     async function signup() {
       const email = document.getElementById('email').value;
@@ -73,6 +102,7 @@
       if (data.success) {
         token = data.session.access_token;
         document.getElementById('authStatus').innerText = 'Logged in!';
+        loadTemplates();
       } else {
         document.getElementById('authStatus').innerText = 'Error: ' + data.error;
       }
@@ -104,12 +134,72 @@
       }
     }
 
+    async function loadTemplates() {
+      const res = await fetch(`${API_BASE}/templates`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const listDiv = document.getElementById('templateList');
+      if (!data.success || data.templates.length === 0) {
+        listDiv.innerHTML = '<p>No templates yet. Create one below.</p>';
+        return;
+      }
+      listDiv.innerHTML = '';
+      data.templates.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'template-item';
+        div.innerText = t.template_name + ' (ID: ' + t.id + ')';
+        div.onclick = () => selectTemplate(t.id, t.template_name, div);
+        listDiv.appendChild(div);
+      });
+    }
+
+    function selectTemplate(id, name, el) {
+      selectedTemplateId = id;
+      document.querySelectorAll('.template-item').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('selectedTemplateLabel').innerText = 'Selected: ' + name + ' (ID: ' + id + ')';
+    }
+
+    async function createTemplate() {
+      if (!token) {
+        document.getElementById('templateStatus').innerText = 'Please log in first.';
+        return;
+      }
+      const name = document.getElementById('newTemplateName').value;
+      const preset = document.getElementById('presetSelect').value;
+      if (!name) {
+        document.getElementById('templateStatus').innerText = 'Please enter a template name.';
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/templates`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ template_name: name, html_content: PRESETS[preset] })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('templateStatus').innerText = 'Template saved!';
+        document.getElementById('newTemplateName').value = '';
+        loadTemplates();
+      } else {
+        document.getElementById('templateStatus').innerText = 'Error: ' + data.error;
+      }
+    }
+
     async function generate() {
       if (!token) {
         document.getElementById('result').innerText = 'Please log in first.';
         return;
       }
-      const template_id = parseInt(document.getElementById('templateId').value);
+      if (!selectedTemplateId) {
+        document.getElementById('result').innerText = 'Please select a template above first.';
+        return;
+      }
       const title = document.getElementById('title').value;
       const price = document.getElementById('price').value;
       const imageUrl = document.getElementById('imageUrl').value;
@@ -122,7 +212,7 @@
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ template_id, data: { title, price, imageUrl } })
+        body: JSON.stringify({ template_id: selectedTemplateId, data: { title, price, imageUrl } })
       });
       const data = await res.json();
       if (data.success === false) {
@@ -132,6 +222,6 @@
       }
     }
   </script>
-  <p style="text-align:center; color:#666; font-size:14px; margin-top:40px;"><a href="/privacy.html" style="color:#666;">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html" style="color:#666;">Terms of Service</a></p>
+
 </body>
 </html>
