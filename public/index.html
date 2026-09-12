@@ -12,6 +12,8 @@
     .template-item { padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
     .template-item:hover { background: #f5f5f5; }
     .template-item.selected { border-color: #2b2d42; background: #f0f0f5; }
+    .usage-bar { background: #eee; border-radius: 6px; height: 12px; overflow: hidden; margin: 8px 0; }
+    .usage-fill { background: #2b2d42; height: 100%; }
   </style>
 </head>
 <body>
@@ -34,6 +36,7 @@
     </select>
     <button onclick="subscribe()">Subscribe Now</button>
     <p id="subscribeStatus"></p>
+    <div id="usageDisplay"></div>
   </div>
 
   <div class="section">
@@ -60,6 +63,10 @@
     <input type="text" id="imageUrl" placeholder="Image URL (optional)">
     <button onclick="generate()">Generate</button>
     <div id="result"></div>
+    <div id="buyCreditsSection" style="display:none; margin-top:15px;">
+      <p>You've used all your included generations for this plan.</p>
+      <button onclick="buyCredits()">Buy 100 More Generations - KES 20 (test)</button>
+    </div>
   </div>
 
   <p style="text-align:center; color:#666; font-size:14px; margin-top:40px;"><a href="/privacy.html" style="color:#666;">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html" style="color:#666;">Terms of Service</a></p>
@@ -103,6 +110,7 @@
         token = data.session.access_token;
         document.getElementById('authStatus').innerText = 'Logged in!';
         loadTemplates();
+        loadUsage();
       } else {
         document.getElementById('authStatus').innerText = 'Error: ' + data.error;
       }
@@ -132,6 +140,23 @@
       } else {
         document.getElementById('subscribeStatus').innerText = 'Error: ' + JSON.stringify(data.error);
       }
+    }
+
+    async function loadUsage() {
+      const res = await fetch(`${API_BASE}/usage`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const div = document.getElementById('usageDisplay');
+      if (!data.hasSubscription) {
+        div.innerHTML = '<p>No active subscription yet.</p>';
+        return;
+      }
+      const percent = Math.min(100, Math.round((data.used / data.totalAllowed) * 100));
+      div.innerHTML = `
+        <p>${data.used} / ${data.totalAllowed} generations used this plan</p>
+        <div class="usage-bar"><div class="usage-fill" style="width:${percent}%"></div></div>
+      `;
     }
 
     async function loadTemplates() {
@@ -205,6 +230,7 @@
       const imageUrl = document.getElementById('imageUrl').value;
 
       document.getElementById('result').innerText = 'Generating... this can take up to 15 seconds.';
+      document.getElementById('buyCreditsSection').style.display = 'none';
 
       const res = await fetch(`${API_BASE}/generate`, {
         method: 'POST',
@@ -217,8 +243,29 @@
       const data = await res.json();
       if (data.success === false) {
         document.getElementById('result').innerText = 'Error: ' + data.error;
+        if (data.needsCredits) {
+          document.getElementById('buyCreditsSection').style.display = 'block';
+        }
       } else {
         document.getElementById('result').innerHTML = `<img src="${data.url}">`;
+        loadUsage();
+      }
+    }
+
+    async function buyCredits() {
+      const res = await fetch(`${API_BASE}/buy-credits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ credits: 100, amount: 20 })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = data.authorization_url;
+      } else {
+        document.getElementById('result').innerText = 'Error: ' + JSON.stringify(data.error);
       }
     }
   </script>
