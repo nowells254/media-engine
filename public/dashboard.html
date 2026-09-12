@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Media Engine - Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 20px; }
+    input, button, select { display: block; width: 100%; margin: 8px 0; padding: 10px; box-sizing: border-box; }
+    button { background: #2b2d42; color: white; border: none; cursor: pointer; border-radius: 6px; }
+    #result img { max-width: 100%; margin-top: 15px; }
+    .template-item { padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
+    .template-item:hover { background: #f5f5f5; }
+    .template-item.selected { border-color: #2b2d42; background: #f0f0f5; }
+    .usage-bar { background: #eee; border-radius: 6px; height: 12px; overflow: hidden; margin: 8px 0; }
+    .usage-fill { background: #2b2d42; height: 100%; }
+
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #ddd; margin-bottom: 20px; }
+    .topbar h1 { font-size: 22px; margin: 0; }
+    .topbar button { width: auto; background: #eee; color: #2b2d42; padding: 8px 16px; }
+
+    .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 10px; text-align: center; background: #eee; color: #2b2d42; border-radius: 6px; cursor: pointer; }
+    .tab-btn.active { background: #2b2d42; color: white; }
+    .tab-content { display: none; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>Media Engine</h1>
+    <button onclick="logout()">Log Out</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab-btn active" onclick="showTab('subscribeTab', this)">Subscribe</div>
+    <div class="tab-btn" onclick="showTab('templatesTab', this)">Templates</div>
+    <div class="tab-btn" onclick="showTab('generateTab', this)">Generate</div>
+  </div>
+
+  <div id="subscribeTab" class="tab-content active">
+    <h2>Subscription</h2>
+    <select id="planSelect">
+      <option value="starter" data-amount="10">Starter - KES 10 (test)</option>
+    </select>
+    <button onclick="subscribe()">Subscribe Now</button>
+    <p id="subscribeStatus"></p>
+    <div id="usageDisplay"></div>
+  </div>
+
+  <div id="templatesTab" class="tab-content">
+    <h2>My Templates</h2>
+    <div id="templateList"><p>Loading...</p></div>
+
+    <h3>Create a New Template</h3>
+    <input type="text" id="newTemplateName" placeholder="Template name (e.g. Summer Sale Banner)">
+    <select id="presetSelect">
+      <option value="banner">Product Banner</option>
+      <option value="certificate">Certificate</option>
+      <option value="poster">Event Poster</option>
+      <option value="quote">Quote Card</option>
+    </select>
+    <button onclick="createTemplate()">Save Template</button>
+    <p id="templateStatus"></p>
+  </div>
+
+  <div id="generateTab" class="tab-content">
+    <h2>Generate an Image</h2>
+    <p id="selectedTemplateLabel">Select a template in the Templates tab first.</p>
+    <input type="text" id="title" placeholder="Title" value="My Banner">
+    <input type="text" id="price" placeholder="Subtitle / Price / Date">
+    <input type="text" id="imageUrl" placeholder="Image URL (optional)">
+    <button onclick="generate()">Generate</button>
+    <div id="result"></div>
+    <div id="buyCreditsSection" style="display:none; margin-top:15px;">
+      <p>You've used all your included generations for this plan.</p>
+      <button onclick="buyCredits()">Buy 100 More Generations - KES 20 (test)</button>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let token = localStorage.getItem('mediaEngineToken') || '';
+    let selectedTemplateId = null;
+
+    if (!token) {
+      window.location.href = '/';
+    }
+
+    function logout() {
+      localStorage.removeItem('mediaEngineToken');
+      window.location.href = '/';
+    }
+
+    function showTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    const PRESETS = {
+      banner: "<html><body style='margin:0;width:800px;height:400px;background:#2b2d42;display:flex;align-items:center;justify-content:space-between;font-family:Arial;padding:40px;box-sizing:border-box;'><div style='color:white;'><h1>{{title}}</h1><p style='color:#ef233c;font-size:32px;'>{{price}}</p></div><img src='{{imageUrl}}' style='max-width:300px;border-radius:12px;' /></body></html>",
+      certificate: "<html><body style='margin:0;width:800px;height:600px;background:#fdfaf3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;border:15px solid #c9a24b;box-sizing:border-box;'><p style='letter-spacing:4px;color:#c9a24b;font-size:18px;'>CERTIFICATE OF ACHIEVEMENT</p><h1 style='font-size:44px;color:#2b2d42;margin:20px 0;'>{{title}}</h1><p style='font-size:20px;color:#555;'>{{price}}</p><img src='{{imageUrl}}' style='width:80px;height:80px;border-radius:50%;margin-top:30px;object-fit:cover;' /></body></html>",
+      poster: "<html><body style='margin:0;width:600px;height:800px;background:linear-gradient(135deg,#7209b7,#3a0ca3);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Arial;color:white;box-sizing:border-box;padding:40px;'><img src='{{imageUrl}}' style='width:100%;max-height:300px;object-fit:cover;border-radius:12px;margin-bottom:30px;' /><h1 style='font-size:48px;margin:0;'>{{title}}</h1><p style='font-size:24px;margin-top:15px;'>{{price}}</p></body></html>",
+      quote: "<html><body style='margin:0;width:800px;height:500px;background:#1d1d2c;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;color:white;padding:60px;box-sizing:border-box;'><p style='font-size:36px;line-height:1.4;'>\u201c{{title}}\u201d</p><img src='{{imageUrl}}' style='width:60px;height:60px;border-radius:50%;margin-top:30px;object-fit:cover;' /><p style='font-size:18px;color:#aaa;margin-top:10px;'>{{price}}</p></body></html>"
+    };
+
+    async function subscribe() {
+      const select = document.getElementById('planSelect');
+      const plan = select.value;
+      const amount = select.selectedOptions[0].dataset.amount;
+
+      const res = await fetch(`${API_BASE}/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ plan, amount: parseInt(amount) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('subscribeStatus').innerText = 'Redirecting to payment...';
+        window.location.href = data.authorization_url;
+      } else {
+        document.getElementById('subscribeStatus').innerText = 'Error: ' + JSON.stringify(data.error);
+      }
+    }
+
+    async function loadUsage() {
+      const res = await fetch(`${API_BASE}/usage`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      const div = document.getElementById('usageDisplay');
+      if (!data.hasSubscription) {
+        div.innerHTML = '<p>No active subscription yet.</p>';
+        return;
+      }
+      const percent = Math.min(100, Math.round((data.used / data.totalAllowed) * 100));
+      div.innerHTML = `<p>${data.used} / ${data.totalAllowed} generations used this plan</p><div class="usage-bar"><div class="usage-fill" style="width:${percent}%"></div></div>`;
+    }
+
+    async function loadTemplates() {
+      const res = await fetch(`${API_BASE}/templates`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      const listDiv = document.getElementById('templateList');
+      if (!data.success || data.templates.length === 0) {
+        listDiv.innerHTML = '<p>No templates yet. Create one below.</p>';
+        return;
+      }
+      listDiv.innerHTML = '';
+      data.templates.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'template-item';
+        div.innerText = t.template_name + ' (ID: ' + t.id + ')';
+        div.onclick = () => selectTemplate(t.id, t.template_name, div);
+        listDiv.appendChild(div);
+      });
+    }
+
+    function selectTemplate(id, name, el) {
+      selectedTemplateId = id;
+      document.querySelectorAll('.template-item').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('selectedTemplateLabel').innerText = 'Selected: ' + name + ' (ID: ' + id + ')';
+    }
+
+    async function createTemplate() {
+      const name = document.getElementById('newTemplateName').value;
+      const preset = document.getElementById('presetSelect').value;
+      if (!name) {
+        document.getElementById('templateStatus').innerText = 'Please enter a template name.';
+        return;
+      }
+      const res = await fetch(`${API_BASE}/templates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ template_name: name, html_content: PRESETS[preset] })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('templateStatus').innerText = 'Template saved!';
+        document.getElementById('newTemplateName').value = '';
+        loadTemplates();
+      } else {
+        document.getElementById('templateStatus').innerText = 'Error: ' + data.error;
+      }
+    }
+
+    async function generate() {
+      if (!selectedTemplateId) {
+        document.getElementById('result').innerText = 'Please select a template in the Templates tab first.';
+        return;
+      }
+      const title = document.getElementById('title').value;
+      const price = document.getElementById('price').value;
+      const imageUrl = document.getElementById('imageUrl').value;
+
+      document.getElementById('result').innerText = 'Generating... this can take up to 15 seconds.';
+      document.getElementById('buyCreditsSection').style.display = 'none';
+
+      const res = await fetch(`${API_BASE}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ template_id: selectedTemplateId, data: { title, price, imageUrl } })
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        document.getElementById('result').innerText = 'Error: ' + data.error;
+        if (data.needsCredits) document.getElementById('buyCreditsSection').style.display = 'block';
+      } else {
+        document.getElementById('result').innerHTML = `<img src="${data.url}">`;
+        loadUsage();
+      }
+    }
+
+    async function buyCredits() {
+      const res = await fetch(`${API_BASE}/buy-credits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ credits: 100, amount: 20 })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = data.authorization_url;
+      } else {
+        document.getElementById('result').innerText = 'Error: ' + JSON.stringify(data.error);
+      }
+    }
+
+    loadTemplates();
+    loadUsage();
+  </script>
+
+</body>
+</html>
