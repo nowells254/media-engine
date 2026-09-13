@@ -16,7 +16,7 @@
     body {
       font-family: 'Inter', Arial, sans-serif;
       background: var(--bg);
-      max-width: 640px;
+      max-width: 720px;
       margin: 0 auto;
       padding: 24px;
       color: var(--brand-dark);
@@ -42,13 +42,6 @@
     }
     h2 { margin-top: 0; font-size: 18px; }
 
-    .template-item {
-      padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius);
-      margin-bottom: 8px; cursor: pointer; font-size: 14px; transition: all 0.15s;
-    }
-    .template-item:hover { border-color: var(--brand); }
-    .template-item.selected { border-color: var(--brand); background: #eef0fd; font-weight: 600; }
-
     .usage-bar { background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; margin: 10px 0; }
     .usage-fill { background: var(--brand); height: 100%; }
 
@@ -68,6 +61,20 @@
     .tab-btn.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
+
+    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 10px; }
+    .gallery-card {
+      border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden;
+      cursor: pointer; background: white; transition: border-color 0.15s;
+    }
+    .gallery-card:hover { border-color: #b8c2f0; }
+    .gallery-card.selected { border-color: var(--brand); }
+    .thumb-wrap { width: 100%; height: 110px; overflow: hidden; background: #f0f1f5; position: relative; }
+    .thumb-frame { position: absolute; top: 0; left: 0; border: none; pointer-events: none; }
+    .gallery-card .label { padding: 8px 10px; font-size: 13px; font-weight: 600; }
+
+    .preset-preview { width: 100%; height: 140px; overflow: hidden; background: #f0f1f5; border-radius: var(--radius); position: relative; margin-top: 8px; }
+    .preset-preview iframe { position: absolute; top: 0; left: 0; border: none; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -95,16 +102,17 @@
 
   <div id="templatesTab" class="tab-content card">
     <h2>My Templates</h2>
-    <div id="templateList"><p>Loading...</p></div>
+    <div id="templateList" class="gallery"><p>Loading...</p></div>
 
     <h2 style="margin-top:28px;">Create a New Template</h2>
     <input type="text" id="newTemplateName" placeholder="Template name (e.g. Summer Sale Banner)">
-    <select id="presetSelect">
+    <select id="presetSelect" onchange="updatePresetPreview()">
       <option value="banner">Product Banner</option>
       <option value="certificate">Certificate</option>
       <option value="poster">Event Poster</option>
       <option value="quote">Quote Card</option>
     </select>
+    <div class="preset-preview" id="presetPreviewBox"></div>
     <button onclick="createTemplate()">Save Template</button>
     <p id="templateStatus"></p>
   </div>
@@ -129,13 +137,13 @@
     let selectedTemplateId = null;
 
     if (!token) {
-  window.location.href = '/login.html';
-}
+      window.location.href = '/login.html';
+    }
 
     function logout() {
-  localStorage.removeItem('mediaEngineToken');
-  window.location.href = '/login.html';
-}
+      localStorage.removeItem('mediaEngineToken');
+      window.location.href = '/login.html';
+    }
 
     function showTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -150,6 +158,40 @@
       poster: "<html><body style='margin:0;width:600px;height:800px;background:linear-gradient(135deg,#7209b7,#3a0ca3);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Arial;color:white;box-sizing:border-box;padding:40px;'><img src='{{imageUrl}}' style='width:100%;max-height:300px;object-fit:cover;border-radius:12px;margin-bottom:30px;' /><h1 style='font-size:48px;margin:0;'>{{title}}</h1><p style='font-size:24px;margin-top:15px;'>{{price}}</p></body></html>",
       quote: "<html><body style='margin:0;width:800px;height:500px;background:#1d1d2c;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;color:white;padding:60px;box-sizing:border-box;'><p style='font-size:36px;line-height:1.4;'>\u201c{{title}}\u201d</p><img src='{{imageUrl}}' style='width:60px;height:60px;border-radius:50%;margin-top:30px;object-fit:cover;' /><p style='font-size:18px;color:#aaa;margin-top:10px;'>{{price}}</p></body></html>"
     };
+
+    function extractDims(html) {
+      const w = html.match(/width:\s*(\d+)px/);
+      const h = html.match(/height:\s*(\d+)px/);
+      return { width: w ? parseInt(w[1]) : 800, height: h ? parseInt(h[1]) : 600 };
+    }
+
+    function fillSample(html) {
+      const sampleImg = window.location.origin + '/assets/logo.png';
+      return html
+        .replace(/{{title}}/g, 'Sample Title')
+        .replace(/{{price}}/g, '$29.99')
+        .replace(/{{imageUrl}}/g, sampleImg);
+    }
+
+    function buildThumbnail(html, boxWidth, boxHeight) {
+      const dims = extractDims(html);
+      const scale = Math.min(boxWidth / dims.width, boxHeight / dims.height);
+      const iframe = document.createElement('iframe');
+      iframe.className = 'thumb-frame';
+      iframe.style.width = dims.width + 'px';
+      iframe.style.height = dims.height + 'px';
+      iframe.style.transform = `scale(${scale})`;
+      iframe.style.transformOrigin = 'top left';
+      iframe.srcdoc = fillSample(html);
+      return iframe;
+    }
+
+    function updatePresetPreview() {
+      const preset = document.getElementById('presetSelect').value;
+      const box = document.getElementById('presetPreviewBox');
+      box.innerHTML = '';
+      box.appendChild(buildThumbnail(PRESETS[preset], box.clientWidth || 300, 140));
+    }
 
     async function subscribe() {
       const select = document.getElementById('planSelect');
@@ -186,25 +228,35 @@
       const res = await fetch(`${API_BASE}/templates`, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
       const listDiv = document.getElementById('templateList');
+      listDiv.innerHTML = '';
       if (!data.success || data.templates.length === 0) {
         listDiv.innerHTML = '<p>No templates yet. Create one below.</p>';
         return;
       }
-      listDiv.innerHTML = '';
       data.templates.forEach(t => {
-        const div = document.createElement('div');
-        div.className = 'template-item';
-        div.innerText = t.template_name + ' (ID: ' + t.id + ')';
-        div.onclick = () => selectTemplate(t.id, t.template_name, div);
-        listDiv.appendChild(div);
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.onclick = () => selectTemplate(t.id, t.template_name, card);
+
+        const thumbWrap = document.createElement('div');
+        thumbWrap.className = 'thumb-wrap';
+        thumbWrap.appendChild(buildThumbnail(t.html_content, 300, 110));
+
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.innerText = t.template_name;
+
+        card.appendChild(thumbWrap);
+        card.appendChild(label);
+        listDiv.appendChild(card);
       });
     }
 
     function selectTemplate(id, name, el) {
       selectedTemplateId = id;
-      document.querySelectorAll('.template-item').forEach(e => e.classList.remove('selected'));
+      document.querySelectorAll('.gallery-card').forEach(e => e.classList.remove('selected'));
       el.classList.add('selected');
-      document.getElementById('selectedTemplateLabel').innerText = 'Selected: ' + name + ' (ID: ' + id + ')';
+      document.getElementById('selectedTemplateLabel').innerText = 'Selected: ' + name;
     }
 
     async function createTemplate() {
@@ -277,6 +329,7 @@
 
     loadTemplates();
     loadUsage();
+    updatePresetPreview();
   </script>
 
 </body>
