@@ -129,13 +129,13 @@
     let selectedTemplateId = null;
 
     if (!token) {
-      window.location.href = '/';
-    }
+  window.location.href = '/login.html';
+}
 
     function logout() {
-      localStorage.removeItem('mediaEngineToken');
-      window.location.href = '/';
-    }
+  localStorage.removeItem('mediaEngineToken');
+  window.location.href = '/login.html';
+}
 
     function showTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Media Engine - Log In</title>
+  <title>Media Engine - Generate Professional Media in Seconds</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --brand: #4361ee;
@@ -12,93 +12,146 @@
       --border: #e2e4ec;
       --radius: 10px;
     }
-    body {
-      font-family: 'Inter', Arial, sans-serif;
-      background: var(--bg);
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 80px 24px;
-      color: var(--brand-dark);
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', Arial, sans-serif; margin: 0; color: var(--brand-dark); }
+    .nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 40px; max-width: 1100px; margin: 0 auto;
     }
-    .card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      box-shadow: 0 4px 20px rgba(43,45,66,0.06);
-    }
-    h1 { text-align: center; font-size: 26px; font-weight: 700; margin-bottom: 4px; }
-    .tagline { text-align: center; color: #888; font-size: 14px; margin-bottom: 28px; }
-    input {
-      display: block; width: 100%; margin: 8px 0; padding: 12px 14px;
-      box-sizing: border-box; font-size: 15px; border: 1px solid var(--border);
-      border-radius: var(--radius); font-family: inherit;
-    }
-    input:focus { outline: none; border-color: var(--brand); }
-    button {
-      display: block; width: 100%; margin: 10px 0 0; padding: 13px;
-      box-sizing: border-box; font-size: 15px; font-weight: 600; border: none;
-      border-radius: var(--radius); cursor: pointer; font-family: inherit;
-      transition: opacity 0.15s;
-    }
-    button:hover { opacity: 0.9; }
+    .nav .logo { font-weight: 800; font-size: 20px; }
+    .nav a { color: var(--brand-dark); text-decoration: none; font-weight: 600; font-size: 14px; }
+    .btn { padding: 10px 20px; border-radius: var(--radius); font-weight: 600; font-size: 14px; text-decoration: none; display: inline-block; }
     .btn-primary { background: var(--brand); color: white; }
-    .btn-secondary { background: #eef0f7; color: var(--brand-dark); }
-    #authStatus { text-align: center; color: #666; font-size: 14px; margin-top: 14px; }
-    .footer-links { text-align: center; color: #999; font-size: 13px; margin-top: 32px; }
+
+    .hero { text-align: center; padding: 70px 24px 90px; background: var(--bg); }
+    .hero h1 { font-size: 42px; font-weight: 800; max-width: 700px; margin: 0 auto 16px; line-height: 1.2; }
+    .hero p { font-size: 18px; color: #666; max-width: 500px; margin: 0 auto 32px; }
+    .hero .btn { padding: 14px 32px; font-size: 16px; }
+
+    .section { max-width: 1000px; margin: 0 auto; padding: 70px 24px; }
+    .section h2 { text-align: center; font-size: 30px; font-weight: 800; margin-bottom: 50px; }
+
+    .steps { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
+    .step { flex: 1; min-width: 220px; text-align: center; }
+    .step .num {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: white;
+      display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 16px;
+    }
+    .step h3 { font-size: 17px; margin-bottom: 8px; }
+    .step p { color: #666; font-size: 14px; }
+
+    .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .feature-card {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px; box-shadow: 0 4px 20px rgba(43,45,66,0.04);
+    }
+    .feature-card h3 { font-size: 16px; margin: 0 0 8px; }
+    .feature-card p { color: #666; font-size: 14px; margin: 0; }
+
+    .pricing-card {
+      background: white; border: 2px solid var(--brand); border-radius: var(--radius);
+      padding: 32px; max-width: 320px; margin: 0 auto; text-align: center;
+      box-shadow: 0 4px 20px rgba(67,97,238,0.1);
+    }
+    .pricing-card .price { font-size: 40px; font-weight: 800; margin: 10px 0; }
+    .pricing-card .price span { font-size: 15px; font-weight: 400; color: #888; }
+    .pricing-card ul { list-style: none; padding: 0; margin: 20px 0 28px; text-align: left; }
+    .pricing-card li { padding: 6px 0; font-size: 14px; color: #555; }
+    .pricing-card li:before { content: "✓ "; color: var(--brand); font-weight: 700; }
+
+    .cta { background: var(--brand-dark); color: white; text-align: center; padding: 70px 24px; }
+    .cta h2 { font-size: 28px; margin-bottom: 20px; }
+    .cta .btn-primary { background: var(--brand); }
+
+    .footer-links { text-align: center; color: #999; font-size: 13px; padding: 30px; }
     .footer-links a { color: #999; text-decoration: none; }
-    .footer-links a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .features { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 30px; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h1>Media Engine</h1>
-    <p class="tagline">Generate professional media in seconds</p>
+  <div class="nav">
+    <div class="logo">Media Engine</div>
+    <div style="display:flex; gap:20px; align-items:center;">
+      <a href="/login.html">Log In</a>
+      <a href="/login.html" class="btn btn-primary">Get Started Free</a>
+    </div>
+  </div>
 
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button class="btn-primary" onclick="login()">Log In</button>
-    <button class="btn-secondary" onclick="signup()">Sign Up</button>
-    <p id="authStatus"></p>
+  <div class="hero">
+    <h1>Generate Professional Media in Seconds</h1>
+    <p>Turn a title, a date, or a product into a polished banner, certificate, poster, or quote card — automatically, every time.</p>
+    <a href="/login.html" class="btn btn-primary">Get Started Free</a>
+  </div>
+
+  <div class="section">
+    <h2>How It Works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Choose a Template</h3>
+        <p>Pick from Product Banners, Certificates, Event Posters, and Quote Cards.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Customize</h3>
+        <p>Add your title, price, date, or image — no design skills needed.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Download</h3>
+        <p>Get a ready-to-use, print-quality image instantly.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="background:var(--bg);">
+    <h2>What You Can Create</h2>
+    <div class="features">
+      <div class="feature-card">
+        <h3>Product Banners</h3>
+        <p>Clean, branded banners for sales, promotions, and product launches.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Certificates</h3>
+        <p>Elegant, print-ready certificates of achievement with a professional seal.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Event Posters</h3>
+        <p>Bold, eye-catching posters for events, launches, and announcements.</p>
+      </div>
+      <div class="feature-card">
+        <h3>Quote Cards</h3>
+        <p>Shareable quote graphics perfect for social media.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Simple Pricing</h2>
+    <div class="pricing-card">
+      <h3>Starter</h3>
+      <div class="price">$49<span>/month</span></div>
+      <ul>
+        <li>1,000 generations per month</li>
+        <li>All template types</li>
+        <li>High-res downloads</li>
+        <li>Pay-as-you-go beyond your limit</li>
+      </ul>
+      <a href="/login.html" class="btn btn-primary" style="width:100%;">Get Started</a>
+    </div>
+  </div>
+
+  <div class="cta">
+    <h2>Ready to save hours on design?</h2>
+    <a href="/login.html" class="btn btn-primary">Get Started Free</a>
   </div>
 
   <p class="footer-links"><a href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms of Service</a></p>
-
-  <script>
-    const API_BASE = window.location.origin;
-
-    async function signup() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const res = await fetch(`${API_BASE}/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      document.getElementById('authStatus').innerText = data.success
-        ? 'Signed up! Check your email to confirm, then log in.'
-        : 'Error: ' + data.error;
-    }
-
-    async function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const res = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem('mediaEngineToken', data.session.access_token);
-        window.location.href = '/dashboard.html';
-      } else {
-        document.getElementById('authStatus').innerText = 'Error: ' + data.error;
-      }
-    }
-  </script>
 
 </body>
 </html>

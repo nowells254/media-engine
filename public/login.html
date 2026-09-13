@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Media Engine - Log In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #4361ee;
+      --brand-dark: #2b2d42;
+      --bg: #f7f8fc;
+      --border: #e2e4ec;
+      --radius: 10px;
+    }
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--bg);
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 80px 24px;
+      color: var(--brand-dark);
+    }
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(43,45,66,0.06);
+    }
+    h1 { text-align: center; font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+    .tagline { text-align: center; color: #888; font-size: 14px; margin-bottom: 28px; }
+    input {
+      display: block; width: 100%; margin: 8px 0; padding: 12px 14px;
+      box-sizing: border-box; font-size: 15px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-family: inherit;
+    }
+    input:focus { outline: none; border-color: var(--brand); }
+    button {
+      display: block; width: 100%; margin: 10px 0 0; padding: 13px;
+      box-sizing: border-box; font-size: 15px; font-weight: 600; border: none;
+      border-radius: var(--radius); cursor: pointer; font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.9; }
+    .btn-primary { background: var(--brand); color: white; }
+    .btn-secondary { background: #eef0f7; color: var(--brand-dark); }
+    #authStatus { text-align: center; color: #666; font-size: 14px; margin-top: 14px; }
+    .footer-links { text-align: center; color: #999; font-size: 13px; margin-top: 32px; }
+    .footer-links a { color: #999; text-decoration: none; }
+    .footer-links a:hover { text-decoration: underline; }
+    .back-link { display:block; text-align:center; margin-bottom: 20px; color: #888; text-decoration: none; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <a href="/" class="back-link">&larr; Back to home</a>
+
+  <div class="card">
+    <h1>Media Engine</h1>
+    <p class="tagline">Generate professional media in seconds</p>
+
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button class="btn-primary" onclick="login()">Log In</button>
+    <button class="btn-secondary" onclick="signup()">Sign Up</button>
+    <p id="authStatus"></p>
+  </div>
+
+  <p class="footer-links"><a href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms of Service</a></p>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    async function signup() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const res = await fetch(`${API_BASE}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      document.getElementById('authStatus').innerText = data.success
+        ? 'Signed up! Check your email to confirm, then log in.'
+        : 'Error: ' + data.error;
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('mediaEngineToken', data.session.access_token);
+        window.location.href = '/dashboard.html';
+      } else {
+        document.getElementById('authStatus').innerText = 'Error: ' + data.error;
+      }
+    }
+  </script>
+
+</body>
+</html>
