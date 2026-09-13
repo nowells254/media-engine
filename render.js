@@ -15,10 +15,23 @@ async function generateImage(htmlContent, data) {
   });
   const page = await browser.newPage();
 
-  await page.setViewport({ width: 800, height: 1200 });
+  // Start with a generous viewport just to load the content correctly
+  await page.setViewport({ width: 1200, height: 1200 });
   await page.setContent(finalHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
   await new Promise(resolve => setTimeout(resolve, 1500));
+
+  // Measure the actual size of the design itself
+  const dimensions = await page.evaluate(() => {
+    const body = document.body;
+    return {
+      width: body.scrollWidth,
+      height: body.scrollHeight
+    };
+  });
+
+  // Resize the canvas to exactly match the design, so there's no extra blank space
+  await page.setViewport({ width: dimensions.width, height: dimensions.height });
 
   const generatedDir = path.join(__dirname, 'generated');
   if (!fs.existsSync(generatedDir)) {
@@ -28,7 +41,7 @@ async function generateImage(htmlContent, data) {
   const filename = `${crypto.randomUUID()}.png`;
   const outputPath = path.join(generatedDir, filename);
 
-  await page.screenshot({ path: outputPath, fullPage: true });
+  await page.screenshot({ path: outputPath, fullPage: false });
   await browser.close();
 
   console.log('Image generated:', filename);
