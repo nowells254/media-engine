@@ -2,25 +2,71 @@
 <html>
 <head>
   <title>Media Engine - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 20px; }
-    input, button, select { display: block; width: 100%; margin: 8px 0; padding: 10px; box-sizing: border-box; }
-    button { background: #2b2d42; color: white; border: none; cursor: pointer; border-radius: 6px; }
-    #result img { max-width: 100%; margin-top: 15px; }
-    .template-item { padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
-    .template-item:hover { background: #f5f5f5; }
-    .template-item.selected { border-color: #2b2d42; background: #f0f0f5; }
-    .usage-bar { background: #eee; border-radius: 6px; height: 12px; overflow: hidden; margin: 8px 0; }
-    .usage-fill { background: #2b2d42; height: 100%; }
+    :root {
+      --brand: #4361ee;
+      --brand-dark: #2b2d42;
+      --bg: #f7f8fc;
+      --border: #e2e4ec;
+      --radius: 10px;
+      --danger: #ef233c;
+    }
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--bg);
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 24px;
+      color: var(--brand-dark);
+    }
+    input, select {
+      display: block; width: 100%; margin: 8px 0; padding: 12px 14px;
+      box-sizing: border-box; font-size: 15px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--brand); }
+    button {
+      display: block; width: 100%; margin: 10px 0 0; padding: 13px;
+      box-sizing: border-box; font-size: 15px; font-weight: 600; border: none;
+      border-radius: var(--radius); cursor: pointer; font-family: inherit;
+      background: var(--brand); color: white; transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.9; }
+    #result img { max-width: 100%; margin-top: 15px; border-radius: var(--radius); }
 
-    .topbar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #ddd; margin-bottom: 20px; }
-    .topbar h1 { font-size: 22px; margin: 0; }
-    .topbar button { width: auto; background: #eee; color: #2b2d42; padding: 8px 16px; }
+    .card {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px; box-shadow: 0 4px 20px rgba(43,45,66,0.05);
+    }
+    h2 { margin-top: 0; font-size: 18px; }
 
-    .tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; padding: 10px; text-align: center; background: #eee; color: #2b2d42; border-radius: 6px; cursor: pointer; }
-    .tab-btn.active { background: #2b2d42; color: white; }
-    .tab-content { display: none; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+    .template-item {
+      padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 8px; cursor: pointer; font-size: 14px; transition: all 0.15s;
+    }
+    .template-item:hover { border-color: var(--brand); }
+    .template-item.selected { border-color: var(--brand); background: #eef0fd; font-weight: 600; }
+
+    .usage-bar { background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; margin: 10px 0; }
+    .usage-fill { background: var(--brand); height: 100%; }
+
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 18px; margin-bottom: 24px;
+    }
+    .topbar h1 { font-size: 20px; margin: 0; font-weight: 700; }
+    .topbar button { width: auto; background: #eef0f7; color: var(--brand-dark); padding: 9px 18px; margin: 0; }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab-btn {
+      flex: 1; padding: 11px; text-align: center; background: white;
+      border: 1px solid var(--border); color: var(--brand-dark); border-radius: var(--radius);
+      cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s;
+    }
+    .tab-btn.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
+    .tab-content { display: none; }
     .tab-content.active { display: block; }
   </style>
 </head>
@@ -37,7 +83,7 @@
     <div class="tab-btn" onclick="showTab('generateTab', this)">Generate</div>
   </div>
 
-  <div id="subscribeTab" class="tab-content active">
+  <div id="subscribeTab" class="tab-content active card">
     <h2>Subscription</h2>
     <select id="planSelect">
       <option value="starter" data-amount="10">Starter - KES 10 (test)</option>
@@ -47,11 +93,11 @@
     <div id="usageDisplay"></div>
   </div>
 
-  <div id="templatesTab" class="tab-content">
+  <div id="templatesTab" class="tab-content card">
     <h2>My Templates</h2>
     <div id="templateList"><p>Loading...</p></div>
 
-    <h3>Create a New Template</h3>
+    <h2 style="margin-top:28px;">Create a New Template</h2>
     <input type="text" id="newTemplateName" placeholder="Template name (e.g. Summer Sale Banner)">
     <select id="presetSelect">
       <option value="banner">Product Banner</option>
@@ -63,16 +109,16 @@
     <p id="templateStatus"></p>
   </div>
 
-  <div id="generateTab" class="tab-content">
+  <div id="generateTab" class="tab-content card">
     <h2>Generate an Image</h2>
-    <p id="selectedTemplateLabel">Select a template in the Templates tab first.</p>
+    <p id="selectedTemplateLabel" style="color:#888; font-size:14px;">Select a template in the Templates tab first.</p>
     <input type="text" id="title" placeholder="Title" value="My Banner">
     <input type="text" id="price" placeholder="Subtitle / Price / Date">
     <input type="text" id="imageUrl" placeholder="Image URL (optional)">
     <button onclick="generate()">Generate</button>
     <div id="result"></div>
     <div id="buyCreditsSection" style="display:none; margin-top:15px;">
-      <p>You've used all your included generations for this plan.</p>
+      <p style="color:var(--danger);">You've used all your included generations for this plan.</p>
       <button onclick="buyCredits()">Buy 100 More Generations - KES 20 (test)</button>
     </div>
   </div>
@@ -133,7 +179,7 @@
         return;
       }
       const percent = Math.min(100, Math.round((data.used / data.totalAllowed) * 100));
-      div.innerHTML = `<p>${data.used} / ${data.totalAllowed} generations used this plan</p><div class="usage-bar"><div class="usage-fill" style="width:${percent}%"></div></div>`;
+      div.innerHTML = `<p style="font-size:14px;color:#666;">${data.used} / ${data.totalAllowed} generations used this plan</p><div class="usage-bar"><div class="usage-fill" style="width:${percent}%"></div></div>`;
     }
 
     async function loadTemplates() {
