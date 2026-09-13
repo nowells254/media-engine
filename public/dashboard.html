@@ -52,11 +52,11 @@
     .topbar h1 { font-size: 20px; margin: 0; font-weight: 700; }
     .topbar button { width: auto; background: #eef0f7; color: var(--brand-dark); padding: 9px 18px; margin: 0; }
 
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab-btn {
       flex: 1; padding: 11px; text-align: center; background: white;
       border: 1px solid var(--border); color: var(--brand-dark); border-radius: var(--radius);
-      cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s;
+      cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; min-width: 100px;
     }
     .tab-btn.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
     .tab-content { display: none; }
@@ -75,6 +75,16 @@
 
     .preset-preview { width: 100%; height: 140px; overflow: hidden; background: #f0f1f5; border-radius: var(--radius); position: relative; margin-top: 8px; }
     .preset-preview iframe { position: absolute; top: 0; left: 0; border: none; pointer-events: none; }
+
+    .history-item {
+      display: flex; align-items: center; gap: 14px; padding: 10px;
+      border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px;
+    }
+    .history-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    .history-item .meta { flex: 1; min-width: 0; }
+    .history-item .meta .name { font-weight: 600; font-size: 14px; }
+    .history-item .meta .date { color: #888; font-size: 12px; }
+    .history-item a button { width: auto; padding: 8px 14px; font-size: 13px; margin: 0; }
   </style>
 </head>
 <body>
@@ -88,6 +98,7 @@
     <div class="tab-btn active" onclick="showTab('subscribeTab', this)">Subscribe</div>
     <div class="tab-btn" onclick="showTab('templatesTab', this)">Templates</div>
     <div class="tab-btn" onclick="showTab('generateTab', this)">Generate</div>
+    <div class="tab-btn" onclick="showTab('historyTab', this, loadHistory)">History</div>
   </div>
 
   <div id="subscribeTab" class="tab-content active card">
@@ -131,6 +142,11 @@
     </div>
   </div>
 
+  <div id="historyTab" class="tab-content card">
+    <h2>My Downloads</h2>
+    <div id="historyList"><p>Loading...</p></div>
+  </div>
+
   <script>
     const API_BASE = window.location.origin;
     let token = localStorage.getItem('mediaEngineToken') || '';
@@ -145,11 +161,12 @@
       window.location.href = '/login.html';
     }
 
-    function showTab(tabId, btn) {
+    function showTab(tabId, btn, callback) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btn.classList.add('active');
+      if (callback) callback();
     }
 
     const PRESETS = {
@@ -325,6 +342,33 @@
       } else {
         document.getElementById('result').innerText = 'Error: ' + JSON.stringify(data.error);
       }
+    }
+
+    async function loadHistory() {
+      const listDiv = document.getElementById('historyList');
+      listDiv.innerHTML = '<p>Loading...</p>';
+      const res = await fetch(`${API_BASE}/history`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (!data.success || data.generations.length === 0) {
+        listDiv.innerHTML = '<p>No generations yet.</p>';
+        return;
+      }
+      listDiv.innerHTML = '';
+      data.generations.forEach(g => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        const templateName = g.templates ? g.templates.template_name : 'Template';
+        const date = new Date(g.created_at).toLocaleString();
+        item.innerHTML = `
+          <img src="${g.image_url}">
+          <div class="meta">
+            <div class="name">${templateName}</div>
+            <div class="date">${date}</div>
+          </div>
+          <a href="${g.image_url}" download="media-engine-image.png"><button>Download</button></a>
+        `;
+        listDiv.appendChild(item);
+      });
     }
 
     loadTemplates();
