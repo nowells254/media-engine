@@ -10,28 +10,21 @@ async function generateImage(htmlContent, data) {
     finalHtml = finalHtml.replace(placeholder, data[key]);
   }
 
+  // Read the exact width/height declared in the template itself
+  const widthMatch = htmlContent.match(/width:\s*(\d+)px/);
+  const heightMatch = htmlContent.match(/height:\s*(\d+)px/);
+  const width = widthMatch ? parseInt(widthMatch[1]) : 800;
+  const height = heightMatch ? parseInt(heightMatch[1]) : 600;
+
   const browser = await puppeteer.launch({
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
   const page = await browser.newPage();
 
-  // Start with a generous viewport just to load the content correctly
-  await page.setViewport({ width: 1200, height: 1200 });
+  await page.setViewport({ width, height });
   await page.setContent(finalHtml, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
   await new Promise(resolve => setTimeout(resolve, 1500));
-
-  // Measure the actual size of the design itself
-  const dimensions = await page.evaluate(() => {
-    const body = document.body;
-    return {
-      width: body.scrollWidth,
-      height: body.scrollHeight
-    };
-  });
-
-  // Resize the canvas to exactly match the design, so there's no extra blank space
-  await page.setViewport({ width: dimensions.width, height: dimensions.height });
 
   const generatedDir = path.join(__dirname, 'generated');
   if (!fs.existsSync(generatedDir)) {
@@ -44,7 +37,7 @@ async function generateImage(htmlContent, data) {
   await page.screenshot({ path: outputPath, fullPage: false });
   await browser.close();
 
-  console.log('Image generated:', filename);
+  console.log('Image generated:', filename, `(${width}x${height})`);
   return filename;
 }
 
