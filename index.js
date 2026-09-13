@@ -264,7 +264,19 @@ app.get('/usage', requireAuth, async (req, res) => {
     totalAllowed: sub.generation_limit + sub.extra_credits
   });
 });
+// New: list a user's past generations
+app.get('/history', requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from('generations')
+    .select('*, templates(template_name)')
+    .eq('user_id', req.user.id)
+    .order('id', { ascending: false })
+    .limit(50);
 
+  if (error) return res.status(500).json({ success: false, error: error.message });
+
+  res.json({ success: true, generations: data });
+});
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
