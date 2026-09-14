@@ -24,7 +24,6 @@ app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (
     const reference = event.data.reference;
 
     if (type === 'credits') {
-      // This payment was for extra generations, not a new subscription
       const { data: sub } = await supabase
         .from('subscriptions')
         .select('*')
@@ -42,7 +41,6 @@ app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (
       }
       console.log('Added', credits, 'extra credits for user:', user_id);
     } else {
-      // A normal new subscription payment
       await supabase.from('subscriptions').insert([{
         user_id: user_id,
         plan: plan,
@@ -90,7 +88,6 @@ async function requireAuth(req, res, next) {
   next();
 }
 
-// Checks the user has an active subscription AND is within their usage allowance
 async function requireSubscription(req, res, next) {
   const { data: subs, error } = await supabase
     .from('subscriptions')
@@ -208,7 +205,6 @@ app.post('/subscribe', requireAuth, async (req, res) => {
   }
 });
 
-// New: buy extra generations once over the plan limit
 app.post('/buy-credits', requireAuth, async (req, res) => {
   const { credits, amount } = req.body;
 
@@ -235,7 +231,6 @@ app.post('/buy-credits', requireAuth, async (req, res) => {
   }
 });
 
-// New: check current usage
 app.get('/usage', requireAuth, async (req, res) => {
   const { data: subs } = await supabase
     .from('subscriptions')
@@ -264,19 +259,34 @@ app.get('/usage', requireAuth, async (req, res) => {
     totalAllowed: sub.generation_limit + sub.extra_credits
   });
 });
-// New: list a user's past generations
+
 app.get('/history', requireAuth, async (req, res) => {
-  const { data, error } = await supabase
+  const { data: generations, error } = await supabase
     .from('generations')
-    .select('*, templates(template_name)')
+    .select('*')
     .eq('user_id', req.user.id)
     .order('id', { ascending: false })
     .limit(50);
 
   if (error) return res.status(500).json({ success: false, error: error.message });
 
-  res.json({ success: true, generations: data });
+  const templateIds = [...new Set(generations.map(g => g.template_id))];
+  const { data: templates } = await supabase
+    .from('templates')
+    .select('id, template_name')
+    .in('id', templateIds);
+
+  const templateMap = {};
+  (templates || []).forEach(t => { templateMap[t.id] = t.template_name; });
+
+  const enriched = generations.map(g => ({
+    ...g,
+    template_name: templateMap[g.template_id] || 'Template'
+  }));
+
+  res.json({ success: true, generations: enriched });
 });
+
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });

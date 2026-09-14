@@ -357,7 +357,7 @@
       data.generations.forEach(g => {
         const item = document.createElement('div');
         item.className = 'history-item';
-        const templateName = g.templates ? g.templates.template_name : 'Template';
+        const templateName = g.template_name;
         const date = new Date(g.created_at).toLocaleString();
         item.innerHTML = `
           <img src="${g.image_url}">
