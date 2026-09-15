@@ -259,7 +259,51 @@ app.get('/usage', requireAuth, async (req, res) => {
     totalAllowed: sub.generation_limit + sub.extra_credits
   });
 });
+// New: get or create the user's profile
+app.get('/profile', requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .limit(1);
 
+  if (error) return res.status(500).json({ success: false, error: error.message });
+
+  if (!data || data.length === 0) {
+    return res.json({ success: true, profile: null, email: req.user.email });
+  }
+
+  res.json({ success: true, profile: data[0], email: req.user.email });
+});
+
+// New: save or update the user's profile
+app.post('/profile', requireAuth, async (req, res) => {
+  const { logo_url, business_name } = req.body;
+
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .limit(1);
+
+  let result;
+  if (existing && existing.length > 0) {
+    result = await supabase
+      .from('profiles')
+      .update({ logo_url, business_name })
+      .eq('user_id', req.user.id)
+      .select();
+  } else {
+    result = await supabase
+      .from('profiles')
+      .insert([{ user_id: req.user.id, logo_url, business_name }])
+      .select();
+  }
+
+  if (result.error) return res.status(500).json({ success: false, error: result.error.message });
+
+  res.json({ success: true, profile: result.data[0] });
+});
 app.get('/history', requireAuth, async (req, res) => {
   const { data: generations, error } = await supabase
     .from('generations')
