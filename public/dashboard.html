@@ -85,6 +85,8 @@
     .history-item .meta .name { font-weight: 600; font-size: 14px; }
     .history-item .meta .date { color: #888; font-size: 12px; }
     .history-item a button { width: auto; padding: 8px 14px; font-size: 13px; margin: 0; }
+
+    .profile-logo-preview { width: 100px; height: 100px; border-radius: var(--radius); background: #f0f1f5; object-fit: contain; margin: 10px 0; border: 1px solid var(--border); }
   </style>
 </head>
 <body>
@@ -99,6 +101,7 @@
     <div class="tab-btn" onclick="showTab('templatesTab', this)">Templates</div>
     <div class="tab-btn" onclick="showTab('generateTab', this)">Generate</div>
     <div class="tab-btn" onclick="showTab('historyTab', this, loadHistory)">History</div>
+    <div class="tab-btn" onclick="showTab('profileTab', this, loadProfile)">Profile</div>
   </div>
 
   <div id="subscribeTab" class="tab-content active card">
@@ -145,6 +148,21 @@
   <div id="historyTab" class="tab-content card">
     <h2>My Downloads</h2>
     <div id="historyList"><p>Loading...</p></div>
+  </div>
+
+  <div id="profileTab" class="tab-content card">
+    <h2>Profile & Brand Settings</h2>
+    <p style="color:#888; font-size:14px;">Logged in as: <span id="profileEmail"></span></p>
+
+    <label style="font-size:14px; font-weight:600;">Business Name</label>
+    <input type="text" id="businessName" placeholder="e.g. Pinnacle Edge Ltd">
+
+    <label style="font-size:14px; font-weight:600;">Logo URL</label>
+    <input type="text" id="logoUrl" placeholder="https://.../assets/logo.png">
+    <img id="logoPreview" class="profile-logo-preview" style="display:none;">
+
+    <button onclick="saveProfile()">Save Profile</button>
+    <p id="profileStatus"></p>
   </div>
 
   <script>
@@ -370,6 +388,50 @@
         listDiv.appendChild(item);
       });
     }
+
+    async function loadProfile() {
+      const res = await fetch(`${API_BASE}/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      document.getElementById('profileEmail').innerText = data.email || '';
+      if (data.profile) {
+        document.getElementById('businessName').value = data.profile.business_name || '';
+        document.getElementById('logoUrl').value = data.profile.logo_url || '';
+        updateLogoPreview();
+      }
+    }
+
+    function updateLogoPreview() {
+      const url = document.getElementById('logoUrl').value;
+      const img = document.getElementById('logoPreview');
+      if (url) {
+        img.src = url;
+        img.style.display = 'block';
+      } else {
+        img.style.display = 'none';
+      }
+    }
+
+    async function saveProfile() {
+      const business_name = document.getElementById('businessName').value;
+      const logo_url = document.getElementById('logoUrl').value;
+
+      const res = await fetch(`${API_BASE}/profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ business_name, logo_url })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('profileStatus').innerText = 'Profile saved!';
+        updateLogoPreview();
+        // Auto-fill the Generate tab's image field with the saved logo
+        if (logo_url) document.getElementById('imageUrl').value = logo_url;
+      } else {
+        document.getElementById('profileStatus').innerText = 'Error: ' + data.error;
+      }
+    }
+
+    document.getElementById('logoUrl').addEventListener('input', updateLogoPreview);
 
     loadTemplates();
     loadUsage();
