@@ -390,15 +390,18 @@
     }
 
     async function loadProfile() {
-      const res = await fetch(`${API_BASE}/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      document.getElementById('profileEmail').innerText = data.email || '';
-      if (data.profile) {
-        document.getElementById('businessName').value = data.profile.business_name || '';
-        document.getElementById('logoUrl').value = data.profile.logo_url || '';
-        updateLogoPreview();
-      }
+  const res = await fetch(`${API_BASE}/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
+  const data = await res.json();
+  document.getElementById('profileEmail').innerText = data.email || '';
+  if (data.profile) {
+    document.getElementById('businessName').value = data.profile.business_name || '';
+    document.getElementById('logoUrl').value = data.profile.logo_url || '';
+    updateLogoPreview();
+    if (data.profile.logo_url) {
+      document.getElementById('imageUrl').value = data.profile.logo_url;
     }
+  }
+}
 
     function updateLogoPreview() {
       const url = document.getElementById('logoUrl').value;
@@ -434,8 +437,9 @@
     document.getElementById('logoUrl').addEventListener('input', updateLogoPreview);
 
     loadTemplates();
-    loadUsage();
-    updatePresetPreview();
+loadUsage();
+updatePresetPreview();
+loadProfile();
   </script>
 
 </body>
