@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Support - Media Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #4361ee;
+      --brand-dark: #2b2d42;
+      --bg: #f7f8fc;
+      --border: #e2e4ec;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', Arial, sans-serif; margin: 0; color: var(--brand-dark); background: var(--bg); }
+    .nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 40px; max-width: 1000px; margin: 0 auto;
+    }
+    .nav .logo { font-weight: 800; font-size: 20px; text-decoration: none; color: var(--brand-dark); }
+    .nav a.back { color: var(--brand-dark); text-decoration: none; font-weight: 600; font-size: 14px; }
+
+    .header { text-align: center; padding: 40px 24px 20px; }
+    .header h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .header p { color: #666; }
+
+    .content { max-width: 700px; margin: 0 auto; padding: 20px 24px 80px; }
+
+    .faq-item {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 12px; overflow: hidden;
+    }
+    .faq-question {
+      padding: 18px 20px; cursor: pointer; font-weight: 600; font-size: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .faq-answer {
+      padding: 0 20px; max-height: 0; overflow: hidden; transition: all 0.2s;
+      color: #666; font-size: 14px; line-height: 1.6;
+    }
+    .faq-item.open .faq-answer { padding: 0 20px 18px; max-height: 300px; }
+    .faq-item .arrow { transition: transform 0.2s; }
+    .faq-item.open .arrow { transform: rotate(180deg); }
+
+    .contact-card {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; margin-top: 40px; text-align: center;
+    }
+    .contact-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .contact-card p { color: #666; font-size: 14px; margin-bottom: 20px; }
+    .contact-card a.email-btn {
+      display: inline-block; background: var(--brand); color: white; padding: 12px 28px;
+      border-radius: var(--radius); text-decoration: none; font-weight: 600; font-size: 14px;
+    }
+
+    .footer-links { text-align: center; color: #999; font-size: 13px; padding: 30px; }
+    .footer-links a { color: #999; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <div class="nav">
+    <a href="/" class="logo">Media Engine</a>
+    <a href="/" class="back">&larr; Back to Home</a>
+  </div>
+
+  <div class="header">
+    <h1>Support Center</h1>
+    <p>Answers to common questions, and how to reach us</p>
+  </div>
+
+  <div class="content">
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">How does Media Engine work? <span class="arrow">▾</span></div>
+      <div class="faq-answer">Choose a template (Product Banner, Certificate, Event Poster, or Quote Card), enter your title, subtitle, and optional image, then click Generate. Your image is created in seconds and ready to download.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">What's included in the Starter plan? <span class="arrow">▾</span></div>
+      <div class="faq-answer">$49/month includes 1,000 generations, access to all template types, and high-resolution downloads. If you go over 1,000 in a month, you can purchase additional generations without losing access.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">Can I create my own custom templates? <span class="arrow">▾</span></div>
+      <div class="faq-answer">Yes — in the Templates tab of your dashboard, you can create and save as many templates as you like based on our starting designs, and reuse them anytime.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">How do I cancel my subscription? <span class="arrow">▾</span></div>
+      <div class="faq-answer">Contact us using the email below and we'll process your cancellation. Self-service cancellation is coming soon.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">Is my payment information secure? <span class="arrow">▾</span></div>
+      <div class="faq-answer">Yes. All payments are processed directly by Paystack, a licensed payment processor. Media Engine never sees or stores your card details.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-question">Can I use generated images for commercial purposes? <span class="arrow">▾</span></div>
+      <div class="faq-answer">Yes, images you generate using your own account are yours to use, including commercially, as described in our Terms of Service.</div>
+    </div>
+
+    <div class="contact-card">
+      <h2>Still need help?</h2>
+      <p>Send us an email and we'll get back to you as soon as possible.</p>
+      <a href="mailto:nowells254@gmail.com" class="email-btn">Email Support</a>
+    </div>
+  </div>
+
+  <p class="footer-links"><a href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms of Service</a></p>
+
+  <script>
+    function toggleFaq(el) {
+      el.classList.toggle('open');
+    }
+  </script>
+
+</body>
+</html>
