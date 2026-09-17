@@ -169,6 +169,12 @@
     <input type="text" id="logoUrl" placeholder="https://.../assets/logo.png">
     <img id="logoPreview" class="profile-logo-preview" style="display:none;">
 
+    <button onclick="extractBrandColor()" style="background:#eef0f7; color:var(--brand-dark);">Detect Brand Color from Logo</button>
+    <div id="colorSwatch" style="display:none; align-items:center; gap:10px; margin-top:10px;">
+      <div id="swatchBox" style="width:32px; height:32px; border-radius:6px; border:1px solid var(--border);"></div>
+      <span id="swatchHex" style="font-size:14px; font-family:monospace;"></span>
+    </div>
+
     <button onclick="saveProfile()">Save Profile</button>
     <p id="profileStatus"></p>
   </div>
@@ -410,7 +416,65 @@
     }
   }
 }
+let detectedColor = '';
 
+async function extractBrandColor() {
+  const url = document.getElementById('logoUrl').value;
+  if (!url) {
+    document.getElementById('profileStatus').innerText = 'Please enter a logo URL first.';
+    return;
+  }
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    try {
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let r = 0, g = 0, b = 0, count = 0;
+
+      for (let i = 0; i < pixels.length; i += 40) {
+        const alpha = pixels[i + 3];
+        if (alpha > 200) {
+          r += pixels[i];
+          g += pixels[i + 1];
+          b += pixels[i + 2];
+          count++;
+        }
+      }
+
+      if (count === 0) {
+        document.getElementById('profileStatus').innerText = 'Could not detect a color from this image.';
+        return;
+      }
+
+      r = Math.round(r / count);
+      g = Math.round(g / count);
+      b = Math.round(b / count);
+      const hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+
+      detectedColor = hex;
+      document.getElementById('swatchBox').style.background = hex;
+      document.getElementById('swatchHex').innerText = hex;
+      document.getElementById('colorSwatch').style.display = 'flex';
+      document.getElementById('profileStatus').innerText = 'Color detected! Save profile to keep it.';
+    } catch (err) {
+      document.getElementById('profileStatus').innerText = 'Could not read this image (it may not allow color analysis from this site).';
+    }
+  };
+
+  img.onerror = () => {
+    document.getElementById('profileStatus').innerText = 'Could not load that image.';
+  };
+
+  img.src = url;
+}
     function updateLogoPreview() {
       const url = document.getElementById('logoUrl').value;
       const img = document.getElementById('logoPreview');
@@ -423,14 +487,14 @@
     }
 
     async function saveProfile() {
-      const business_name = document.getElementById('businessName').value;
-      const logo_url = document.getElementById('logoUrl').value;
+  const business_name = document.getElementById('businessName').value;
+  const logo_url = document.getElementById('logoUrl').value;
 
-      const res = await fetch(`${API_BASE}/profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ business_name, logo_url })
-      });
+  const res = await fetch(`${API_BASE}/profile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ business_name, logo_url, brand_color: detectedColor })
+  });
       const data = await res.json();
       if (data.success) {
         document.getElementById('profileStatus').innerText = 'Profile saved!';

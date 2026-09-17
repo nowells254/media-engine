@@ -278,7 +278,7 @@ app.get('/profile', requireAuth, async (req, res) => {
 
 // New: save or update the user's profile
 app.post('/profile', requireAuth, async (req, res) => {
-  const { logo_url, business_name } = req.body;
+  const { logo_url, business_name, brand_color } = req.body;
 
   const { data: existing } = await supabase
     .from('profiles')
@@ -290,13 +290,13 @@ app.post('/profile', requireAuth, async (req, res) => {
   if (existing && existing.length > 0) {
     result = await supabase
       .from('profiles')
-      .update({ logo_url, business_name })
+      .update({ logo_url, business_name, brand_color })
       .eq('user_id', req.user.id)
       .select();
   } else {
     result = await supabase
       .from('profiles')
-      .insert([{ user_id: req.user.id, logo_url, business_name }])
+      .insert([{ user_id: req.user.id, logo_url, business_name, brand_color }])
       .select();
   }
 
