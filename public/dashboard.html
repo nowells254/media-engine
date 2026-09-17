@@ -144,6 +144,13 @@
       <p style="color:var(--danger);">You've used all your included generations for this plan.</p>
       <button onclick="buyCredits()">Buy 100 More Generations - KES 20 (test)</button>
     </div>
+
+    <h2 style="margin-top:32px;">Batch Generate (CSV)</h2>
+    <p style="color:#888; font-size:14px;">Upload a CSV with columns: title, price, imageUrl (one row per image). Uses the template selected above.</p>
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="startBatch()">Start Batch</button>
+    <div id="batchStatus" style="margin-top:12px; font-size:14px;"></div>
+    <div id="batchResults" style="margin-top:15px;"></div>
   </div>
 
   <div id="historyTab" class="tab-content card">
@@ -436,7 +443,71 @@
     }
 
     document.getElementById('logoUrl').addEventListener('input', updateLogoPreview);
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(v => v.trim());
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
+    rows.push(row);
+  }
+  return rows;
+}
 
+async function startBatch() {
+  if (!selectedTemplateId) {
+    document.getElementById('batchStatus').innerText = 'Please select a template above first.';
+    return;
+  }
+  const fileInput = document.getElementById('csvFile');
+  if (!fileInput.files.length) {
+    document.getElementById('batchStatus').innerText = 'Please choose a CSV file first.';
+    return;
+  }
+
+  const text = await fileInput.files[0].text();
+  const rows = parseCSV(text);
+  const resultsDiv = document.getElementById('batchResults');
+  resultsDiv.innerHTML = '';
+
+  for (let i = 0; i < rows.length; i++) {
+    document.getElementById('batchStatus').innerText = `Generating ${i + 1} of ${rows.length}...`;
+
+    const res = await fetch(`${API_BASE}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
+        template_id: selectedTemplateId,
+        data: { title: rows[i].title || '', price: rows[i].price || '', imageUrl: rows[i].imageurl || '' }
+      })
+    });
+    const data = await res.json();
+
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    if (data.success === false) {
+      item.innerHTML = `<div class="meta"><div class="name">Row ${i + 1}: ${rows[i].title}</div><div class="date" style="color:var(--danger);">Error: ${data.error}</div></div>`;
+      if (data.needsCredits) {
+        document.getElementById('batchStatus').innerText = `Stopped at row ${i + 1}: plan limit reached.`;
+        resultsDiv.appendChild(item);
+        document.getElementById('buyCreditsSection').style.display = 'block';
+        return;
+      }
+    } else {
+      item.innerHTML = `
+        <img src="${data.url}">
+        <div class="meta"><div class="name">${rows[i].title}</div></div>
+        <a href="${data.url}" download="media-engine-image.png"><button>Download</button></a>
+      `;
+    }
+    resultsDiv.appendChild(item);
+  }
+
+  document.getElementById('batchStatus').innerText = `Done — generated ${rows.length} images.`;
+  loadUsage();
+}
     loadTemplates();
 loadUsage();
 updatePresetPreview();
