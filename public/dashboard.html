@@ -414,6 +414,12 @@
     if (data.profile.logo_url) {
       document.getElementById('imageUrl').value = data.profile.logo_url;
     }
+    if (data.profile.brand_color) {
+      detectedColor = data.profile.brand_color;
+      document.getElementById('swatchBox').style.background = detectedColor;
+      document.getElementById('swatchHex').innerText = detectedColor;
+      document.getElementById('colorSwatch').style.display = 'flex';
+    }
   }
 }
 let detectedColor = '';
