@@ -184,6 +184,7 @@
     let token = localStorage.getItem('mediaEngineToken') || '';
     let selectedTemplateId = null;
     let detectedColor = '';
+    let savedBusinessName = '';
 
     if (!token) {
       window.location.href = '/login.html';
@@ -204,7 +205,7 @@
 
     const PRESETS = {
       banner: "<html><body style='margin:0;width:800px;height:400px;background:#2b2d42;display:flex;align-items:center;justify-content:space-between;font-family:Arial;padding:40px;box-sizing:border-box;'><div style='color:white;'><h1>{{title}}</h1><p style='color:{{brandColor}};font-size:32px;'>{{price}}</p></div><img src='{{imageUrl}}' style='max-width:300px;border-radius:12px;' /></body></html>",
-      certificate: "<html><body style='margin:0;width:900px;height:650px;background:linear-gradient(135deg,#fdfaf3,#f5ecd7);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;border:14px double #c9a24b;box-sizing:border-box;padding:50px;'><p style='letter-spacing:5px;color:#c9a24b;font-size:16px;margin:0;'>CERTIFICATE OF ACHIEVEMENT</p><div style='width:3px;height:20px;background:#c9a24b;margin:15px auto;'></div><p style='font-size:16px;color:#888;margin:0;'>This certificate is proudly presented to</p><h1 style='font-size:48px;color:#2b2d42;margin:15px 0;'>{{title}}</h1><p style='font-size:18px;color:#555;margin:0 0 25px;'>{{price}}</p><div style='width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#f4d78b,#c9a24b 75%);border:4px solid #fff;box-shadow:0 0 0 2px #c9a24b,0 6px 14px rgba(0,0,0,0.25);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2b2d42;font-weight:bold;'><div style='font-size:13px;letter-spacing:1px;'>PINNACLE</div><div style='font-size:11px;letter-spacing:1px;'>EDGE LTD</div><div style='font-size:15px;margin-top:2px;'>&#9733;</div></div></body></html>",
+      certificate: "<html><body style='margin:0;width:900px;height:650px;background:linear-gradient(135deg,#fdfaf3,#f5ecd7);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;border:14px double #c9a24b;box-sizing:border-box;padding:50px;'><p style='letter-spacing:5px;color:#c9a24b;font-size:16px;margin:0;'>CERTIFICATE OF ACHIEVEMENT</p><div style='width:3px;height:20px;background:#c9a24b;margin:15px auto;'></div><p style='font-size:16px;color:#888;margin:0;'>This certificate is proudly presented to</p><h1 style='font-size:48px;color:#2b2d42;margin:15px 0;'>{{title}}</h1><p style='font-size:18px;color:#555;margin:0 0 25px;'>{{price}}</p><div style='width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#f4d78b,#c9a24b 75%);border:4px solid #fff;box-shadow:0 0 0 2px #c9a24b,0 6px 14px rgba(0,0,0,0.25);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2b2d42;font-weight:bold;'><div style='font-size:12px;letter-spacing:1px;padding:0 8px;'>{{businessName}}</div><div style='font-size:15px;margin-top:2px;'>&#9733;</div></div></body></html>",
       poster: "<html><body style='margin:0;width:600px;height:800px;background:linear-gradient(135deg,#7209b7,#3a0ca3);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Arial;color:white;box-sizing:border-box;padding:40px;'><img src='{{imageUrl}}' style='width:100%;max-height:300px;object-fit:cover;border-radius:12px;margin-bottom:30px;' /><h1 style='font-size:48px;margin:0;'>{{title}}</h1><p style='font-size:24px;margin-top:15px;'>{{price}}</p></body></html>",
       quote: "<html><body style='margin:0;width:800px;height:500px;background:#1d1d2c;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;color:white;padding:60px;box-sizing:border-box;'><p style='font-size:36px;line-height:1.4;'>\u201c{{title}}\u201d</p><img src='{{imageUrl}}' style='width:60px;height:60px;border-radius:50%;margin-top:30px;object-fit:cover;' /><p style='font-size:18px;color:{{brandColor}};margin-top:10px;'>{{price}}</p></body></html>"
     };
@@ -218,11 +219,13 @@
     function fillSample(html) {
       const sampleImg = window.location.origin + '/assets/logo.png';
       const color = detectedColor || '#ef233c';
+      const bizName = savedBusinessName || 'Your Business';
       return html
         .replace(/{{title}}/g, 'Sample Title')
         .replace(/{{price}}/g, '$29.99')
         .replace(/{{imageUrl}}/g, sampleImg)
-        .replace(/{{brandColor}}/g, color);
+        .replace(/{{brandColor}}/g, color)
+        .replace(/{{businessName}}/g, bizName);
     }
 
     function buildThumbnail(html, boxWidth, boxHeight) {
@@ -348,7 +351,7 @@
       const res = await fetch(`${API_BASE}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ template_id: selectedTemplateId, data: { title, price, imageUrl, brandColor: detectedColor || '#ef233c' } })
+        body: JSON.stringify({ template_id: selectedTemplateId, data: { title, price, imageUrl, brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' } })
       });
       const data = await res.json();
       if (data.success === false) {
@@ -412,6 +415,7 @@
       document.getElementById('profileEmail').innerText = data.email || '';
       if (data.profile) {
         document.getElementById('businessName').value = data.profile.business_name || '';
+        savedBusinessName = data.profile.business_name || '';
         document.getElementById('logoUrl').value = data.profile.logo_url || '';
         updateLogoPreview();
         if (data.profile.logo_url) {
@@ -507,6 +511,7 @@
       const data = await res.json();
       if (data.success) {
         document.getElementById('profileStatus').innerText = 'Profile saved!';
+        savedBusinessName = business_name;
         updateLogoPreview();
         if (logo_url) document.getElementById('imageUrl').value = logo_url;
       } else {
@@ -553,7 +558,7 @@
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             template_id: selectedTemplateId,
-            data: { title: rows[i].title || '', price: rows[i].price || '', imageUrl: rows[i].imageurl || '', brandColor: detectedColor || '#ef233c' }
+            data: { title: rows[i].title || '', price: rows[i].price || '', imageUrl: rows[i].imageurl || '', brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' }
           })
         });
         const data = await res.json();
