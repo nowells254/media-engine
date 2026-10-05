@@ -304,6 +304,25 @@ app.post('/profile', requireAuth, async (req, res) => {
 
   res.json({ success: true, profile: result.data[0] });
 });
+// New: update login email and/or password
+app.post('/account', requireAuth, async (req, res) => {
+  const { newEmail, newPassword } = req.body;
+
+  const updates = {};
+  if (newEmail) updates.email = newEmail;
+  if (newPassword) updates.password = newPassword;
+
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ success: false, error: 'Nothing to update' });
+  }
+
+  const token = req.headers.authorization.split(' ')[1];
+  const { data, error } = await supabase.auth.admin.updateUserById(req.user.id, updates);
+
+  if (error) return res.status(500).json({ success: false, error: error.message });
+
+  res.json({ success: true, message: 'Account updated successfully' });
+});
 app.get('/history', requireAuth, async (req, res) => {
   const { data: generations, error } = await supabase
     .from('generations')
