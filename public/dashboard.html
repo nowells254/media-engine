@@ -5,87 +5,40 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --brand: #4361ee;
-      --brand-dark: #2b2d42;
-      --bg: #f7f8fc;
-      --border: #e2e4ec;
-      --radius: 10px;
-      --danger: #ef233c;
-    }
-    body {
-      font-family: 'Inter', Arial, sans-serif;
-      background: var(--bg);
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 24px;
-      color: var(--brand-dark);
-    }
-    input, select {
-      display: block; width: 100%; margin: 8px 0; padding: 12px 14px;
-      box-sizing: border-box; font-size: 15px; border: 1px solid var(--border);
-      border-radius: var(--radius); font-family: inherit;
-    }
+    :root { --brand: #4361ee; --brand-dark: #2b2d42; --bg: #f7f8fc; --border: #e2e4ec; --radius: 10px; --danger: #ef233c; }
+    body { font-family: 'Inter', Arial, sans-serif; background: var(--bg); max-width: 720px; margin: 0 auto; padding: 24px; color: var(--brand-dark); }
+    input, select { display: block; width: 100%; margin: 8px 0; padding: 12px 14px; box-sizing: border-box; font-size: 15px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; }
     input:focus, select:focus { outline: none; border-color: var(--brand); }
-    button {
-      display: block; width: 100%; margin: 10px 0 0; padding: 13px;
-      box-sizing: border-box; font-size: 15px; font-weight: 600; border: none;
-      border-radius: var(--radius); cursor: pointer; font-family: inherit;
-      background: var(--brand); color: white; transition: opacity 0.15s;
-    }
+    button { display: block; width: 100%; margin: 10px 0 0; padding: 13px; box-sizing: border-box; font-size: 15px; font-weight: 600; border: none; border-radius: var(--radius); cursor: pointer; font-family: inherit; background: var(--brand); color: white; transition: opacity 0.15s; }
     button:hover { opacity: 0.9; }
     #result img { max-width: 100%; margin-top: 15px; border-radius: var(--radius); }
-
-    .card {
-      background: white; border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 24px; box-shadow: 0 4px 20px rgba(43,45,66,0.05);
-    }
+    .card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: 0 4px 20px rgba(43,45,66,0.05); }
     h2 { margin-top: 0; font-size: 18px; }
-
     .usage-bar { background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; margin: 10px 0; }
     .usage-fill { background: var(--brand); height: 100%; }
-
-    .topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding-bottom: 18px; margin-bottom: 24px;
-    }
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; margin-bottom: 24px; }
     .topbar h1 { font-size: 20px; margin: 0; font-weight: 700; }
     .topbar button { width: auto; background: #eef0f7; color: var(--brand-dark); padding: 9px 18px; margin: 0; }
-
     .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .tab-btn {
-      flex: 1; padding: 11px; text-align: center; background: white;
-      border: 1px solid var(--border); color: var(--brand-dark); border-radius: var(--radius);
-      cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; min-width: 100px;
-    }
+    .tab-btn { flex: 1; padding: 11px; text-align: center; background: white; border: 1px solid var(--border); color: var(--brand-dark); border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; min-width: 100px; }
     .tab-btn.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-
     .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 10px; }
-    .gallery-card {
-      border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden;
-      cursor: pointer; background: white; transition: border-color 0.15s;
-    }
+    .gallery-card { border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; background: white; transition: border-color 0.15s; }
     .gallery-card:hover { border-color: #b8c2f0; }
     .gallery-card.selected { border-color: var(--brand); }
     .thumb-wrap { width: 100%; height: 110px; overflow: hidden; background: #f0f1f5; position: relative; }
     .thumb-frame { position: absolute; top: 0; left: 0; border: none; pointer-events: none; }
     .gallery-card .label { padding: 8px 10px; font-size: 13px; font-weight: 600; }
-
     .preset-preview { width: 100%; height: 140px; overflow: hidden; background: #f0f1f5; border-radius: var(--radius); position: relative; margin-top: 8px; }
     .preset-preview iframe { position: absolute; top: 0; left: 0; border: none; pointer-events: none; }
-
-    .history-item {
-      display: flex; align-items: center; gap: 14px; padding: 10px;
-      border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px;
-    }
+    .history-item { display: flex; align-items: center; gap: 14px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; }
     .history-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
     .history-item .meta { flex: 1; min-width: 0; }
     .history-item .meta .name { font-weight: 600; font-size: 14px; }
     .history-item .meta .date { color: #888; font-size: 12px; }
     .history-item a button { width: auto; padding: 8px 14px; font-size: 13px; margin: 0; }
-
     .profile-logo-preview { width: 100px; height: 100px; border-radius: var(--radius); background: #f0f1f5; object-fit: contain; margin: 10px 0; border: 1px solid var(--border); }
   </style>
 </head>
@@ -102,6 +55,7 @@
     <div class="tab-btn" onclick="showTab('generateTab', this)">Generate</div>
     <div class="tab-btn" onclick="showTab('historyTab', this, loadHistory)">History</div>
     <div class="tab-btn" onclick="showTab('profileTab', this, loadProfile)">Profile</div>
+    <div class="tab-btn" onclick="showTab('settingsTab', this)">Settings</div>
     <a href="/support.html" target="_blank" class="tab-btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">Support</a>
   </div>
 
@@ -118,7 +72,6 @@
   <div id="templatesTab" class="tab-content card">
     <h2>My Templates</h2>
     <div id="templateList" class="gallery"><p>Loading...</p></div>
-
     <h2 style="margin-top:28px;">Create a New Template</h2>
     <input type="text" id="newTemplateName" placeholder="Template name (e.g. Summer Sale Banner)">
     <select id="presetSelect" onchange="updatePresetPreview()">
@@ -144,7 +97,6 @@
       <p style="color:var(--danger);">You've used all your included generations for this plan.</p>
       <button onclick="buyCredits()">Buy 100 More Generations - KES 20 (test)</button>
     </div>
-
     <h2 style="margin-top:32px;">Batch Generate (CSV)</h2>
     <p style="color:#888; font-size:14px;">Upload a CSV with columns: title, price, imageUrl (one row per image). Uses the template selected above.</p>
     <input type="file" id="csvFile" accept=".csv">
@@ -161,22 +113,32 @@
   <div id="profileTab" class="tab-content card">
     <h2>Profile & Brand Settings</h2>
     <p style="color:#888; font-size:14px;">Logged in as: <span id="profileEmail"></span></p>
-
     <label style="font-size:14px; font-weight:600;">Business Name</label>
     <input type="text" id="businessName" placeholder="e.g. Pinnacle Edge Ltd">
-
     <label style="font-size:14px; font-weight:600;">Logo URL</label>
     <input type="text" id="logoUrl" placeholder="https://.../assets/logo.png">
     <img id="logoPreview" class="profile-logo-preview" style="display:none;">
-
     <button onclick="extractBrandColor()" style="background:#eef0f7; color:var(--brand-dark);">Detect Brand Color from Logo</button>
     <div id="colorSwatch" style="display:none; align-items:center; gap:10px; margin-top:10px;">
       <div id="swatchBox" style="width:32px; height:32px; border-radius:6px; border:1px solid var(--border);"></div>
       <span id="swatchHex" style="font-size:14px; font-family:monospace;"></span>
     </div>
-
     <button onclick="saveProfile()">Save Profile</button>
     <p id="profileStatus"></p>
+  </div>
+
+  <div id="settingsTab" class="tab-content card">
+    <h2>Account Settings</h2>
+    <p style="color:#888; font-size:14px;">Current email: <span id="settingsCurrentEmail"></span></p>
+
+    <label style="font-size:14px; font-weight:600;">New Email (optional)</label>
+    <input type="email" id="newEmail" placeholder="Leave blank to keep current email">
+
+    <label style="font-size:14px; font-weight:600;">New Password (optional)</label>
+    <input type="password" id="newPassword" placeholder="Leave blank to keep current password">
+
+    <button onclick="updateAccount()">Save Changes</button>
+    <p id="settingsStatus"></p>
   </div>
 
   <script>
@@ -186,9 +148,7 @@
     let detectedColor = '';
     let savedBusinessName = '';
 
-    if (!token) {
-      window.location.href = '/login.html';
-    }
+    if (!token) { window.location.href = '/login.html'; }
 
     function logout() {
       localStorage.removeItem('mediaEngineToken');
@@ -200,6 +160,9 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btn.classList.add('active');
+      if (tabId === 'settingsTab') {
+        document.getElementById('settingsCurrentEmail').innerText = document.getElementById('profileEmail').innerText;
+      }
       if (callback) callback();
     }
 
@@ -220,12 +183,7 @@
       const sampleImg = window.location.origin + '/assets/logo.png';
       const color = detectedColor || '#ef233c';
       const bizName = savedBusinessName || 'Your Business';
-      return html
-        .replace(/{{title}}/g, 'Sample Title')
-        .replace(/{{price}}/g, '$29.99')
-        .replace(/{{imageUrl}}/g, sampleImg)
-        .replace(/{{brandColor}}/g, color)
-        .replace(/{{businessName}}/g, bizName);
+      return html.replace(/{{title}}/g, 'Sample Title').replace(/{{price}}/g, '$29.99').replace(/{{imageUrl}}/g, sampleImg).replace(/{{brandColor}}/g, color).replace(/{{businessName}}/g, bizName);
     }
 
     function buildThumbnail(html, boxWidth, boxHeight) {
@@ -252,29 +210,17 @@
       const select = document.getElementById('planSelect');
       const plan = select.value;
       const amount = select.selectedOptions[0].dataset.amount;
-
-      const res = await fetch(`${API_BASE}/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ plan, amount: parseInt(amount) })
-      });
+      const res = await fetch(`${API_BASE}/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ plan, amount: parseInt(amount) }) });
       const data = await res.json();
-      if (data.success) {
-        document.getElementById('subscribeStatus').innerText = 'Redirecting to payment...';
-        window.location.href = data.authorization_url;
-      } else {
-        document.getElementById('subscribeStatus').innerText = 'Error: ' + JSON.stringify(data.error);
-      }
+      if (data.success) { document.getElementById('subscribeStatus').innerText = 'Redirecting to payment...'; window.location.href = data.authorization_url; }
+      else { document.getElementById('subscribeStatus').innerText = 'Error: ' + JSON.stringify(data.error); }
     }
 
     async function loadUsage() {
       const res = await fetch(`${API_BASE}/usage`, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
       const div = document.getElementById('usageDisplay');
-      if (!data.hasSubscription) {
-        div.innerHTML = '<p>No active subscription yet.</p>';
-        return;
-      }
+      if (!data.hasSubscription) { div.innerHTML = '<p>No active subscription yet.</p>'; return; }
       const percent = Math.min(100, Math.round((data.used / data.totalAllowed) * 100));
       div.innerHTML = `<p style="font-size:14px;color:#666;">${data.used} / ${data.totalAllowed} generations used this plan</p><div class="usage-bar"><div class="usage-fill" style="width:${percent}%"></div></div>`;
     }
@@ -284,23 +230,17 @@
       const data = await res.json();
       const listDiv = document.getElementById('templateList');
       listDiv.innerHTML = '';
-      if (!data.success || data.templates.length === 0) {
-        listDiv.innerHTML = '<p>No templates yet. Create one below.</p>';
-        return;
-      }
+      if (!data.success || data.templates.length === 0) { listDiv.innerHTML = '<p>No templates yet. Create one below.</p>'; return; }
       data.templates.forEach(t => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
         card.onclick = () => selectTemplate(t.id, t.template_name, card);
-
         const thumbWrap = document.createElement('div');
         thumbWrap.className = 'thumb-wrap';
         thumbWrap.appendChild(buildThumbnail(t.html_content, 300, 110));
-
         const label = document.createElement('div');
         label.className = 'label';
         label.innerText = t.template_name;
-
         card.appendChild(thumbWrap);
         card.appendChild(label);
         listDiv.appendChild(card);
@@ -317,69 +257,31 @@
     async function createTemplate() {
       const name = document.getElementById('newTemplateName').value;
       const preset = document.getElementById('presetSelect').value;
-      if (!name) {
-        document.getElementById('templateStatus').innerText = 'Please enter a template name.';
-        return;
-      }
-      const res = await fetch(`${API_BASE}/templates`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ template_name: name, html_content: PRESETS[preset] })
-      });
+      if (!name) { document.getElementById('templateStatus').innerText = 'Please enter a template name.'; return; }
+      const res = await fetch(`${API_BASE}/templates`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ template_name: name, html_content: PRESETS[preset] }) });
       const data = await res.json();
-      if (data.success) {
-        document.getElementById('templateStatus').innerText = 'Template saved!';
-        document.getElementById('newTemplateName').value = '';
-        loadTemplates();
-      } else {
-        document.getElementById('templateStatus').innerText = 'Error: ' + data.error;
-      }
+      if (data.success) { document.getElementById('templateStatus').innerText = 'Template saved!'; document.getElementById('newTemplateName').value = ''; loadTemplates(); }
+      else { document.getElementById('templateStatus').innerText = 'Error: ' + data.error; }
     }
 
     async function generate() {
-      if (!selectedTemplateId) {
-        document.getElementById('result').innerText = 'Please select a template in the Templates tab first.';
-        return;
-      }
+      if (!selectedTemplateId) { document.getElementById('result').innerText = 'Please select a template in the Templates tab first.'; return; }
       const title = document.getElementById('title').value;
       const price = document.getElementById('price').value;
       const imageUrl = document.getElementById('imageUrl').value;
-
       document.getElementById('result').innerText = 'Generating... this can take up to 15 seconds.';
       document.getElementById('buyCreditsSection').style.display = 'none';
-
-      const res = await fetch(`${API_BASE}/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ template_id: selectedTemplateId, data: { title, price, imageUrl, brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' } })
-      });
+      const res = await fetch(`${API_BASE}/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ template_id: selectedTemplateId, data: { title, price, imageUrl, brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' } }) });
       const data = await res.json();
-      if (data.success === false) {
-        document.getElementById('result').innerText = 'Error: ' + data.error;
-        if (data.needsCredits) document.getElementById('buyCreditsSection').style.display = 'block';
-      } else {
-        document.getElementById('result').innerHTML = `
-          <img src="${data.url}">
-          <a href="${data.url}" download="media-engine-image.png">
-            <button style="margin-top:10px;">Download Image</button>
-          </a>
-        `;
-        loadUsage();
-      }
+      if (data.success === false) { document.getElementById('result').innerText = 'Error: ' + data.error; if (data.needsCredits) document.getElementById('buyCreditsSection').style.display = 'block'; }
+      else { document.getElementById('result').innerHTML = `<img src="${data.url}"><a href="${data.url}" download="media-engine-image.png"><button style="margin-top:10px;">Download Image</button></a>`; loadUsage(); }
     }
 
     async function buyCredits() {
-      const res = await fetch(`${API_BASE}/buy-credits`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ credits: 100, amount: 20 })
-      });
+      const res = await fetch(`${API_BASE}/buy-credits`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ credits: 100, amount: 20 }) });
       const data = await res.json();
-      if (data.success) {
-        window.location.href = data.authorization_url;
-      } else {
-        document.getElementById('result').innerText = 'Error: ' + JSON.stringify(data.error);
-      }
+      if (data.success) { window.location.href = data.authorization_url; }
+      else { document.getElementById('result').innerText = 'Error: ' + JSON.stringify(data.error); }
     }
 
     async function loadHistory() {
@@ -387,24 +289,13 @@
       listDiv.innerHTML = '<p>Loading...</p>';
       const res = await fetch(`${API_BASE}/history`, { headers: { 'Authorization': `Bearer ${token}` } });
       const data = await res.json();
-      if (!data.success || data.generations.length === 0) {
-        listDiv.innerHTML = '<p>No generations yet.</p>';
-        return;
-      }
+      if (!data.success || data.generations.length === 0) { listDiv.innerHTML = '<p>No generations yet.</p>'; return; }
       listDiv.innerHTML = '';
       data.generations.forEach(g => {
         const item = document.createElement('div');
         item.className = 'history-item';
-        const templateName = g.template_name;
         const date = new Date(g.created_at).toLocaleString();
-        item.innerHTML = `
-          <img src="${g.image_url}">
-          <div class="meta">
-            <div class="name">${templateName}</div>
-            <div class="date">${date}</div>
-          </div>
-          <a href="${g.image_url}" download="media-engine-image.png"><button>Download</button></a>
-        `;
+        item.innerHTML = `<img src="${g.image_url}"><div class="meta"><div class="name">${g.template_name}</div><div class="date">${date}</div></div><a href="${g.image_url}" download="media-engine-image.png"><button>Download</button></a>`;
         listDiv.appendChild(item);
       });
     }
@@ -418,9 +309,7 @@
         savedBusinessName = data.profile.business_name || '';
         document.getElementById('logoUrl').value = data.profile.logo_url || '';
         updateLogoPreview();
-        if (data.profile.logo_url) {
-          document.getElementById('imageUrl').value = data.profile.logo_url;
-        }
+        if (data.profile.logo_url) document.getElementById('imageUrl').value = data.profile.logo_url;
         if (data.profile.brand_color) {
           detectedColor = data.profile.brand_color;
           document.getElementById('swatchBox').style.background = detectedColor;
@@ -432,91 +321,47 @@
 
     async function extractBrandColor() {
       const url = document.getElementById('logoUrl').value;
-      if (!url) {
-        document.getElementById('profileStatus').innerText = 'Please enter a logo URL first.';
-        return;
-      }
-
+      if (!url) { document.getElementById('profileStatus').innerText = 'Please enter a logo URL first.'; return; }
       const img = new Image();
       img.crossOrigin = 'anonymous';
-
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = img.width; canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-
         try {
           const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
           let r = 0, g = 0, b = 0, count = 0;
-
           for (let i = 0; i < pixels.length; i += 40) {
-            const alpha = pixels[i + 3];
-            if (alpha > 200) {
-              r += pixels[i];
-              g += pixels[i + 1];
-              b += pixels[i + 2];
-              count++;
-            }
+            if (pixels[i + 3] > 200) { r += pixels[i]; g += pixels[i + 1]; b += pixels[i + 2]; count++; }
           }
-
-          if (count === 0) {
-            document.getElementById('profileStatus').innerText = 'Could not detect a color from this image.';
-            return;
-          }
-
-          r = Math.round(r / count);
-          g = Math.round(g / count);
-          b = Math.round(b / count);
+          if (count === 0) { document.getElementById('profileStatus').innerText = 'Could not detect a color from this image.'; return; }
+          r = Math.round(r / count); g = Math.round(g / count); b = Math.round(b / count);
           const hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
-
           detectedColor = hex;
           document.getElementById('swatchBox').style.background = hex;
           document.getElementById('swatchHex').innerText = hex;
           document.getElementById('colorSwatch').style.display = 'flex';
           document.getElementById('profileStatus').innerText = 'Color detected! Save profile to keep it.';
-        } catch (err) {
-          document.getElementById('profileStatus').innerText = 'Could not read this image (it may not allow color analysis from this site).';
-        }
+        } catch (err) { document.getElementById('profileStatus').innerText = 'Could not read this image.'; }
       };
-
-      img.onerror = () => {
-        document.getElementById('profileStatus').innerText = 'Could not load that image.';
-      };
-
+      img.onerror = () => { document.getElementById('profileStatus').innerText = 'Could not load that image.'; };
       img.src = url;
     }
 
     function updateLogoPreview() {
       const url = document.getElementById('logoUrl').value;
       const img = document.getElementById('logoPreview');
-      if (url) {
-        img.src = url;
-        img.style.display = 'block';
-      } else {
-        img.style.display = 'none';
-      }
+      if (url) { img.src = url; img.style.display = 'block'; } else { img.style.display = 'none'; }
     }
 
     async function saveProfile() {
       const business_name = document.getElementById('businessName').value;
       const logo_url = document.getElementById('logoUrl').value;
-
-      const res = await fetch(`${API_BASE}/profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ business_name, logo_url, brand_color: detectedColor })
-      });
+      const res = await fetch(`${API_BASE}/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ business_name, logo_url, brand_color: detectedColor }) });
       const data = await res.json();
-      if (data.success) {
-        document.getElementById('profileStatus').innerText = 'Profile saved!';
-        savedBusinessName = business_name;
-        updateLogoPreview();
-        if (logo_url) document.getElementById('imageUrl').value = logo_url;
-      } else {
-        document.getElementById('profileStatus').innerText = 'Error: ' + data.error;
-      }
+      if (data.success) { document.getElementById('profileStatus').innerText = 'Profile saved!'; savedBusinessName = business_name; updateLogoPreview(); if (logo_url) document.getElementById('imageUrl').value = logo_url; }
+      else { document.getElementById('profileStatus').innerText = 'Error: ' + data.error; }
     }
 
     document.getElementById('logoUrl').addEventListener('input', updateLogoPreview);
@@ -535,56 +380,47 @@
     }
 
     async function startBatch() {
-      if (!selectedTemplateId) {
-        document.getElementById('batchStatus').innerText = 'Please select a template above first.';
-        return;
-      }
+      if (!selectedTemplateId) { document.getElementById('batchStatus').innerText = 'Please select a template above first.'; return; }
       const fileInput = document.getElementById('csvFile');
-      if (!fileInput.files.length) {
-        document.getElementById('batchStatus').innerText = 'Please choose a CSV file first.';
-        return;
-      }
-
+      if (!fileInput.files.length) { document.getElementById('batchStatus').innerText = 'Please choose a CSV file first.'; return; }
       const text = await fileInput.files[0].text();
       const rows = parseCSV(text);
       const resultsDiv = document.getElementById('batchResults');
       resultsDiv.innerHTML = '';
-
       for (let i = 0; i < rows.length; i++) {
         document.getElementById('batchStatus').innerText = `Generating ${i + 1} of ${rows.length}...`;
-
-        const res = await fetch(`${API_BASE}/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({
-            template_id: selectedTemplateId,
-            data: { title: rows[i].title || '', price: rows[i].price || '', imageUrl: rows[i].imageurl || '', brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' }
-          })
-        });
+        const res = await fetch(`${API_BASE}/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ template_id: selectedTemplateId, data: { title: rows[i].title || '', price: rows[i].price || '', imageUrl: rows[i].imageurl || '', brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' } }) });
         const data = await res.json();
-
         const item = document.createElement('div');
         item.className = 'history-item';
         if (data.success === false) {
           item.innerHTML = `<div class="meta"><div class="name">Row ${i + 1}: ${rows[i].title}</div><div class="date" style="color:var(--danger);">Error: ${data.error}</div></div>`;
-          if (data.needsCredits) {
-            document.getElementById('batchStatus').innerText = `Stopped at row ${i + 1}: plan limit reached.`;
-            resultsDiv.appendChild(item);
-            document.getElementById('buyCreditsSection').style.display = 'block';
-            return;
-          }
+          if (data.needsCredits) { document.getElementById('batchStatus').innerText = `Stopped at row ${i + 1}: plan limit reached.`; resultsDiv.appendChild(item); document.getElementById('buyCreditsSection').style.display = 'block'; return; }
         } else {
-          item.innerHTML = `
-            <img src="${data.url}">
-            <div class="meta"><div class="name">${rows[i].title}</div></div>
-            <a href="${data.url}" download="media-engine-image.png"><button>Download</button></a>
-          `;
+          item.innerHTML = `<img src="${data.url}"><div class="meta"><div class="name">${rows[i].title}</div></div><a href="${data.url}" download="media-engine-image.png"><button>Download</button></a>`;
         }
         resultsDiv.appendChild(item);
       }
-
       document.getElementById('batchStatus').innerText = `Done — generated ${rows.length} images.`;
       loadUsage();
+    }
+
+    async function updateAccount() {
+      const newEmail = document.getElementById('newEmail').value;
+      const newPassword = document.getElementById('newPassword').value;
+      if (!newEmail && !newPassword) {
+        document.getElementById('settingsStatus').innerText = 'Enter a new email or password first.';
+        return;
+      }
+      const res = await fetch(`${API_BASE}/account`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ newEmail, newPassword }) });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('settingsStatus').innerText = 'Account updated! Please log in again with your new details.';
+        document.getElementById('newEmail').value = '';
+        document.getElementById('newPassword').value = '';
+      } else {
+        document.getElementById('settingsStatus').innerText = 'Error: ' + data.error;
+      }
     }
 
     loadTemplates();
