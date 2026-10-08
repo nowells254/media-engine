@@ -62,7 +62,7 @@
   <div id="subscribeTab" class="tab-content active card">
     <h2>Subscription</h2>
     <select id="planSelect">
-      <option value="starter" data-amount="10">Starter - KES 10 (test)</option>
+    <option value="starter">Starter - KES 10,350 / month (about $80)</option>  
     </select>
     <button onclick="subscribe()">Subscribe Now</button>
     <p id="subscribeStatus"></p>
@@ -95,7 +95,7 @@
     <div id="result"></div>
     <div id="buyCreditsSection" style="display:none; margin-top:15px;">
       <p style="color:var(--danger);">You've used all your included generations for this plan.</p>
-      <button onclick="buyCredits()">Buy 100 More Generations - KES 20 (test)</button>
+      <button onclick="buyCredits()">Buy 100 More Generations - KES 2,000</button>
     </div>
     <h2 style="margin-top:32px;">Batch Generate (CSV)</h2>
     <p style="color:#888; font-size:14px;">Upload a CSV with columns: title, price, imageUrl (one row per image). Uses the template selected above.</p>
@@ -210,7 +210,7 @@
       const select = document.getElementById('planSelect');
       const plan = select.value;
       const amount = select.selectedOptions[0].dataset.amount;
-      const res = await fetch(`${API_BASE}/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ plan, amount: parseInt(amount) }) });
+      const res = await fetch(`${API_BASE}/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ plan }) });
       const data = await res.json();
       if (data.success) { document.getElementById('subscribeStatus').innerText = 'Redirecting to payment...'; window.location.href = data.authorization_url; }
       else { document.getElementById('subscribeStatus').innerText = 'Error: ' + JSON.stringify(data.error); }
@@ -278,7 +278,7 @@
     }
 
     async function buyCredits() {
-      const res = await fetch(`${API_BASE}/buy-credits`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ credits: 100, amount: 20 }) });
+      const res = await fetch(`${API_BASE}/buy-credits`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ credits: 100 }) });
       const data = await res.json();
       if (data.success) { window.location.href = data.authorization_url; }
       else { document.getElementById('result').innerText = 'Error: ' + JSON.stringify(data.error); }

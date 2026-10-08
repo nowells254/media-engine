@@ -179,8 +179,13 @@ app.post('/generate', requireAuth, requireSubscription, async (req, res) => {
   res.json({ url: fileUrl, generatedBy: req.user.email });
 });
 
+const PLAN_PRICES = { starter: 10350 };
+const CREDIT_PACKS = { 100: 1200 };
+
 app.post('/subscribe', requireAuth, async (req, res) => {
-  const { plan, amount } = req.body;
+  const { plan } = req.body;
+  const amount = PLAN_PRICES[plan];
+  if (!amount) return res.status(400).json({ success: false, error: 'Unknown plan' });
 
   try {
     const response = await axios.post(
@@ -206,7 +211,9 @@ app.post('/subscribe', requireAuth, async (req, res) => {
 });
 
 app.post('/buy-credits', requireAuth, async (req, res) => {
-  const { credits, amount } = req.body;
+  const { credits } = req.body;
+  const amount = CREDIT_PACKS[credits];
+  if (!amount) return res.status(400).json({ success: false, error: 'Unknown credit pack' });
 
   try {
     const response = await axios.post(
