@@ -8,6 +8,34 @@ const axios = require('axios');
 const app = express();
 const PORT = 3000;
 
+// Prices live on the server. The browser can never set them.
+const PLAN_PRICES = { starter: { KES: 10350, USD: 80 } };
+const CREDIT_PACKS = { 100: { KES: 2000, USD: 15 } };
+const PLAN_DAYS = 30;
+
+async function getActiveSubscription(userId) {
+  const { data } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .order('id', { ascending: false })
+    .limit(1);
+  if (!data || data.length === 0) return null;
+  const sub = data[0];
+  if (sub.expires_at && new Date(sub.expires_at) < new Date()) return null;
+  return sub;
+}
+
+async function countUsage(userId, sub) {
+  const { count } = await supabase
+    .from('generations')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .gte('created_at', sub.created_at);
+  return count || 0;
+}
+
 // Webhook route MUST come before express.json() so it gets the raw body
 app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (req, res) => {
   const secret = process.env.PAYSTACK_SECRET_KEY;
@@ -20,36 +48,53 @@ app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (
   const event = JSON.parse(req.body);
 
   if (event.event === 'charge.success') {
-    const { user_id, plan, type, credits } = event.data.metadata;
+    const { user_id, plan, type, credits } = event.data.metadata || {};
     const reference = event.data.reference;
 
-    if (type === 'credits') {
-      const { data: sub } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user_id)
-        .eq('status', 'active')
-        .order('id', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (sub) {
-        await supabase
+    if (user_id) {
+      if (type === 'credits') {
+        const { data: sub } = await supabase
           .from('subscriptions')
-          .update({ extra_credits: sub.extra_credits + parseInt(credits) })
-          .eq('id', sub.id);
+          .select('*')
+          .eq('user_id', user_id)
+          .eq('status', 'active')
+          .order('id', { ascending: false })
+          .limit(1)
+          .single();
+        if (sub) {
+          await supabase
+            .from('subscriptions')
+            .update({ extra_credits: sub.extra_credits + parseInt(credits) })
+            .eq('id', sub.id);
+        }
+        console.log('Added', credits, 'extra credits for user:', user_id);
+      } else {
+        const { data: existing } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .eq('paystack_reference', reference)
+          .limit(1);
+
+        if (!existing || existing.length === 0) {
+          // Renewing early adds 30 days on top of the time already left
+          const current = await getActiveSubscription(user_id);
+          const base = current && current.expires_at && new Date(current.expires_at) > new Date()
+            ? new Date(current.expires_at).getTime()
+            : Date.now();
+          const expiresAt = new Date(base + PLAN_DAYS * 86400000).toISOString();
+
+          await supabase.from('subscriptions').insert([{
+            user_id: user_id,
+            plan: plan,
+            status: 'active',
+            paystack_reference: reference,
+            generation_limit: 1000,
+            extra_credits: 0,
+            expires_at: expiresAt
+          }]);
+          console.log('Subscription activated for user:', user_id);
+        }
       }
-      console.log('Added', credits, 'extra credits for user:', user_id);
-    } else {
-      await supabase.from('subscriptions').insert([{
-        user_id: user_id,
-        plan: plan,
-        status: 'active',
-        paystack_reference: reference,
-        generation_limit: 1000,
-        extra_credits: 0
-      }]);
-      console.log('Subscription activated for user:', user_id);
     }
   }
 
@@ -61,10 +106,30 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/generated', express.static(path.join(__dirname, 'generated')));
 
 app.post('/signup', async (req, res) => {
-  const { email, password } = req.body;
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { email, password, fullName, phone, country, acceptedTerms } = req.body;
+  if (!email || !password || !fullName) {
+    return res.status(400).json({ success: false, error: 'Name, email and password are required.' });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ success: false, error: 'Password must be at least 8 characters.' });
+  }
+  if (!acceptedTerms) {
+    return res.status(400).json({ success: false, error: 'You must accept the Terms of Service.' });
+  }
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        phone: phone || '',
+        country: country || '',
+        accepted_terms_at: new Date().toISOString()
+      }
+    }
+  });
   if (error) return res.status(400).json({ success: false, error: error.message });
-  res.json({ success: true, user: data.user });
+  res.json({ success: true });
 });
 
 app.post('/login', async (req, res) => {
@@ -88,64 +153,98 @@ async function requireAuth(req, res, next) {
   next();
 }
 
+// Must have an active (not expired) subscription
+async function requireActive(req, res, next) {
+  const sub = await getActiveSubscription(req.user.id);
+  if (!sub) {
+    return res.status(403).json({ success: false, needsSubscription: true, error: 'An active subscription is required.' });
+  }
+  req.subscription = sub;
+  next();
+}
+
+// Active subscription AND still within the generation allowance
 async function requireSubscription(req, res, next) {
-  const { data: subs, error } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', req.user.id)
-    .eq('status', 'active')
-    .order('id', { ascending: false })
-    .limit(1);
-
-  if (error || !subs || subs.length === 0) {
-    return res.status(403).json({ success: false, error: 'An active subscription is required to generate images' });
+  const sub = await getActiveSubscription(req.user.id);
+  if (!sub) {
+    return res.status(403).json({ success: false, needsSubscription: true, error: 'An active subscription is required to generate images.' });
   }
-
-  const subscription = subs[0];
-
-  const { count, error: countError } = await supabase
-    .from('generations')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', req.user.id);
-
-  if (countError) {
-    return res.status(500).json({ success: false, error: 'Could not check usage' });
-  }
-
-  const totalAllowed = subscription.generation_limit + subscription.extra_credits;
-
-  if (count >= totalAllowed) {
+  const used = await countUsage(req.user.id, sub);
+  if (used >= sub.generation_limit + sub.extra_credits) {
     return res.status(402).json({
       success: false,
       error: 'You have reached your plan limit. Purchase extra generations to continue.',
       needsCredits: true
     });
   }
-
+  req.subscription = sub;
   next();
 }
 
-app.post('/templates', requireAuth, async (req, res) => {
-  const { template_name, html_content } = req.body;
+// Everything the dashboard overview needs, in one call
+app.get('/overview', requireAuth, async (req, res) => {
+  const sub = await getActiveSubscription(req.user.id);
+  const meta = req.user.user_metadata || {};
 
+  let subscription = null;
+  if (sub) {
+    const used = await countUsage(req.user.id, sub);
+    subscription = {
+      plan: sub.plan,
+      used,
+      limit: sub.generation_limit,
+      extraCredits: sub.extra_credits,
+      totalAllowed: sub.generation_limit + sub.extra_credits,
+      startedAt: sub.created_at,
+      expiresAt: sub.expires_at
+    };
+  }
+
+  const { count: templatesCount } = await supabase
+    .from('templates')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', req.user.id);
+
+  const since = new Date(Date.now() - 6 * 86400000);
+  since.setUTCHours(0, 0, 0, 0);
+  const { data: recent } = await supabase
+    .from('generations')
+    .select('created_at')
+    .eq('user_id', req.user.id)
+    .gte('created_at', since.toISOString());
+
+  const daily = [];
+  for (let i = 0; i < 7; i++) {
+    const key = new Date(since.getTime() + i * 86400000).toISOString().slice(0, 10);
+    daily.push({ date: key, count: (recent || []).filter(g => g.created_at.slice(0, 10) === key).length });
+  }
+
+  res.json({
+    success: true,
+    email: req.user.email,
+    name: meta.full_name || '',
+    subscription,
+    templatesCount: templatesCount || 0,
+    daily
+  });
+});
+
+app.post('/templates', requireAuth, requireActive, async (req, res) => {
+  const { template_name, html_content } = req.body;
   const { data, error } = await supabase
     .from('templates')
     .insert([{ template_name, html_content, user_id: req.user.id }])
     .select();
-
   if (error) return res.status(500).json({ success: false, error: error.message });
-
   res.json({ success: true, template: data[0] });
 });
 
-app.get('/templates', requireAuth, async (req, res) => {
+app.get('/templates', requireAuth, requireActive, async (req, res) => {
   const { data, error } = await supabase
     .from('templates')
     .select('*')
     .eq('user_id', req.user.id);
-
   if (error) return res.status(500).json({ success: false, error: error.message });
-
   res.json({ success: true, templates: data });
 });
 
@@ -160,6 +259,7 @@ app.post('/generate', requireAuth, requireSubscription, async (req, res) => {
     .from('templates')
     .select('*')
     .eq('id', template_id)
+    .eq('user_id', req.user.id)
     .single();
 
   if (templateError || !templateRows) {
@@ -179,22 +279,17 @@ app.post('/generate', requireAuth, requireSubscription, async (req, res) => {
   res.json({ url: fileUrl, generatedBy: req.user.email });
 });
 
-const PLAN_PRICES = { starter: 10350 };
-const CREDIT_PACKS = { 100: 1200 };
-
-app.post('/subscribe', requireAuth, async (req, res) => {
-  const { plan } = req.body;
-  const amount = PLAN_PRICES[plan];
-  if (!amount) return res.status(400).json({ success: false, error: 'Unknown plan' });
-
+async function initPayment(req, res, amount, currency, metadata) {
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
   try {
     const response = await axios.post(
       'https://api.paystack.co/transaction/initialize',
       {
         email: req.user.email,
         amount: amount * 100,
-        currency: 'KES',
-        metadata: { user_id: req.user.id, plan: plan }
+        currency: currency,
+        metadata: metadata,
+        callback_url: `${baseUrl}/dashboard.html?paid=1`
       },
       {
         headers: {
@@ -203,88 +298,38 @@ app.post('/subscribe', requireAuth, async (req, res) => {
         }
       }
     );
-
-    res.json({ success: true, authorization_url: response.data.data.authorization_url, reference: response.data.data.reference });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.response ? error.response.data : error.message });
-  }
-});
-
-app.post('/buy-credits', requireAuth, async (req, res) => {
-  const { credits } = req.body;
-  const amount = CREDIT_PACKS[credits];
-  if (!amount) return res.status(400).json({ success: false, error: 'Unknown credit pack' });
-
-  try {
-    const response = await axios.post(
-      'https://api.paystack.co/transaction/initialize',
-      {
-        email: req.user.email,
-        amount: amount * 100,
-        currency: 'KES',
-        metadata: { user_id: req.user.id, type: 'credits', credits: credits }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
     res.json({ success: true, authorization_url: response.data.data.authorization_url });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.response ? error.response.data : error.message });
+    const msg = (error.response && error.response.data && error.response.data.message) || error.message;
+    res.status(500).json({ success: false, error: msg });
   }
+}
+
+app.post('/subscribe', requireAuth, async (req, res) => {
+  const { plan, currency = 'KES' } = req.body;
+  const price = PLAN_PRICES[plan] && PLAN_PRICES[plan][currency];
+  if (!price) return res.status(400).json({ success: false, error: 'Unknown plan or currency' });
+  await initPayment(req, res, price, currency, { user_id: req.user.id, plan: plan });
 });
 
-app.get('/usage', requireAuth, async (req, res) => {
-  const { data: subs } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', req.user.id)
-    .eq('status', 'active')
-    .order('id', { ascending: false })
-    .limit(1);
-
-  const { count } = await supabase
-    .from('generations')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', req.user.id);
-
-  if (!subs || subs.length === 0) {
-    return res.json({ success: true, hasSubscription: false, used: count || 0 });
-  }
-
-  const sub = subs[0];
-  res.json({
-    success: true,
-    hasSubscription: true,
-    used: count || 0,
-    limit: sub.generation_limit,
-    extraCredits: sub.extra_credits,
-    totalAllowed: sub.generation_limit + sub.extra_credits
-  });
+app.post('/buy-credits', requireAuth, requireActive, async (req, res) => {
+  const { credits, currency = 'KES' } = req.body;
+  const price = CREDIT_PACKS[credits] && CREDIT_PACKS[credits][currency];
+  if (!price) return res.status(400).json({ success: false, error: 'Unknown credit pack or currency' });
+  await initPayment(req, res, price, currency, { user_id: req.user.id, type: 'credits', credits: credits });
 });
-// New: get or create the user's profile
-app.get('/profile', requireAuth, async (req, res) => {
+
+app.get('/profile', requireAuth, requireActive, async (req, res) => {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('user_id', req.user.id)
     .limit(1);
-
   if (error) return res.status(500).json({ success: false, error: error.message });
-
-  if (!data || data.length === 0) {
-    return res.json({ success: true, profile: null, email: req.user.email });
-  }
-
-  res.json({ success: true, profile: data[0], email: req.user.email });
+  res.json({ success: true, profile: data && data.length ? data[0] : null, email: req.user.email });
 });
 
-// New: save or update the user's profile
-app.post('/profile', requireAuth, async (req, res) => {
+app.post('/profile', requireAuth, requireActive, async (req, res) => {
   const { logo_url, business_name, brand_color } = req.body;
 
   const { data: existing } = await supabase
@@ -308,10 +353,9 @@ app.post('/profile', requireAuth, async (req, res) => {
   }
 
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
-
   res.json({ success: true, profile: result.data[0] });
 });
-// New: update login email and/or password
+
 app.post('/account', requireAuth, async (req, res) => {
   const { newEmail, newPassword } = req.body;
 
@@ -323,18 +367,13 @@ app.post('/account', requireAuth, async (req, res) => {
     return res.status(400).json({ success: false, error: 'Nothing to update' });
   }
 
-  const { data, error } = await supabase.auth.admin.updateUserById(req.user.id, updates);
-
+  const { error } = await supabase.auth.admin.updateUserById(req.user.id, updates);
   if (error) return res.status(500).json({ success: false, error: error.message });
 
-  res.json({
-    success: true,
-    message: newEmail
-      ? 'Email updated. If email confirmation is required, check your new inbox before logging in again.'
-      : 'Account updated successfully'
-  });
+  res.json({ success: true, message: 'Account updated successfully' });
 });
-app.get('/history', requireAuth, async (req, res) => {
+
+app.get('/history', requireAuth, requireActive, async (req, res) => {
   const { data: generations, error } = await supabase
     .from('generations')
     .select('*')

@@ -1,72 +1,149 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Media Engine - Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --brand: #4361ee; --brand-dark: #2b2d42; --bg: #f7f8fc; --border: #e2e4ec; --radius: 10px; --danger: #ef233c; }
-    body { font-family: 'Inter', Arial, sans-serif; background: var(--bg); max-width: 720px; margin: 0 auto; padding: 24px; color: var(--brand-dark); }
-    input, select { display: block; width: 100%; margin: 8px 0; padding: 12px 14px; box-sizing: border-box; font-size: 15px; border: 1px solid var(--border); border-radius: var(--radius); font-family: inherit; }
-    input:focus, select:focus { outline: none; border-color: var(--brand); }
-    button { display: block; width: 100%; margin: 10px 0 0; padding: 13px; box-sizing: border-box; font-size: 15px; font-weight: 600; border: none; border-radius: var(--radius); cursor: pointer; font-family: inherit; background: var(--brand); color: white; transition: opacity 0.15s; }
-    button:hover { opacity: 0.9; }
-    #result img { max-width: 100%; margin-top: 15px; border-radius: var(--radius); }
-    .card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: 0 4px 20px rgba(43,45,66,0.05); }
-    h2 { margin-top: 0; font-size: 18px; }
-    .usage-bar { background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; margin: 10px 0; }
-    .usage-fill { background: var(--brand); height: 100%; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 18px; margin-bottom: 24px; }
-    .topbar h1 { font-size: 20px; margin: 0; font-weight: 700; }
-    .topbar button { width: auto; background: #eef0f7; color: var(--brand-dark); padding: 9px 18px; margin: 0; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .tab-btn { flex: 1; padding: 11px; text-align: center; background: white; border: 1px solid var(--border); color: var(--brand-dark); border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; min-width: 100px; }
-    .tab-btn.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 10px; }
-    .gallery-card { border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; background: white; transition: border-color 0.15s; }
-    .gallery-card:hover { border-color: #b8c2f0; }
-    .gallery-card.selected { border-color: var(--brand); }
-    .thumb-wrap { width: 100%; height: 110px; overflow: hidden; background: #f0f1f5; position: relative; }
-    .thumb-frame { position: absolute; top: 0; left: 0; border: none; pointer-events: none; }
-    .gallery-card .label { padding: 8px 10px; font-size: 13px; font-weight: 600; }
-    .preset-preview { width: 100%; height: 140px; overflow: hidden; background: #f0f1f5; border-radius: var(--radius); position: relative; margin-top: 8px; }
-    .preset-preview iframe { position: absolute; top: 0; left: 0; border: none; pointer-events: none; }
-    .history-item { display: flex; align-items: center; gap: 14px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; }
-    .history-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-    .history-item .meta { flex: 1; min-width: 0; }
-    .history-item .meta .name { font-weight: 600; font-size: 14px; }
-    .history-item .meta .date { color: #888; font-size: 12px; }
-    .history-item a button { width: auto; padding: 8px 14px; font-size: 13px; margin: 0; }
-    .profile-logo-preview { width: 100px; height: 100px; border-radius: var(--radius); background: #f0f1f5; object-fit: contain; margin: 10px 0; border: 1px solid var(--border); }
+    :root { --brand:#4361ee; --dark:#2b2d42; --bg:#f4f5fb; --border:#e2e4ec; --radius:12px; --danger:#ef233c; }
+    * { box-sizing:border-box; }
+    body { font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); max-width:900px; margin:0 auto; padding:20px; color:var(--dark); }
+    input, select { display:block; width:100%; margin:8px 0; padding:12px 14px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius); font-family:inherit; background:white; }
+    input:focus, select:focus { outline:none; border-color:var(--brand); }
+    button { display:block; width:100%; margin:10px 0 0; padding:13px; font-size:15px; font-weight:600; border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; background:linear-gradient(90deg,#4361ee,#7209b7); color:white; transition:opacity .15s; }
+    button:hover { opacity:.9; }
+    h2 { margin:0 0 10px; font-size:18px; }
+    .hint { font-size:12px; color:#888; }
+    #result img { max-width:100%; margin-top:15px; border-radius:var(--radius); }
+
+    .card { background:white; border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:0 4px 20px rgba(43,45,66,.05); }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .logo { font-size:21px; font-weight:800; background:linear-gradient(90deg,#4361ee,#f72585); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .userbox { display:flex; align-items:center; gap:12px; font-size:14px; font-weight:600; }
+    .userbox button { width:auto; margin:0; padding:9px 16px; background:#eef0f7; color:var(--dark); }
+
+    .banner { background:#e8fff6; border:1px solid #9be7c8; color:#0a7a55; padding:12px 16px; border-radius:var(--radius); margin-bottom:14px; font-size:14px; }
+    .notice { background:#fff4e5; border:1px solid #ffd59a; color:#8a5a00; padding:12px 16px; border-radius:var(--radius); margin-bottom:14px; font-size:14px; }
+
+    .tabs { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+    .tab-btn { flex:1; min-width:96px; padding:11px 8px; text-align:center; background:white; border:1px solid var(--border); color:var(--dark); border-radius:var(--radius); cursor:pointer; font-size:14px; font-weight:600; transition:all .15s; text-decoration:none; }
+    .tab-btn.active { background:var(--dark); color:white; border-color:var(--dark); }
+    .tab-btn.locked { opacity:.55; }
+    .lock { display:none; }
+    .locked .lock { display:inline; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    .hero { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:26px; border-radius:16px; color:white; background:linear-gradient(120deg,#4361ee,#7209b7 60%,#f72585); margin-bottom:16px; }
+    .hero h2 { color:white; font-size:22px; margin:0 0 6px; }
+    .hero p { margin:0; opacity:.92; font-size:14px; }
+    .hero button { width:auto; margin:0; padding:12px 22px; background:white; color:#7209b7; white-space:nowrap; }
+
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+    .stat { border-radius:14px; padding:18px 14px; color:white; }
+    .stat .v { font-size:28px; font-weight:800; }
+    .stat .l { font-size:12px; opacity:.92; margin-top:2px; }
+    .c1 { background:linear-gradient(135deg,#4361ee,#7209b7); }
+    .c2 { background:linear-gradient(135deg,#f72585,#ff9e00); }
+    .c3 { background:linear-gradient(135deg,#06d6a0,#118ab2); }
+    .c4 { background:linear-gradient(135deg,#ff9e00,#ef476f); }
+
+    .charts { display:grid; grid-template-columns:1fr 1.6fr; gap:14px; }
+    .center { text-align:center; }
+    .legend { font-size:13px; color:#555; line-height:1.8; text-align:center; margin-top:6px; }
+
+    .plan-card { max-width:460px; margin:0 auto; border:2px solid var(--brand); }
+    .badge { display:inline-block; background:#eef0ff; color:var(--brand); font-weight:700; font-size:12px; padding:4px 12px; border-radius:20px; letter-spacing:1px; }
+    .price { font-size:38px; font-weight:800; margin:10px 0; }
+    .price span { font-size:14px; font-weight:400; color:#888; }
+    .plan-card ul { list-style:none; padding:0; margin:12px 0 18px; }
+    .plan-card li { padding:5px 0; font-size:14px; color:#555; }
+    .plan-card li:before { content:"\2713  "; color:var(--brand); font-weight:700; }
+
+    .gallery { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:10px; }
+    .gallery-card { border:2px solid var(--border); border-radius:var(--radius); overflow:hidden; cursor:pointer; background:white; transition:border-color .15s; }
+    .gallery-card:hover { border-color:#b8c2f0; }
+    .gallery-card.selected { border-color:var(--brand); }
+    .thumb-wrap { width:100%; height:110px; overflow:hidden; background:#f0f1f5; position:relative; }
+    .thumb-frame { position:absolute; top:0; left:0; border:none; pointer-events:none; }
+    .gallery-card .label { padding:8px 10px; font-size:13px; font-weight:600; }
+    .preset-preview { width:100%; height:140px; overflow:hidden; background:#f0f1f5; border-radius:var(--radius); position:relative; margin-top:8px; }
+    .preset-preview iframe { position:absolute; top:0; left:0; border:none; pointer-events:none; }
+
+    .history-item { display:flex; align-items:center; gap:14px; padding:10px; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; }
+    .history-item img { width:70px; height:70px; object-fit:cover; border-radius:6px; flex-shrink:0; }
+    .history-item .meta { flex:1; min-width:0; }
+    .history-item .meta .name { font-weight:600; font-size:14px; }
+    .history-item .meta .date { color:#888; font-size:12px; }
+    .history-item a button { width:auto; padding:8px 14px; font-size:13px; margin:0; }
+    .profile-logo-preview { width:100px; height:100px; border-radius:var(--radius); background:#f0f1f5; object-fit:contain; margin:10px 0; border:1px solid var(--border); }
+
+    @media (max-width:700px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .charts { grid-template-columns:1fr; }
+      .hero { flex-direction:column; align-items:flex-start; }
+    }
   </style>
 </head>
 <body>
 
   <div class="topbar">
-    <h1>Media Engine</h1>
-    <button onclick="logout()">Log Out</button>
+    <div class="logo">Media Engine</div>
+    <div class="userbox"><span id="userName"></span><button onclick="logout()">Log Out</button></div>
   </div>
+
+  <div id="paidBanner" class="banner" style="display:none;"></div>
 
   <div class="tabs">
-    <div class="tab-btn active" onclick="showTab('subscribeTab', this)">Subscribe</div>
-    <div class="tab-btn" onclick="showTab('templatesTab', this)">Templates</div>
-    <div class="tab-btn" onclick="showTab('generateTab', this)">Generate</div>
-    <div class="tab-btn" onclick="showTab('historyTab', this, loadHistory)">History</div>
-    <div class="tab-btn" onclick="showTab('profileTab', this, loadProfile)">Profile</div>
+    <div class="tab-btn active" id="overviewBtn" onclick="showTab('overviewTab', this)">Overview</div>
+    <div class="tab-btn" id="plansBtn" onclick="showTab('plansTab', this)">Plans</div>
+    <div class="tab-btn" data-locked="true" onclick="showTab('templatesTab', this)">Templates <span class="lock">&#128274;</span></div>
+    <div class="tab-btn" id="generateBtn" data-locked="true" onclick="showTab('generateTab', this)">Generate <span class="lock">&#128274;</span></div>
+    <div class="tab-btn" data-locked="true" onclick="showTab('historyTab', this, loadHistory)">History <span class="lock">&#128274;</span></div>
+    <div class="tab-btn" data-locked="true" onclick="showTab('profileTab', this, loadProfile)">Profile <span class="lock">&#128274;</span></div>
     <div class="tab-btn" onclick="showTab('settingsTab', this)">Settings</div>
-    <a href="/support.html" target="_blank" class="tab-btn" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">Support</a>
+    <a href="/support.html" target="_blank" class="tab-btn">Support</a>
   </div>
 
-  <div id="subscribeTab" class="tab-content active card">
-    <h2>Subscription</h2>
-    <select id="planSelect">
-    <option value="starter">Starter - KES 10,350 / month (about $80)</option>  
-    </select>
-    <button onclick="subscribe()">Subscribe Now</button>
-    <p id="subscribeStatus"></p>
-    <div id="usageDisplay"></div>
+  <div id="overviewTab" class="tab-content active">
+    <div class="hero" id="heroBox"></div>
+    <div class="stats" id="statsBox"></div>
+    <div class="charts">
+      <div class="card">
+        <h2>Plan usage</h2>
+        <div class="center" id="donutBox"></div>
+        <div class="legend" id="donutLegend"></div>
+      </div>
+      <div class="card">
+        <h2>Generations, last 7 days</h2>
+        <div id="barsBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="plansTab" class="tab-content">
+    <div id="lockNotice" class="notice" style="display:none;">&#128274; Subscribe to unlock Templates, Generate, History and Profile.</div>
+    <div class="card plan-card">
+      <span class="badge">STARTER</span>
+      <div class="price" id="planPrice"></div>
+      <ul>
+        <li>1,000 generations every 30 days</li>
+        <li>Banners, certificates, posters and quote cards</li>
+        <li>CSV batch generation</li>
+        <li>Brand logo and colour matching</li>
+      </ul>
+      <label style="font-size:13px;font-weight:600;">Pay in</label>
+      <select id="currencySelect" onchange="updatePrices()"></select>
+      <button id="subBtn" onclick="subscribe()">Subscribe now</button>
+      <p id="subscribeStatus" class="hint"></p>
+      <p class="hint">Each payment gives you 30 days. Renewing early adds 30 more days on top of the time you have left. Plans do not renew automatically.</p>
+    </div>
+    <div class="card" id="creditsCard" style="display:none; margin:16px auto 0; max-width:460px;">
+      <h2>Need more generations?</h2>
+      <p style="margin:0 0 4px;">100 extra generations: <b id="creditsPrice"></b></p>
+      <button onclick="buyCredits()">Buy 100 more</button>
+      <p id="creditsStatus" class="hint"></p>
+    </div>
   </div>
 
   <div id="templatesTab" class="tab-content card">
@@ -87,7 +164,7 @@
 
   <div id="generateTab" class="tab-content card">
     <h2>Generate an Image</h2>
-    <p id="selectedTemplateLabel" style="color:#888; font-size:14px;">Select a template in the Templates tab first.</p>
+    <p id="selectedTemplateLabel" class="hint">Select a template in the Templates tab first.</p>
     <input type="text" id="title" placeholder="Title" value="My Banner">
     <input type="text" id="price" placeholder="Subtitle / Price / Date">
     <input type="text" id="imageUrl" placeholder="Image URL (optional)">
@@ -95,10 +172,11 @@
     <div id="result"></div>
     <div id="buyCreditsSection" style="display:none; margin-top:15px;">
       <p style="color:var(--danger);">You've used all your included generations for this plan.</p>
-      <button onclick="buyCredits()">Buy 100 More Generations - KES 2,000</button>
+      <button onclick="goPlans()">Buy more generations</button>
     </div>
+
     <h2 style="margin-top:32px;">Batch Generate (CSV)</h2>
-    <p style="color:#888; font-size:14px;">Upload a CSV with columns: title, price, imageUrl (one row per image). Uses the template selected above.</p>
+    <p class="hint">Upload a CSV with columns: title, price, imageUrl (one row per image). Uses the template selected above.</p>
     <input type="file" id="csvFile" accept=".csv">
     <button onclick="startBatch()">Start Batch</button>
     <div id="batchStatus" style="margin-top:12px; font-size:14px;"></div>
@@ -111,14 +189,14 @@
   </div>
 
   <div id="profileTab" class="tab-content card">
-    <h2>Profile & Brand Settings</h2>
-    <p style="color:#888; font-size:14px;">Logged in as: <span id="profileEmail"></span></p>
+    <h2>Profile &amp; Brand Settings</h2>
+    <p class="hint">Logged in as: <span id="profileEmail"></span></p>
     <label style="font-size:14px; font-weight:600;">Business Name</label>
     <input type="text" id="businessName" placeholder="e.g. Pinnacle Edge Ltd">
     <label style="font-size:14px; font-weight:600;">Logo URL</label>
     <input type="text" id="logoUrl" placeholder="https://.../assets/logo.png">
     <img id="logoPreview" class="profile-logo-preview" style="display:none;">
-    <button onclick="extractBrandColor()" style="background:#eef0f7; color:var(--brand-dark);">Detect Brand Color from Logo</button>
+    <button onclick="extractBrandColor()" style="background:#eef0f7; color:var(--dark);">Detect Brand Color from Logo</button>
     <div id="colorSwatch" style="display:none; align-items:center; gap:10px; margin-top:10px;">
       <div id="swatchBox" style="width:32px; height:32px; border-radius:6px; border:1px solid var(--border);"></div>
       <span id="swatchHex" style="font-size:14px; font-family:monospace;"></span>
@@ -129,43 +207,185 @@
 
   <div id="settingsTab" class="tab-content card">
     <h2>Account Settings</h2>
-    <p style="color:#888; font-size:14px;">Current email: <span id="settingsCurrentEmail"></span></p>
-
+    <p class="hint">Current email: <span id="settingsCurrentEmail"></span></p>
     <label style="font-size:14px; font-weight:600;">New Email (optional)</label>
     <input type="email" id="newEmail" placeholder="Leave blank to keep current email">
-
     <label style="font-size:14px; font-weight:600;">New Password (optional)</label>
     <input type="password" id="newPassword" placeholder="Leave blank to keep current password">
-
     <button onclick="updateAccount()">Save Changes</button>
     <p id="settingsStatus"></p>
   </div>
 
   <script>
     const API_BASE = window.location.origin;
+    // Change to true once Paystack has enabled USD on your account
+    const ENABLE_USD = false;
+    const PRICES = {
+      KES: { plan: 'KES 10,350', credits: 'KES 2,000' },
+      USD: { plan: '$80', credits: '$15' }
+    };
+
     let token = localStorage.getItem('mediaEngineToken') || '';
     let selectedTemplateId = null;
     let detectedColor = '';
     let savedBusinessName = '';
+    let hasSub = false;
 
     if (!token) { window.location.href = '/login.html'; }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
 
     function logout() {
       localStorage.removeItem('mediaEngineToken');
       window.location.href = '/login.html';
     }
 
+    async function api(path, method, body) {
+      const res = await fetch(API_BASE + path, {
+        method: method || 'GET',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      if (res.status === 401) { logout(); throw new Error('Session expired'); }
+      return res.json();
+    }
+
     function showTab(tabId, btn, callback) {
+      if (btn.dataset.locked === 'true' && !hasSub) {
+        document.getElementById('lockNotice').style.display = 'block';
+        tabId = 'plansTab';
+        btn = document.getElementById('plansBtn');
+        callback = null;
+      }
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btn.classList.add('active');
-      if (tabId === 'settingsTab') {
-        document.getElementById('settingsCurrentEmail').innerText = document.getElementById('profileEmail').innerText;
-      }
       if (callback) callback();
     }
 
+    function goPlans() { showTab('plansTab', document.getElementById('plansBtn')); }
+
+    /* ---------- Overview and charts ---------- */
+    function renderDonut(used, total) {
+      const pct = total > 0 ? Math.min(1, used / total) : 0;
+      const r = 54, c = 2 * Math.PI * r;
+      return '<svg viewBox="0 0 140 140" width="170" height="170">' +
+        '<defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4361ee"/><stop offset="100%" stop-color="#f72585"/></linearGradient></defs>' +
+        '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#eef0f7" stroke-width="16"/>' +
+        '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="url(#dg)" stroke-width="16" stroke-linecap="round" stroke-dasharray="' + (pct * c) + ' ' + c + '" transform="rotate(-90 70 70)"/>' +
+        '<text x="70" y="68" text-anchor="middle" font-size="24" font-weight="700" fill="#2b2d42">' + Math.round(pct * 100) + '%</text>' +
+        '<text x="70" y="88" text-anchor="middle" font-size="11" fill="#888">used</text></svg>';
+    }
+
+    function renderBars(daily) {
+      const max = Math.max(1, ...daily.map(d => d.count));
+      const colors = ['#4361ee', '#7209b7', '#f72585', '#ff9e00', '#06d6a0', '#118ab2', '#ef476f'];
+      const W = 420, H = 180, bw = 34, gap = 24, base = H - 28;
+      let out = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">';
+      daily.forEach((d, i) => {
+        const h = Math.round((d.count / max) * (base - 26));
+        const x = 14 + i * (bw + gap);
+        const day = new Date(d.date + 'T00:00:00Z').toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' });
+        out += '<rect x="' + x + '" y="' + (base - h) + '" width="' + bw + '" height="' + Math.max(h, 3) + '" rx="8" fill="' + colors[i % colors.length] + '"/>';
+        out += '<text x="' + (x + bw / 2) + '" y="' + (base - h - 6) + '" text-anchor="middle" font-size="11" fill="#2b2d42">' + d.count + '</text>';
+        out += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="#888">' + day + '</text>';
+      });
+      return out + '</svg>';
+    }
+
+    function renderOverview(d) {
+      const s = d.subscription;
+      const name = d.name || (d.email || '').split('@')[0];
+      document.getElementById('userName').innerText = name;
+      document.getElementById('settingsCurrentEmail').innerText = d.email || '';
+      document.getElementById('profileEmail').innerText = d.email || '';
+
+      const hero = document.getElementById('heroBox');
+      hero.innerHTML = '<div><h2>Welcome, ' + esc(name) + '</h2><p>' +
+        (s ? 'Your Starter plan is active. Create something great today.' : 'Subscribe to unlock templates, generation, history and brand tools.') + '</p></div>';
+      const btn = document.createElement('button');
+      btn.innerText = s ? 'Generate now' : 'View plans';
+      btn.onclick = () => s ? showTab('generateTab', document.getElementById('generateBtn')) : goPlans();
+      hero.appendChild(btn);
+
+      const daysLeft = s && s.expiresAt ? Math.max(0, Math.ceil((new Date(s.expiresAt) - Date.now()) / 86400000)) : null;
+      const stats = [
+        { cls: 'c1', label: 'Generations used', value: s ? s.used : '-' },
+        { cls: 'c2', label: 'Remaining', value: s ? Math.max(0, s.totalAllowed - s.used) : '-' },
+        { cls: 'c3', label: 'Days left', value: s ? (daysLeft === null ? 'No expiry' : daysLeft) : '-' },
+        { cls: 'c4', label: 'Templates', value: d.templatesCount }
+      ];
+      document.getElementById('statsBox').innerHTML = stats.map(x =>
+        '<div class="stat ' + x.cls + '"><div class="v">' + x.value + '</div><div class="l">' + x.label + '</div></div>').join('');
+
+      document.getElementById('donutBox').innerHTML = renderDonut(s ? s.used : 0, s ? s.totalAllowed : 0);
+      document.getElementById('donutLegend').innerHTML = s
+        ? 'Included: <b>' + s.limit + '</b><br>Extra credits: <b>' + s.extraCredits + '</b><br>Used: <b>' + s.used + '</b>'
+        : 'No active plan yet';
+      document.getElementById('barsBox').innerHTML = renderBars(d.daily);
+    }
+
+    async function loadOverview() {
+      const d = await api('/overview');
+      if (!d.success) return d;
+      hasSub = !!d.subscription;
+      renderOverview(d);
+      document.querySelectorAll('[data-locked]').forEach(b => b.classList.toggle('locked', !hasSub));
+      document.getElementById('creditsCard').style.display = hasSub ? 'block' : 'none';
+      document.getElementById('subBtn').innerText = hasSub ? 'Renew (adds 30 days)' : 'Subscribe now';
+      return d;
+    }
+
+    /* ---------- Plans and payments ---------- */
+    function updatePrices() {
+      const sel = document.getElementById('currencySelect');
+      if (!sel.options.length) {
+        sel.innerHTML = '<option value="KES">Kenyan Shilling (KES) - M-PESA or card</option>' +
+          (ENABLE_USD ? '<option value="USD">US Dollar (USD) - card</option>' : '');
+      }
+      const c = sel.value || 'KES';
+      document.getElementById('planPrice').innerHTML = PRICES[c].plan + '<span> / 30 days</span>';
+      document.getElementById('creditsPrice').innerText = PRICES[c].credits;
+    }
+
+    async function subscribe() {
+      const st = document.getElementById('subscribeStatus');
+      st.innerText = 'Opening the secure payment page...';
+      const data = await api('/subscribe', 'POST', { plan: 'starter', currency: document.getElementById('currencySelect').value });
+      if (data.success) { window.location.href = data.authorization_url; }
+      else { st.innerText = 'Error: ' + data.error; }
+    }
+
+    async function buyCredits() {
+      const st = document.getElementById('creditsStatus');
+      st.innerText = 'Opening the secure payment page...';
+      const data = await api('/buy-credits', 'POST', { credits: 100, currency: document.getElementById('currencySelect').value });
+      if (data.success) { window.location.href = data.authorization_url; }
+      else { st.innerText = 'Error: ' + data.error; }
+    }
+
+    function handlePaidReturn() {
+      history.replaceState(null, '', '/dashboard.html');
+      const banner = document.getElementById('paidBanner');
+      banner.style.display = 'block';
+      banner.innerText = 'Payment received. Updating your plan...';
+      let tries = 0;
+      const timer = setInterval(async () => {
+        tries++;
+        const wasSub = hasSub;
+        await loadOverview();
+        if (hasSub && !wasSub) { loadTemplates(); loadProfile(); }
+        if (tries >= 6) {
+          clearInterval(timer);
+          banner.innerText = 'Thank you! Your plan details are on the Overview tab. If they have not updated yet, refresh the page in a minute.';
+        }
+      }, 3000);
+    }
+
+    /* ---------- Templates ---------- */
     const PRESETS = {
       banner: "<html><body style='margin:0;width:800px;height:400px;background:#2b2d42;display:flex;align-items:center;justify-content:space-between;font-family:Arial;padding:40px;box-sizing:border-box;'><div style='color:white;'><h1>{{title}}</h1><p style='color:{{brandColor}};font-size:32px;'>{{price}}</p></div><img src='{{imageUrl}}' style='max-width:300px;border-radius:12px;' /></body></html>",
       certificate: "<html><body style='margin:0;width:900px;height:650px;background:linear-gradient(135deg,#fdfaf3,#f5ecd7);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;border:14px double #c9a24b;box-sizing:border-box;padding:50px;'><p style='letter-spacing:5px;color:#c9a24b;font-size:16px;margin:0;'>CERTIFICATE OF ACHIEVEMENT</p><div style='width:3px;height:20px;background:#c9a24b;margin:15px auto;'></div><p style='font-size:16px;color:#888;margin:0;'>This certificate is proudly presented to</p><h1 style='font-size:48px;color:#2b2d42;margin:15px 0;'>{{title}}</h1><p style='font-size:18px;color:#555;margin:0 0 25px;'>{{price}}</p><div style='width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#f4d78b,#c9a24b 75%);border:4px solid #fff;box-shadow:0 0 0 2px #c9a24b,0 6px 14px rgba(0,0,0,0.25);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2b2d42;font-weight:bold;'><div style='font-size:12px;letter-spacing:1px;padding:0 8px;'>{{businessName}}</div><div style='font-size:15px;margin-top:2px;'>&#9733;</div></div></body></html>",
@@ -193,7 +413,7 @@
       iframe.className = 'thumb-frame';
       iframe.style.width = dims.width + 'px';
       iframe.style.height = dims.height + 'px';
-      iframe.style.transform = `scale(${scale})`;
+      iframe.style.transform = 'scale(' + scale + ')';
       iframe.style.transformOrigin = 'top left';
       iframe.srcdoc = fillSample(html);
       return iframe;
@@ -206,31 +426,14 @@
       box.appendChild(buildThumbnail(PRESETS[preset], box.clientWidth || 300, 140));
     }
 
-    async function subscribe() {
-      const select = document.getElementById('planSelect');
-      const plan = select.value;
-      const amount = select.selectedOptions[0].dataset.amount;
-      const res = await fetch(`${API_BASE}/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ plan }) });
-      const data = await res.json();
-      if (data.success) { document.getElementById('subscribeStatus').innerText = 'Redirecting to payment...'; window.location.href = data.authorization_url; }
-      else { document.getElementById('subscribeStatus').innerText = 'Error: ' + JSON.stringify(data.error); }
-    }
-
-    async function loadUsage() {
-      const res = await fetch(`${API_BASE}/usage`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      const div = document.getElementById('usageDisplay');
-      if (!data.hasSubscription) { div.innerHTML = '<p>No active subscription yet.</p>'; return; }
-      const percent = Math.min(100, Math.round((data.used / data.totalAllowed) * 100));
-      div.innerHTML = `<p style="font-size:14px;color:#666;">${data.used} / ${data.totalAllowed} generations used this plan</p><div class="usage-bar"><div class="usage-fill" style="width:${percent}%"></div></div>`;
-    }
-
     async function loadTemplates() {
-      const res = await fetch(`${API_BASE}/templates`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
+      const data = await api('/templates');
       const listDiv = document.getElementById('templateList');
       listDiv.innerHTML = '';
-      if (!data.success || data.templates.length === 0) { listDiv.innerHTML = '<p>No templates yet. Create one below.</p>'; return; }
+      if (!data.success || data.templates.length === 0) {
+        listDiv.innerHTML = '<p>No templates yet. Create one below.</p>';
+        return;
+      }
       data.templates.forEach(t => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
@@ -258,52 +461,109 @@
       const name = document.getElementById('newTemplateName').value;
       const preset = document.getElementById('presetSelect').value;
       if (!name) { document.getElementById('templateStatus').innerText = 'Please enter a template name.'; return; }
-      const res = await fetch(`${API_BASE}/templates`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ template_name: name, html_content: PRESETS[preset] }) });
-      const data = await res.json();
-      if (data.success) { document.getElementById('templateStatus').innerText = 'Template saved!'; document.getElementById('newTemplateName').value = ''; loadTemplates(); }
-      else { document.getElementById('templateStatus').innerText = 'Error: ' + data.error; }
+      const data = await api('/templates', 'POST', { template_name: name, html_content: PRESETS[preset] });
+      if (data.success) {
+        document.getElementById('templateStatus').innerText = 'Template saved!';
+        document.getElementById('newTemplateName').value = '';
+        loadTemplates();
+        loadOverview();
+      } else {
+        document.getElementById('templateStatus').innerText = 'Error: ' + data.error;
+      }
     }
 
+    /* ---------- Generate ---------- */
     async function generate() {
       if (!selectedTemplateId) { document.getElementById('result').innerText = 'Please select a template in the Templates tab first.'; return; }
       const title = document.getElementById('title').value;
       const price = document.getElementById('price').value;
       const imageUrl = document.getElementById('imageUrl').value;
+
       document.getElementById('result').innerText = 'Generating... this can take up to 15 seconds.';
       document.getElementById('buyCreditsSection').style.display = 'none';
-      const res = await fetch(`${API_BASE}/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ template_id: selectedTemplateId, data: { title, price, imageUrl, brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' } }) });
-      const data = await res.json();
-      if (data.success === false) { document.getElementById('result').innerText = 'Error: ' + data.error; if (data.needsCredits) document.getElementById('buyCreditsSection').style.display = 'block'; }
-      else { document.getElementById('result').innerHTML = `<img src="${data.url}"><a href="${data.url}" download="media-engine-image.png"><button style="margin-top:10px;">Download Image</button></a>`; loadUsage(); }
+
+      const data = await api('/generate', 'POST', {
+        template_id: selectedTemplateId,
+        data: { title, price, imageUrl, brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' }
+      });
+      if (data.success === false) {
+        document.getElementById('result').innerText = 'Error: ' + data.error;
+        if (data.needsCredits) document.getElementById('buyCreditsSection').style.display = 'block';
+      } else {
+        document.getElementById('result').innerHTML =
+          '<img src="' + data.url + '"><a href="' + data.url + '" download="media-engine-image.png"><button style="margin-top:10px;">Download Image</button></a>';
+        loadOverview();
+      }
     }
 
-    async function buyCredits() {
-      const res = await fetch(`${API_BASE}/buy-credits`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ credits: 100 }) });
-      const data = await res.json();
-      if (data.success) { window.location.href = data.authorization_url; }
-      else { document.getElementById('result').innerText = 'Error: ' + JSON.stringify(data.error); }
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const row = {};
+        headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
+        rows.push(row);
+      }
+      return rows;
     }
 
+    async function startBatch() {
+      if (!selectedTemplateId) { document.getElementById('batchStatus').innerText = 'Please select a template above first.'; return; }
+      const fileInput = document.getElementById('csvFile');
+      if (!fileInput.files.length) { document.getElementById('batchStatus').innerText = 'Please choose a CSV file first.'; return; }
+
+      const text = await fileInput.files[0].text();
+      const rows = parseCSV(text);
+      const resultsDiv = document.getElementById('batchResults');
+      resultsDiv.innerHTML = '';
+
+      for (let i = 0; i < rows.length; i++) {
+        document.getElementById('batchStatus').innerText = 'Generating ' + (i + 1) + ' of ' + rows.length + '...';
+        const data = await api('/generate', 'POST', {
+          template_id: selectedTemplateId,
+          data: { title: rows[i].title || '', price: rows[i].price || '', imageUrl: rows[i].imageurl || '', brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' }
+        });
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        if (data.success === false) {
+          item.innerHTML = '<div class="meta"><div class="name">Row ' + (i + 1) + ': ' + esc(rows[i].title) + '</div><div class="date" style="color:var(--danger);">Error: ' + esc(data.error) + '</div></div>';
+          resultsDiv.appendChild(item);
+          if (data.needsCredits) {
+            document.getElementById('batchStatus').innerText = 'Stopped at row ' + (i + 1) + ': plan limit reached.';
+            document.getElementById('buyCreditsSection').style.display = 'block';
+            return;
+          }
+          continue;
+        }
+        item.innerHTML = '<img src="' + data.url + '"><div class="meta"><div class="name">' + esc(rows[i].title) + '</div></div><a href="' + data.url + '" download="media-engine-image.png"><button>Download</button></a>';
+        resultsDiv.appendChild(item);
+      }
+      document.getElementById('batchStatus').innerText = 'Done. Generated ' + rows.length + ' images.';
+      loadOverview();
+    }
+
+    /* ---------- History ---------- */
     async function loadHistory() {
       const listDiv = document.getElementById('historyList');
       listDiv.innerHTML = '<p>Loading...</p>';
-      const res = await fetch(`${API_BASE}/history`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
+      const data = await api('/history');
       if (!data.success || data.generations.length === 0) { listDiv.innerHTML = '<p>No generations yet.</p>'; return; }
       listDiv.innerHTML = '';
       data.generations.forEach(g => {
         const item = document.createElement('div');
         item.className = 'history-item';
         const date = new Date(g.created_at).toLocaleString();
-        item.innerHTML = `<img src="${g.image_url}"><div class="meta"><div class="name">${g.template_name}</div><div class="date">${date}</div></div><a href="${g.image_url}" download="media-engine-image.png"><button>Download</button></a>`;
+        item.innerHTML = '<img src="' + g.image_url + '"><div class="meta"><div class="name">' + esc(g.template_name) + '</div><div class="date">' + date + '</div></div><a href="' + g.image_url + '" download="media-engine-image.png"><button>Download</button></a>';
         listDiv.appendChild(item);
       });
     }
 
+    /* ---------- Profile ---------- */
     async function loadProfile() {
-      const res = await fetch(`${API_BASE}/profile`, { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      document.getElementById('profileEmail').innerText = data.email || '';
+      const data = await api('/profile');
+      if (!data.success) return;
       if (data.profile) {
         document.getElementById('businessName').value = data.profile.business_name || '';
         savedBusinessName = data.profile.business_name || '';
@@ -326,7 +586,8 @@
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        canvas.width = img.width; canvas.height = img.height;
+        canvas.width = img.width;
+        canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         try {
@@ -343,7 +604,9 @@
           document.getElementById('swatchHex').innerText = hex;
           document.getElementById('colorSwatch').style.display = 'flex';
           document.getElementById('profileStatus').innerText = 'Color detected! Save profile to keep it.';
-        } catch (err) { document.getElementById('profileStatus').innerText = 'Could not read this image.'; }
+        } catch (err) {
+          document.getElementById('profileStatus').innerText = 'Could not read this image (it may not allow color analysis from this site).';
+        }
       };
       img.onerror = () => { document.getElementById('profileStatus').innerText = 'Could not load that image.'; };
       img.src = url;
@@ -358,76 +621,44 @@
     async function saveProfile() {
       const business_name = document.getElementById('businessName').value;
       const logo_url = document.getElementById('logoUrl').value;
-      const res = await fetch(`${API_BASE}/profile`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ business_name, logo_url, brand_color: detectedColor }) });
-      const data = await res.json();
-      if (data.success) { document.getElementById('profileStatus').innerText = 'Profile saved!'; savedBusinessName = business_name; updateLogoPreview(); if (logo_url) document.getElementById('imageUrl').value = logo_url; }
-      else { document.getElementById('profileStatus').innerText = 'Error: ' + data.error; }
+      const data = await api('/profile', 'POST', { business_name, logo_url, brand_color: detectedColor });
+      if (data.success) {
+        document.getElementById('profileStatus').innerText = 'Profile saved!';
+        savedBusinessName = business_name;
+        updateLogoPreview();
+        if (logo_url) document.getElementById('imageUrl').value = logo_url;
+      } else {
+        document.getElementById('profileStatus').innerText = 'Error: ' + data.error;
+      }
     }
 
     document.getElementById('logoUrl').addEventListener('input', updateLogoPreview);
 
-    function parseCSV(text) {
-      const lines = text.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      const rows = [];
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim());
-        const row = {};
-        headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
-        rows.push(row);
-      }
-      return rows;
-    }
-
-    async function startBatch() {
-      if (!selectedTemplateId) { document.getElementById('batchStatus').innerText = 'Please select a template above first.'; return; }
-      const fileInput = document.getElementById('csvFile');
-      if (!fileInput.files.length) { document.getElementById('batchStatus').innerText = 'Please choose a CSV file first.'; return; }
-      const text = await fileInput.files[0].text();
-      const rows = parseCSV(text);
-      const resultsDiv = document.getElementById('batchResults');
-      resultsDiv.innerHTML = '';
-      for (let i = 0; i < rows.length; i++) {
-        document.getElementById('batchStatus').innerText = `Generating ${i + 1} of ${rows.length}...`;
-        const res = await fetch(`${API_BASE}/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ template_id: selectedTemplateId, data: { title: rows[i].title || '', price: rows[i].price || '', imageUrl: rows[i].imageurl || '', brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' } }) });
-        const data = await res.json();
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        if (data.success === false) {
-          item.innerHTML = `<div class="meta"><div class="name">Row ${i + 1}: ${rows[i].title}</div><div class="date" style="color:var(--danger);">Error: ${data.error}</div></div>`;
-          if (data.needsCredits) { document.getElementById('batchStatus').innerText = `Stopped at row ${i + 1}: plan limit reached.`; resultsDiv.appendChild(item); document.getElementById('buyCreditsSection').style.display = 'block'; return; }
-        } else {
-          item.innerHTML = `<img src="${data.url}"><div class="meta"><div class="name">${rows[i].title}</div></div><a href="${data.url}" download="media-engine-image.png"><button>Download</button></a>`;
-        }
-        resultsDiv.appendChild(item);
-      }
-      document.getElementById('batchStatus').innerText = `Done — generated ${rows.length} images.`;
-      loadUsage();
-    }
-
+    /* ---------- Settings ---------- */
     async function updateAccount() {
       const newEmail = document.getElementById('newEmail').value;
       const newPassword = document.getElementById('newPassword').value;
-      if (!newEmail && !newPassword) {
-        document.getElementById('settingsStatus').innerText = 'Enter a new email or password first.';
-        return;
-      }
-      const res = await fetch(`${API_BASE}/account`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ newEmail, newPassword }) });
-      const data = await res.json();
+      const st = document.getElementById('settingsStatus');
+      if (!newEmail && !newPassword) { st.innerText = 'Enter a new email or password first.'; return; }
+      if (newPassword && newPassword.length < 8) { st.innerText = 'Password must be at least 8 characters.'; return; }
+      const data = await api('/account', 'POST', { newEmail, newPassword });
       if (data.success) {
-        document.getElementById('settingsStatus').innerText = 'Account updated! Please log in again with your new details.';
+        st.innerText = 'Account updated! Please log in again with your new details.';
         document.getElementById('newEmail').value = '';
         document.getElementById('newPassword').value = '';
       } else {
-        document.getElementById('settingsStatus').innerText = 'Error: ' + data.error;
+        st.innerText = 'Error: ' + data.error;
       }
     }
 
-    loadTemplates();
-    loadUsage();
-    updatePresetPreview();
-    loadProfile();
+    /* ---------- Start ---------- */
+    async function init() {
+      updatePrices();
+      await loadOverview();
+      if (hasSub) { loadTemplates(); loadProfile(); updatePresetPreview(); }
+      if (new URLSearchParams(location.search).get('paid')) handlePaidReturn();
+    }
+    init();
   </script>
-
 </body>
 </html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create your account - Media Engine</title>
+  <style>
+    :root { --brand:#4361ee; --dark:#2b2d42; --border:#e2e4ec; --radius:10px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:linear-gradient(135deg,#4361ee 0%,#7209b7 55%,#f72585 100%); color:var(--dark); display:flex; align-items:center; justify-content:center; padding:32px 16px; }
+    .wrap { width:100%; max-width:520px; }
+    .brand { text-align:center; color:white; margin-bottom:18px; }
+    .brand h1 { margin:0; font-size:28px; }
+    .brand p { margin:6px 0 0; opacity:.9; font-size:14px; }
+    .card { background:white; border-radius:16px; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,.25); }
+    h2 { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#7209b7; margin:24px 0 4px; }
+    h2.first { margin-top:0; }
+    label { display:block; font-size:13px; font-weight:600; margin-top:12px; }
+    input, select { width:100%; padding:12px 14px; margin-top:6px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius); font-family:inherit; background:white; }
+    input:focus, select:focus { outline:none; border-color:var(--brand); }
+    .row { display:flex; gap:12px; }
+    .row > div { flex:1; min-width:0; }
+    .hint { font-size:12px; color:#888; margin-top:4px; }
+    .terms { display:flex; gap:10px; align-items:flex-start; margin-top:20px; font-size:13px; line-height:1.5; }
+    .terms input { width:auto; margin-top:3px; }
+    button { width:100%; margin-top:20px; padding:14px; font-size:16px; font-weight:700; color:white; border:none; border-radius:var(--radius); cursor:pointer; background:linear-gradient(90deg,#4361ee,#7209b7); }
+    button:disabled { opacity:.6; cursor:wait; }
+    #msg { margin-top:14px; font-size:14px; text-align:center; color:#ef233c; }
+    .foot { text-align:center; margin-top:16px; font-size:14px; color:white; }
+    .foot a { color:white; font-weight:700; }
+    @media (max-width:480px) { .row { flex-direction:column; gap:0; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <h1>Media Engine</h1>
+      <p>Create your account in under a minute</p>
+    </div>
+
+    <div class="card" id="formCard">
+      <h2 class="first">Personal information</h2>
+      <label>Full name</label>
+      <input id="fullName" placeholder="e.g. Jane Wanjiru" autocomplete="name">
+
+      <div class="row">
+        <div>
+          <label>Phone number</label>
+          <input id="phone" placeholder="+254 7XX XXX XXX" autocomplete="tel">
+        </div>
+        <div>
+          <label>Country</label>
+          <select id="country">
+            <option value="">Select country</option>
+            <option>Kenya</option><option>China</option><option>United States</option>
+            <option>United Kingdom</option><option>Nigeria</option><option>Ghana</option>
+            <option>South Africa</option><option>Uganda</option><option>Tanzania</option>
+            <option>India</option><option>United Arab Emirates</option><option>Canada</option>
+            <option>Australia</option><option>Germany</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <h2>Account details</h2>
+      <label>Email address</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+
+      <label>Password</label>
+      <input id="password" type="password" placeholder="Create a password" autocomplete="new-password">
+      <div class="hint">At least 8 characters.</div>
+
+      <label>Confirm password</label>
+      <input id="confirm" type="password" placeholder="Type the password again" autocomplete="new-password">
+
+      <div class="terms">
+        <input type="checkbox" id="terms">
+        <span>I have read and agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and the <a href="/privacy.html" target="_blank">Privacy Policy</a>.</span>
+      </div>
+
+      <button id="submitBtn" onclick="register()">Create account</button>
+      <div id="msg"></div>
+    </div>
+
+    <div class="foot">Already have an account? <a href="/login.html">Log in</a></div>
+  </div>
+
+  <script>
+    async function register() {
+      const msg = document.getElementById('msg');
+      const btn = document.getElementById('submitBtn');
+      const val = id => document.getElementById(id).value.trim();
+      const fullName = val('fullName');
+      const phone = val('phone');
+      const country = val('country');
+      const email = val('email');
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+
+      msg.innerText = '';
+      if (!fullName) { msg.innerText = 'Please enter your full name.'; return; }
+      if (!phone) { msg.innerText = 'Please enter your phone number.'; return; }
+      if (!country) { msg.innerText = 'Please select your country.'; return; }
+      if (!/^\S+@\S+\.\S+$/.test(email)) { msg.innerText = 'Please enter a valid email address.'; return; }
+      if (password.length < 8) { msg.innerText = 'Password must be at least 8 characters.'; return; }
+      if (password !== confirm) { msg.innerText = 'The two passwords do not match.'; return; }
+      if (!document.getElementById('terms').checked) { msg.innerText = 'Please accept the Terms of Service to continue.'; return; }
+
+      btn.disabled = true;
+      btn.innerText = 'Creating account...';
+
+      try {
+        const res = await fetch('/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, fullName, phone, country, acceptedTerms: true })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('formCard').innerHTML =
+            '<div style="text-align:center;padding:10px 0;">' +
+            '<div style="font-size:52px;">&#9989;</div>' +
+            '<h2 style="font-size:22px;text-transform:none;letter-spacing:0;color:#2b2d42;margin:10px 0;">Account created</h2>' +
+            '<p style="color:#555;line-height:1.6;">We sent a confirmation link to <b id="sentTo"></b>.<br>Click it, then log in.</p>' +
+            '<a href="/login.html" style="display:inline-block;margin-top:14px;padding:12px 28px;border-radius:10px;background:linear-gradient(90deg,#4361ee,#7209b7);color:white;font-weight:700;text-decoration:none;">Go to log in</a>' +
+            '</div>';
+          document.getElementById('sentTo').textContent = email;
+        } else {
+          msg.innerText = data.error || 'Something went wrong. Please try again.';
+          btn.disabled = false;
+          btn.innerText = 'Create account';
+        }
+      } catch (e) {
+        msg.innerText = 'Could not reach the server. Please try again.';
+        btn.disabled = false;
+        btn.innerText = 'Create account';
+      }
+    }
+  </script>
+</body>
+</html>
