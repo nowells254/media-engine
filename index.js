@@ -1,17 +1,29 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 const { generateImage } = require('./render');
-const supabase = require('./supabaseClient');
+const { supabase, authClient } = require('./supabaseClient');
 const axios = require('axios');
 
 const app = express();
 const PORT = 3000;
+app.set('trust proxy', 1);
+
+const BASE_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 
 // Prices live on the server. The browser can never set them.
 const PLAN_PRICES = { starter: { KES: 10350, USD: 80 } };
 const CREDIT_PACKS = { 100: { KES: 2000, USD: 15 } };
 const PLAN_DAYS = 30;
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many attempts. Please wait a few minutes and try again.' }
+});
 
 async function getActiveSubscription(userId) {
   const { data } = await supabase
@@ -105,7 +117,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/generated', express.static(path.join(__dirname, 'generated')));
 
-app.post('/signup', async (req, res) => {
+app.post('/signup', authLimiter, async (req, res) => {
   const { email, password, fullName, phone, country, acceptedTerms } = req.body;
   if (!email || !password || !fullName) {
     return res.status(400).json({ success: false, error: 'Name, email and password are required.' });
@@ -116,10 +128,11 @@ app.post('/signup', async (req, res) => {
   if (!acceptedTerms) {
     return res.status(400).json({ success: false, error: 'You must accept the Terms of Service.' });
   }
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await authClient().auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${BASE_URL}/login.html?confirmed=1`,
       data: {
         full_name: fullName,
         phone: phone || '',
@@ -132,11 +145,35 @@ app.post('/signup', async (req, res) => {
   res.json({ success: true });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await authClient().auth.signInWithPassword({ email, password });
   if (error) return res.status(400).json({ success: false, error: error.message });
   res.json({ success: true, session: data.session });
+});
+
+// Password reset step 1: email a reset link (always answers the same, so nobody can discover which emails have accounts)
+app.post('/forgot', authLimiter, async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ success: false, error: 'Please enter your email.' });
+  const { error } = await authClient().auth.resetPasswordForEmail(email, { redirectTo: `${BASE_URL}/reset.html` });
+  if (error) console.log('Reset email problem:', error.message);
+  res.json({ success: true });
+});
+
+// Password reset step 2: set the new password using the token from the emailed link
+app.post('/reset-password', authLimiter, async (req, res) => {
+  const { accessToken, newPassword } = req.body;
+  if (!accessToken || !newPassword || newPassword.length < 8) {
+    return res.status(400).json({ success: false, error: 'Please enter a new password of at least 8 characters.' });
+  }
+  const { data, error } = await supabase.auth.getUser(accessToken);
+  if (error || !data.user) {
+    return res.status(400).json({ success: false, error: 'This reset link is invalid or has expired. Please request a new one.' });
+  }
+  const { error: updateError } = await supabase.auth.admin.updateUserById(data.user.id, { password: newPassword });
+  if (updateError) return res.status(500).json({ success: false, error: updateError.message });
+  res.json({ success: true });
 });
 
 async function requireAuth(req, res, next) {
@@ -187,6 +224,7 @@ app.get('/overview', requireAuth, async (req, res) => {
   const meta = req.user.user_metadata || {};
 
   let subscription = null;
+  let expiredAt = null;
   if (sub) {
     const used = await countUsage(req.user.id, sub);
     subscription = {
@@ -198,6 +236,15 @@ app.get('/overview', requireAuth, async (req, res) => {
       startedAt: sub.created_at,
       expiresAt: sub.expires_at
     };
+  } else {
+    const { data: last } = await supabase
+      .from('subscriptions')
+      .select('expires_at')
+      .eq('user_id', req.user.id)
+      .eq('status', 'active')
+      .order('id', { ascending: false })
+      .limit(1);
+    if (last && last.length && last[0].expires_at) expiredAt = last[0].expires_at;
   }
 
   const { count: templatesCount } = await supabase
@@ -224,6 +271,7 @@ app.get('/overview', requireAuth, async (req, res) => {
     email: req.user.email,
     name: meta.full_name || '',
     subscription,
+    expiredAt,
     templatesCount: templatesCount || 0,
     daily
   });
@@ -266,21 +314,37 @@ app.post('/generate', requireAuth, requireSubscription, async (req, res) => {
     return res.status(404).json({ success: false, error: 'Template not found' });
   }
 
-  const filename = await generateImage(templateRows.html_content, data);
-  const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-  const fileUrl = `${baseUrl}/generated/${filename}`;
+  const safeData = { ...data };
+  if (!/^#[0-9a-fA-F]{6}$/.test(safeData.brandColor || '')) safeData.brandColor = '#ef233c';
 
-  await supabase.from('generations').insert([{
-    template_id: template_id,
-    image_url: fileUrl,
-    user_id: req.user.id
-  }]);
+  try {
+    const shot = await generateImage(templateRows.html_content, safeData);
+    const filename = `${req.user.id}/${crypto.randomUUID()}.png`;
 
-  res.json({ url: fileUrl, generatedBy: req.user.email });
+    const { error: uploadError } = await supabase.storage
+      .from('generated')
+      .upload(filename, Buffer.from(shot), { contentType: 'image/png' });
+    if (uploadError) throw uploadError;
+
+    const { data: pub } = supabase.storage
+      .from('generated')
+      .getPublicUrl(filename, { download: 'media-engine-image.png' });
+    const fileUrl = pub.publicUrl;
+
+    await supabase.from('generations').insert([{
+      template_id: template_id,
+      image_url: fileUrl,
+      user_id: req.user.id
+    }]);
+
+    res.json({ url: fileUrl, generatedBy: req.user.email });
+  } catch (err) {
+    console.error('Generate failed:', err.message);
+    res.status(500).json({ success: false, error: 'Image generation failed. Please try again.' });
+  }
 });
 
 async function initPayment(req, res, amount, currency, metadata) {
-  const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
   try {
     const response = await axios.post(
       'https://api.paystack.co/transaction/initialize',
@@ -289,7 +353,7 @@ async function initPayment(req, res, amount, currency, metadata) {
         amount: amount * 100,
         currency: currency,
         metadata: metadata,
-        callback_url: `${baseUrl}/dashboard.html?paid=1`
+        callback_url: `${BASE_URL}/dashboard.html?paid=1`
       },
       {
         headers: {
@@ -356,13 +420,21 @@ app.post('/profile', requireAuth, requireActive, async (req, res) => {
   res.json({ success: true, profile: result.data[0] });
 });
 
-app.post('/account', requireAuth, async (req, res) => {
-  const { newEmail, newPassword } = req.body;
+// Changing email or password now requires the current password
+app.post('/account', requireAuth, authLimiter, async (req, res) => {
+  const { currentPassword, newEmail, newPassword } = req.body;
+
+  if (!currentPassword) {
+    return res.status(400).json({ success: false, error: 'Please enter your current password.' });
+  }
+  const check = await authClient().auth.signInWithPassword({ email: req.user.email, password: currentPassword });
+  if (check.error) {
+    return res.status(400).json({ success: false, error: 'Your current password is incorrect.' });
+  }
 
   const updates = {};
   if (newEmail) updates.email = newEmail;
   if (newPassword) updates.password = newPassword;
-
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ success: false, error: 'Nothing to update' });
   }

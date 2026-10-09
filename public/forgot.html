@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reset password - Media Engine</title>
+  <style>
+    :root { --brand:#4361ee; --dark:#2b2d42; --border:#e2e4ec; --radius:10px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:linear-gradient(135deg,#4361ee 0%,#7209b7 55%,#f72585 100%); color:var(--dark); display:flex; align-items:center; justify-content:center; padding:32px 16px; }
+    .wrap { width:100%; max-width:420px; }
+    .brand { text-align:center; color:white; margin-bottom:18px; }
+    .brand h1 { margin:0; font-size:28px; }
+    .brand p { margin:6px 0 0; opacity:.9; font-size:14px; }
+    .card { background:white; border-radius:16px; padding:28px; box-shadow:0 20px 50px rgba(0,0,0,.25); }
+    label { display:block; font-size:13px; font-weight:600; }
+    input { width:100%; padding:12px 14px; margin-top:6px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius); font-family:inherit; }
+    input:focus { outline:none; border-color:var(--brand); }
+    button { width:100%; margin-top:20px; padding:14px; font-size:16px; font-weight:700; color:white; border:none; border-radius:var(--radius); cursor:pointer; background:linear-gradient(90deg,#4361ee,#7209b7); }
+    button:disabled { opacity:.6; cursor:wait; }
+    #msg { margin-top:14px; font-size:14px; text-align:center; color:#ef233c; line-height:1.5; }
+    #msg.ok { color:#0a9e6e; }
+    .foot { text-align:center; margin-top:16px; font-size:14px; color:white; }
+    .foot a { color:white; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <h1>Media Engine</h1>
+      <p>Reset your password</p>
+    </div>
+    <div class="card">
+      <label>Your account email</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+      <button id="sendBtn" onclick="send()">Send reset link</button>
+      <div id="msg"></div>
+    </div>
+    <div class="foot"><a href="/login.html">&larr; Back to log in</a></div>
+  </div>
+
+  <script>
+    async function send() {
+      const msg = document.getElementById('msg');
+      const btn = document.getElementById('sendBtn');
+      const email = document.getElementById('email').value.trim();
+      msg.className = '';
+      if (!/^\S+@\S+\.\S+$/.test(email)) { msg.innerText = 'Please enter a valid email address.'; return; }
+      btn.disabled = true;
+      btn.innerText = 'Sending...';
+      try {
+        const res = await fetch('/forgot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.success) {
+          msg.className = 'ok';
+          msg.innerText = 'If an account exists for that email, we have sent a reset link. Check your inbox (and spam folder).';
+        } else {
+          msg.innerText = data.error || 'Something went wrong. Please try again.';
+        }
+      } catch (e) {
+        msg.innerText = 'Could not reach the server. Please try again.';
+      }
+      btn.disabled = false;
+      btn.innerText = 'Send reset link';
+    }
+  </script>
+</body>
+</html>

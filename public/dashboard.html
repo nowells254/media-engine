@@ -93,6 +93,7 @@
   </div>
 
   <div id="paidBanner" class="banner" style="display:none;"></div>
+  <div id="expiryBanner" class="notice" style="display:none;"></div>
 
   <div class="tabs">
     <div class="tab-btn active" id="overviewBtn" onclick="showTab('overviewTab', this)">Overview</div>
@@ -208,6 +209,8 @@
   <div id="settingsTab" class="tab-content card">
     <h2>Account Settings</h2>
     <p class="hint">Current email: <span id="settingsCurrentEmail"></span></p>
+    <label style="font-size:14px; font-weight:600;">Current Password (required)</label>
+    <input type="password" id="currentPassword" placeholder="Your current password">
     <label style="font-size:14px; font-weight:600;">New Email (optional)</label>
     <input type="email" id="newEmail" placeholder="Leave blank to keep current email">
     <label style="font-size:14px; font-weight:600;">New Password (optional)</label>
@@ -305,13 +308,20 @@
 
       const hero = document.getElementById('heroBox');
       hero.innerHTML = '<div><h2>Welcome, ' + esc(name) + '</h2><p>' +
-        (s ? 'Your Starter plan is active. Create something great today.' : 'Subscribe to unlock templates, generation, history and brand tools.') + '</p></div>';
+      (s ? 'Your Starter plan is active. Create something great today.' : (d.expiredAt ? 'Your plan expired on ' + new Date(d.expiredAt).toLocaleDateString() + '. Renew to keep creating.' : 'Subscribe to unlock templates, generation, history and brand tools.')) + '</p></div>';  
       const btn = document.createElement('button');
       btn.innerText = s ? 'Generate now' : 'View plans';
       btn.onclick = () => s ? showTab('generateTab', document.getElementById('generateBtn')) : goPlans();
       hero.appendChild(btn);
 
       const daysLeft = s && s.expiresAt ? Math.max(0, Math.ceil((new Date(s.expiresAt) - Date.now()) / 86400000)) : null;
+            const soon = document.getElementById('expiryBanner');
+      if (s && daysLeft !== null && daysLeft <= 5) {
+        soon.style.display = 'block';
+        soon.innerText = 'Your plan ends in ' + daysLeft + ' day(s). Renew now so you do not lose access.';
+      } else {
+        soon.style.display = 'none';
+      }
       const stats = [
         { cls: 'c1', label: 'Generations used', value: s ? s.used : '-' },
         { cls: 'c2', label: 'Remaining', value: s ? Math.max(0, s.totalAllowed - s.used) : '-' },
@@ -635,17 +645,18 @@
     document.getElementById('logoUrl').addEventListener('input', updateLogoPreview);
 
     /* ---------- Settings ---------- */
-    async function updateAccount() {
+        async function updateAccount() {
+      const currentPassword = document.getElementById('currentPassword').value;
       const newEmail = document.getElementById('newEmail').value;
       const newPassword = document.getElementById('newPassword').value;
       const st = document.getElementById('settingsStatus');
-      if (!newEmail && !newPassword) { st.innerText = 'Enter a new email or password first.'; return; }
-      if (newPassword && newPassword.length < 8) { st.innerText = 'Password must be at least 8 characters.'; return; }
-      const data = await api('/account', 'POST', { newEmail, newPassword });
+      if (!currentPassword) { st.innerText = 'Please enter your current password.'; return; }
+      if (!newEmail && !newPassword) { st.innerText = 'Enter a new email or a new password.'; return; }
+      if (newPassword && newPassword.length < 8) { st.innerText = 'New password must be at least 8 characters.'; return; }
+      const data = await api('/account', 'POST', { currentPassword, newEmail, newPassword });
       if (data.success) {
         st.innerText = 'Account updated! Please log in again with your new details.';
-        document.getElementById('newEmail').value = '';
-        document.getElementById('newPassword').value = '';
+        ['currentPassword', 'newEmail', 'newPassword'].forEach(id => { document.getElementById(id).value = ''; });
       } else {
         st.innerText = 'Error: ' + data.error;
       }
