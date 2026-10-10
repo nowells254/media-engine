@@ -12,25 +12,29 @@
     input:focus, select:focus { outline:none; border-color:var(--brand); }
     button { display:block; width:100%; margin:10px 0 0; padding:13px; font-size:15px; font-weight:600; border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; background:linear-gradient(90deg,#4361ee,#7209b7); color:white; transition:opacity .15s; }
     button:hover { opacity:.9; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
     h2 { margin:0 0 10px; font-size:18px; }
     .hint { font-size:12px; color:#888; }
     #result img { max-width:100%; margin-top:15px; border-radius:var(--radius); }
 
     .card { background:white; border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:0 4px 20px rgba(43,45,66,.05); }
-    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; position:relative; }
+    .left { display:flex; align-items:center; gap:14px; }
     .logo { font-size:21px; font-weight:800; background:linear-gradient(90deg,#4361ee,#f72585); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    .userbox { display:flex; align-items:center; gap:12px; font-size:14px; font-weight:600; }
-    .userbox button { width:auto; margin:0; padding:9px 16px; background:#eef0f7; color:var(--dark); }
+    .topbar > button { width:auto; margin:0; padding:9px 16px; background:#eef0f7; color:var(--dark); }
+    .acct { display:flex; align-items:center; gap:8px; background:white; border:1px solid var(--border); border-radius:30px; padding:5px 12px 5px 5px; cursor:pointer; font-size:14px; font-weight:600; }
+    .avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#4361ee,#f72585); color:white; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
+    .acct-panel { position:absolute; top:52px; left:0; z-index:20; width:310px; background:white; border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 40px rgba(43,45,66,.2); padding:18px; }
+    .acct-panel .row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; font-size:13px; border-bottom:1px solid #f0f1f5; }
+    .acct-panel .row span:first-child { color:#888; }
+    .acct-panel .row span:last-child { font-weight:600; text-align:right; word-break:break-all; }
 
     .banner { background:#e8fff6; border:1px solid #9be7c8; color:#0a7a55; padding:12px 16px; border-radius:var(--radius); margin-bottom:14px; font-size:14px; }
     .notice { background:#fff4e5; border:1px solid #ffd59a; color:#8a5a00; padding:12px 16px; border-radius:var(--radius); margin-bottom:14px; font-size:14px; }
 
     .tabs { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
-    .tab-btn { flex:1; min-width:96px; padding:11px 8px; text-align:center; background:white; border:1px solid var(--border); color:var(--dark); border-radius:var(--radius); cursor:pointer; font-size:14px; font-weight:600; transition:all .15s; text-decoration:none; }
+    .tab-btn { flex:1; min-width:90px; padding:11px 8px; text-align:center; background:white; border:1px solid var(--border); color:var(--dark); border-radius:var(--radius); cursor:pointer; font-size:14px; font-weight:600; transition:all .15s; text-decoration:none; }
     .tab-btn.active { background:var(--dark); color:white; border-color:var(--dark); }
-    .tab-btn.locked { opacity:.55; }
-    .lock { display:none; }
-    .locked .lock { display:inline; }
     .tab-content { display:none; }
     .tab-content.active { display:block; }
 
@@ -38,7 +42,6 @@
     .hero h2 { color:white; font-size:22px; margin:0 0 6px; }
     .hero p { margin:0; opacity:.92; font-size:14px; }
     .hero button { width:auto; margin:0; padding:12px 22px; background:white; color:#7209b7; white-space:nowrap; }
-
     .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
     .stat { border-radius:14px; padding:18px 14px; color:white; }
     .stat .v { font-size:28px; font-weight:800; }
@@ -47,28 +50,34 @@
     .c2 { background:linear-gradient(135deg,#f72585,#ff9e00); }
     .c3 { background:linear-gradient(135deg,#06d6a0,#118ab2); }
     .c4 { background:linear-gradient(135deg,#ff9e00,#ef476f); }
-
     .charts { display:grid; grid-template-columns:1fr 1.6fr; gap:14px; }
     .center { text-align:center; }
     .legend { font-size:13px; color:#555; line-height:1.8; text-align:center; margin-top:6px; }
 
-    .plan-card { max-width:460px; margin:0 auto; border:2px solid var(--brand); }
-    .badge { display:inline-block; background:#eef0ff; color:var(--brand); font-weight:700; font-size:12px; padding:4px 12px; border-radius:20px; letter-spacing:1px; }
-    .price { font-size:38px; font-weight:800; margin:10px 0; }
-    .price span { font-size:14px; font-weight:400; color:#888; }
-    .plan-card ul { list-style:none; padding:0; margin:12px 0 18px; }
-    .plan-card li { padding:5px 0; font-size:14px; color:#555; }
-    .plan-card li:before { content:"\2713  "; color:var(--brand); font-weight:700; }
+    .plans-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .plan { background:white; border:2px solid var(--border); border-radius:16px; padding:20px; text-align:center; position:relative; }
+    .plan.pop { border-color:var(--brand); box-shadow:0 8px 30px rgba(67,97,238,.15); }
+    .plan .tag { position:absolute; top:-11px; left:50%; transform:translateX(-50%); background:linear-gradient(90deg,#4361ee,#f72585); color:white; font-size:10px; font-weight:700; letter-spacing:.5px; padding:4px 10px; border-radius:20px; white-space:nowrap; }
+    .plan h3 { margin:6px 0 0; font-size:16px; }
+    .plan .price { font-size:28px; font-weight:800; margin:8px 0 0; }
+    .plan .per { font-size:12px; color:#888; margin-bottom:8px; }
+    .plan ul { list-style:none; padding:0; margin:10px 0 6px; text-align:left; }
+    .plan li { padding:4px 0; font-size:13px; color:#555; }
+    .plan li:before { content:"\2713  "; color:var(--brand); font-weight:700; }
+
+    .gen-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .live { width:100%; height:230px; overflow:hidden; background:#f0f1f5; border-radius:var(--radius); position:relative; }
+    .live .empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#999; font-size:13px; text-align:center; padding:12px; }
 
     .gallery { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:10px; }
-    .gallery-card { border:2px solid var(--border); border-radius:var(--radius); overflow:hidden; cursor:pointer; background:white; transition:border-color .15s; }
+    .gallery-card { position:relative; border:2px solid var(--border); border-radius:var(--radius); overflow:hidden; cursor:pointer; background:white; transition:border-color .15s; }
     .gallery-card:hover { border-color:#b8c2f0; }
     .gallery-card.selected { border-color:var(--brand); }
+    .gallery-card .del { position:absolute; top:6px; right:6px; width:26px; height:26px; padding:0; margin:0; border-radius:50%; background:rgba(43,45,66,.75); font-size:12px; line-height:26px; }
     .thumb-wrap { width:100%; height:110px; overflow:hidden; background:#f0f1f5; position:relative; }
     .thumb-frame { position:absolute; top:0; left:0; border:none; pointer-events:none; }
     .gallery-card .label { padding:8px 10px; font-size:13px; font-weight:600; }
     .preset-preview { width:100%; height:140px; overflow:hidden; background:#f0f1f5; border-radius:var(--radius); position:relative; margin-top:8px; }
-    .preset-preview iframe { position:absolute; top:0; left:0; border:none; pointer-events:none; }
 
     .history-item { display:flex; align-items:center; gap:14px; padding:10px; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; }
     .history-item img { width:70px; height:70px; object-fit:cover; border-radius:6px; flex-shrink:0; }
@@ -80,7 +89,7 @@
 
     @media (max-width:700px) {
       .stats { grid-template-columns:repeat(2,1fr); }
-      .charts { grid-template-columns:1fr; }
+      .charts, .gen-grid, .plans-grid { grid-template-columns:1fr; }
       .hero { flex-direction:column; align-items:flex-start; }
     }
   </style>
@@ -88,8 +97,15 @@
 <body>
 
   <div class="topbar">
-    <div class="logo">Media Engine</div>
-    <div class="userbox"><span id="userName"></span><button onclick="logout()">Log Out</button></div>
+    <div class="left">
+      <div class="acct" onclick="toggleAcct(event)"><span class="avatar" id="avatar">?</span><span id="userName">Account</span><span style="font-size:10px;">&#9660;</span></div>
+      <div class="logo">Media Engine</div>
+    </div>
+    <button onclick="logout()">Log Out</button>
+    <div class="acct-panel" id="acctPanel" style="display:none;">
+      <div id="acctRows"></div>
+      <button onclick="openSettings()" style="margin-top:12px;">Account settings</button>
+    </div>
   </div>
 
   <div id="paidBanner" class="banner" style="display:none;"></div>
@@ -98,11 +114,11 @@
   <div class="tabs">
     <div class="tab-btn active" id="overviewBtn" onclick="showTab('overviewTab', this)">Overview</div>
     <div class="tab-btn" id="plansBtn" onclick="showTab('plansTab', this)">Plans</div>
-    <div class="tab-btn" data-locked="true" onclick="showTab('templatesTab', this)">Templates <span class="lock">&#128274;</span></div>
-    <div class="tab-btn" id="generateBtn" data-locked="true" onclick="showTab('generateTab', this)">Generate <span class="lock">&#128274;</span></div>
-    <div class="tab-btn" data-locked="true" onclick="showTab('historyTab', this, loadHistory)">History <span class="lock">&#128274;</span></div>
-    <div class="tab-btn" data-locked="true" onclick="showTab('profileTab', this, loadProfile)">Profile <span class="lock">&#128274;</span></div>
-    <div class="tab-btn" onclick="showTab('settingsTab', this)">Settings</div>
+    <div class="tab-btn" onclick="showTab('templatesTab', this)">Templates</div>
+    <div class="tab-btn" id="generateBtn" onclick="showTab('generateTab', this)">Generate</div>
+    <div class="tab-btn" onclick="showTab('historyTab', this, loadHistory)">History</div>
+    <div class="tab-btn" onclick="showTab('profileTab', this, loadProfile)">Brand</div>
+    <div class="tab-btn" id="settingsBtn" onclick="showTab('settingsTab', this)">Settings</div>
     <a href="/support.html" target="_blank" class="tab-btn">Support</a>
   </div>
 
@@ -110,36 +126,22 @@
     <div class="hero" id="heroBox"></div>
     <div class="stats" id="statsBox"></div>
     <div class="charts">
-      <div class="card">
-        <h2>Plan usage</h2>
-        <div class="center" id="donutBox"></div>
-        <div class="legend" id="donutLegend"></div>
-      </div>
-      <div class="card">
-        <h2>Generations, last 7 days</h2>
-        <div id="barsBox"></div>
-      </div>
+      <div class="card"><h2>Pass usage</h2><div class="center" id="donutBox"></div><div class="legend" id="donutLegend"></div></div>
+      <div class="card"><h2>Generations, last 7 days</h2><div id="barsBox"></div></div>
     </div>
   </div>
 
   <div id="plansTab" class="tab-content">
-    <div id="lockNotice" class="notice" style="display:none;">&#128274; Subscribe to unlock Templates, Generate, History and Profile.</div>
-    <div class="card plan-card">
-      <span class="badge">STARTER</span>
-      <div class="price" id="planPrice"></div>
-      <ul>
-        <li>1,000 generations every 30 days</li>
-        <li>Banners, certificates, posters and quote cards</li>
-        <li>CSV batch generation</li>
-        <li>Brand logo and colour matching</li>
-      </ul>
-      <label style="font-size:13px;font-weight:600;">Pay in</label>
-      <select id="currencySelect" onchange="updatePrices()"></select>
-      <button id="subBtn" onclick="subscribe()">Subscribe now</button>
-      <p id="subscribeStatus" class="hint"></p>
-      <p class="hint">Each payment gives you 30 days. Renewing early adds 30 more days on top of the time you have left. Plans do not renew automatically.</p>
+    <div id="lockNotice" class="notice" style="display:none;">Your design is ready. Choose a pass to generate it. You only pay when you generate.</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div id="currentPass" style="font-size:14px; margin-bottom:6px;"></div>
+      <label style="font-size:13px; font-weight:600;">Pay in</label>
+      <select id="currencySelect" onchange="renderPlans()"></select>
     </div>
-    <div class="card" id="creditsCard" style="display:none; margin:16px auto 0; max-width:460px;">
+    <div class="plans-grid" id="plansGrid"></div>
+    <p id="subscribeStatus" class="hint"></p>
+    <p class="hint">Browsing, designing and previewing are free. A pass starts when your payment is confirmed and does not renew automatically.</p>
+    <div class="card" id="creditsCard" style="display:none; margin-top:16px;">
       <h2>Need more generations?</h2>
       <p style="margin:0 0 4px;">100 extra generations: <b id="creditsPrice"></b></p>
       <button onclick="buyCredits()">Buy 100 more</button>
@@ -166,13 +168,19 @@
   <div id="generateTab" class="tab-content card">
     <h2>Generate an Image</h2>
     <p id="selectedTemplateLabel" class="hint">Select a template in the Templates tab first.</p>
-    <input type="text" id="title" placeholder="Title" value="My Banner">
-    <input type="text" id="price" placeholder="Subtitle / Price / Date">
-    <input type="text" id="imageUrl" placeholder="Image URL (optional)">
-    <button onclick="generate()">Generate</button>
+    <div class="gen-grid">
+      <div>
+        <input type="text" id="title" placeholder="Title" value="My Banner" oninput="updateLivePreview()">
+        <input type="text" id="price" placeholder="Subtitle / Price / Date" oninput="updateLivePreview()">
+        <input type="text" id="imageUrl" placeholder="Image URL (optional)" oninput="updateLivePreview()">
+        <button onclick="generate()">Generate</button>
+        <p class="hint" id="priceHint"></p>
+      </div>
+      <div class="live" id="livePreview"></div>
+    </div>
     <div id="result"></div>
     <div id="buyCreditsSection" style="display:none; margin-top:15px;">
-      <p style="color:var(--danger);">You've used all your included generations for this plan.</p>
+      <p style="color:var(--danger);">You've used all your included generations for this pass.</p>
       <button onclick="goPlans()">Buy more generations</button>
     </div>
 
@@ -190,8 +198,8 @@
   </div>
 
   <div id="profileTab" class="tab-content card">
-    <h2>Profile &amp; Brand Settings</h2>
-    <p class="hint">Logged in as: <span id="profileEmail"></span></p>
+    <h2>Brand Settings</h2>
+    <p class="hint">Your business name, logo and colour are used automatically in your designs.</p>
     <label style="font-size:14px; font-weight:600;">Business Name</label>
     <input type="text" id="businessName" placeholder="e.g. Pinnacle Edge Ltd">
     <label style="font-size:14px; font-weight:600;">Logo URL</label>
@@ -202,37 +210,48 @@
       <div id="swatchBox" style="width:32px; height:32px; border-radius:6px; border:1px solid var(--border);"></div>
       <span id="swatchHex" style="font-size:14px; font-family:monospace;"></span>
     </div>
-    <button onclick="saveProfile()">Save Profile</button>
+    <button onclick="saveProfile()">Save Brand Settings</button>
     <p id="profileStatus"></p>
   </div>
 
-  <div id="settingsTab" class="tab-content card">
-    <h2>Account Settings</h2>
-    <p class="hint">Current email: <span id="settingsCurrentEmail"></span></p>
-    <label style="font-size:14px; font-weight:600;">Current Password (required)</label>
-    <input type="password" id="currentPassword" placeholder="Your current password">
-    <label style="font-size:14px; font-weight:600;">New Email (optional)</label>
-    <input type="email" id="newEmail" placeholder="Leave blank to keep current email">
-    <label style="font-size:14px; font-weight:600;">New Password (optional)</label>
-    <input type="password" id="newPassword" placeholder="Leave blank to keep current password">
-    <button onclick="updateAccount()">Save Changes</button>
-    <p id="settingsStatus"></p>
+  <div id="settingsTab" class="tab-content">
+    <div class="card" style="margin-bottom:16px;">
+      <h2>Personal Information</h2>
+      <label style="font-size:14px; font-weight:600;">Full name</label>
+      <input type="text" id="infoName">
+      <label style="font-size:14px; font-weight:600;">Phone</label>
+      <input type="text" id="infoPhone">
+      <label style="font-size:14px; font-weight:600;">Country</label>
+      <input type="text" id="infoCountry">
+      <button onclick="saveInfo()">Save Personal Information</button>
+      <p id="infoStatus"></p>
+    </div>
+    <div class="card">
+      <h2>Login &amp; Security</h2>
+      <p class="hint">Current email: <span id="settingsCurrentEmail"></span></p>
+      <label style="font-size:14px; font-weight:600;">Current Password (required)</label>
+      <input type="password" id="currentPassword" placeholder="Your current password">
+      <label style="font-size:14px; font-weight:600;">New Email (optional)</label>
+      <input type="email" id="newEmail" placeholder="Leave blank to keep current email">
+      <label style="font-size:14px; font-weight:600;">New Password (optional)</label>
+      <input type="password" id="newPassword" placeholder="Leave blank to keep current password">
+      <button onclick="updateAccount()">Save Changes</button>
+      <p id="settingsStatus"></p>
+    </div>
   </div>
 
   <script>
     const API_BASE = window.location.origin;
-    // Change to true once Paystack has enabled USD on your account
-    const ENABLE_USD = false;
-    const PRICES = {
-      KES: { plan: 'KES 10,350', credits: 'KES 2,000' },
-      USD: { plan: '$80', credits: '$15' }
-    };
-
     let token = localStorage.getItem('mediaEngineToken') || '';
     let selectedTemplateId = null;
+    let selectedTemplateHtml = '';
     let detectedColor = '';
     let savedBusinessName = '';
     let hasSub = false;
+    let activeEnds = null;
+    let PLANS = [];
+    let CREDIT = null;
+    let infoFilled = false;
 
     if (!token) { window.location.href = '/login.html'; }
 
@@ -256,12 +275,7 @@
     }
 
     function showTab(tabId, btn, callback) {
-      if (btn.dataset.locked === 'true' && !hasSub) {
-        document.getElementById('lockNotice').style.display = 'block';
-        tabId = 'plansTab';
-        btn = document.getElementById('plansBtn');
-        callback = null;
-      }
+      document.getElementById('acctPanel').style.display = 'none';
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
@@ -270,6 +284,17 @@
     }
 
     function goPlans() { showTab('plansTab', document.getElementById('plansBtn')); }
+    function openSettings() { showTab('settingsTab', document.getElementById('settingsBtn')); }
+
+    function toggleAcct(e) {
+      e.stopPropagation();
+      const p = document.getElementById('acctPanel');
+      p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    }
+    document.addEventListener('click', e => {
+      const p = document.getElementById('acctPanel');
+      if (!p.contains(e.target)) p.style.display = 'none';
+    });
 
     /* ---------- Overview and charts ---------- */
     function renderDonut(used, total) {
@@ -303,25 +328,46 @@
       const s = d.subscription;
       const name = d.name || (d.email || '').split('@')[0];
       document.getElementById('userName').innerText = name;
+      document.getElementById('avatar').innerText = (name || '?').trim().charAt(0).toUpperCase();
       document.getElementById('settingsCurrentEmail').innerText = d.email || '';
-      document.getElementById('profileEmail').innerText = d.email || '';
+
+      const rows = [
+        ['Name', d.name || '-'], ['Email', d.email || '-'], ['Phone', d.phone || '-'], ['Country', d.country || '-'],
+        ['Member since', d.memberSince ? new Date(d.memberSince).toLocaleDateString() : '-'],
+        ['Pass', s ? s.planLabel + (s.expiresAt ? ' (until ' + new Date(s.expiresAt).toLocaleDateString() + ')' : '') : 'No active pass'],
+        ['Usage', s ? s.used + ' / ' + s.totalAllowed : '-']
+      ];
+      document.getElementById('acctRows').innerHTML = rows.map(r => '<div class="row"><span>' + r[0] + '</span><span>' + esc(r[1]) + '</span></div>').join('');
+
+      if (!infoFilled) {
+        document.getElementById('infoName').value = d.name || '';
+        document.getElementById('infoPhone').value = d.phone || '';
+        document.getElementById('infoCountry').value = d.country || '';
+        infoFilled = true;
+      }
 
       const hero = document.getElementById('heroBox');
-      hero.innerHTML = '<div><h2>Welcome, ' + esc(name) + '</h2><p>' +
-      (s ? 'Your Starter plan is active. Create something great today.' : (d.expiredAt ? 'Your plan expired on ' + new Date(d.expiredAt).toLocaleDateString() + '. Renew to keep creating.' : 'Subscribe to unlock templates, generation, history and brand tools.')) + '</p></div>';  
+      const msg = s ? 'Your ' + s.planLabel + ' is active. Create something great today.'
+        : (d.expiredAt ? 'Your pass expired on ' + new Date(d.expiredAt).toLocaleDateString() + '. Choose a new pass to keep generating.'
+        : 'Explore everything for free. You only pay when you generate.');
+      hero.innerHTML = '<div><h2>Welcome, ' + esc(name) + '</h2><p>' + msg + '</p></div>';
       const btn = document.createElement('button');
-      btn.innerText = s ? 'Generate now' : 'View plans';
+      btn.innerText = s ? 'Generate now' : 'See pricing';
       btn.onclick = () => s ? showTab('generateTab', document.getElementById('generateBtn')) : goPlans();
       hero.appendChild(btn);
 
       const daysLeft = s && s.expiresAt ? Math.max(0, Math.ceil((new Date(s.expiresAt) - Date.now()) / 86400000)) : null;
-            const soon = document.getElementById('expiryBanner');
-      if (s && daysLeft !== null && daysLeft <= 5) {
+      const soon = document.getElementById('expiryBanner');
+      if (s && daysLeft !== null && daysLeft <= 1) {
         soon.style.display = 'block';
-        soon.innerText = 'Your plan ends in ' + daysLeft + ' day(s). Renew now so you do not lose access.';
+        soon.innerText = 'Your pass ends soon (' + new Date(s.expiresAt).toLocaleString() + '). Plan ahead so you do not lose access.';
+      } else if (s && daysLeft !== null && daysLeft <= 5) {
+        soon.style.display = 'block';
+        soon.innerText = 'Your pass ends in ' + daysLeft + ' day(s).';
       } else {
         soon.style.display = 'none';
       }
+
       const stats = [
         { cls: 'c1', label: 'Generations used', value: s ? s.used : '-' },
         { cls: 'c2', label: 'Remaining', value: s ? Math.max(0, s.totalAllowed - s.used) : '-' },
@@ -334,7 +380,7 @@
       document.getElementById('donutBox').innerHTML = renderDonut(s ? s.used : 0, s ? s.totalAllowed : 0);
       document.getElementById('donutLegend').innerHTML = s
         ? 'Included: <b>' + s.limit + '</b><br>Extra credits: <b>' + s.extraCredits + '</b><br>Used: <b>' + s.used + '</b>'
-        : 'No active plan yet';
+        : 'No active pass yet';
       document.getElementById('barsBox').innerHTML = renderBars(d.daily);
     }
 
@@ -342,29 +388,59 @@
       const d = await api('/overview');
       if (!d.success) return d;
       hasSub = !!d.subscription;
+      activeEnds = d.subscription ? d.subscription.expiresAt : null;
       renderOverview(d);
-      document.querySelectorAll('[data-locked]').forEach(b => b.classList.toggle('locked', !hasSub));
       document.getElementById('creditsCard').style.display = hasSub ? 'block' : 'none';
-      document.getElementById('subBtn').innerText = hasSub ? 'Renew (adds 30 days)' : 'Subscribe now';
+      if (PLANS.length) renderPlans();
       return d;
     }
 
     /* ---------- Plans and payments ---------- */
-    function updatePrices() {
-      const sel = document.getElementById('currencySelect');
-      if (!sel.options.length) {
-        sel.innerHTML = '<option value="KES">Kenyan Shilling (KES) - M-PESA or card</option>' +
-          (ENABLE_USD ? '<option value="USD">US Dollar (USD) - card</option>' : '');
-      }
-      const c = sel.value || 'KES';
-      document.getElementById('planPrice').innerHTML = PRICES[c].plan + '<span> / 30 days</span>';
-      document.getElementById('creditsPrice').innerText = PRICES[c].credits;
+    function money(c, n) { return c === 'USD' ? '$' + n : c + ' ' + n.toLocaleString('en-US'); }
+    function currentCurrency() { return document.getElementById('currencySelect').value || 'KES'; }
+
+    async function loadPlans() {
+      const res = await fetch(API_BASE + '/plans');
+      const d = await res.json();
+      PLANS = d.plans;
+      CREDIT = d.creditPack;
+      document.getElementById('currencySelect').innerHTML = d.currencies.map(c =>
+        '<option value="' + c + '">' + (c === 'KES' ? 'Kenyan Shilling (KES) - M-PESA or card' : 'US Dollar (USD) - card') + '</option>').join('');
+      renderPlans();
     }
 
-    async function subscribe() {
+    function renderPlans() {
+      const c = currentCurrency();
+      const blocked = hasSub && activeEnds;
+      document.getElementById('plansGrid').innerHTML = PLANS.map(p => {
+        const per = c === 'USD' ? +(p.prices[c] / p.generations).toFixed(2) : Math.round(p.prices[c] / p.generations);
+        const pop = p.id === 'monthly';
+        return '<div class="plan' + (pop ? ' pop' : '') + '">' +
+          (pop ? '<div class="tag">LOWEST PRICE PER IMAGE</div>' : '') +
+          '<h3>' + p.label + '</h3>' +
+          '<div class="price">' + money(c, p.prices[c]) + '</div>' +
+          '<div class="per">about ' + money(c, per) + ' per image</div>' +
+          '<ul><li>' + p.generations.toLocaleString('en-US') + ' generations</li>' +
+          '<li>Valid for ' + p.days + (p.days === 1 ? ' day' : ' days') + '</li>' +
+          '<li>All templates and CSV batch</li></ul>' +
+          '<button onclick="subscribe(\'' + p.id + '\')"' + (blocked ? ' disabled' : '') + '>' + (blocked ? 'Pass active' : 'Choose ' + p.label) + '</button></div>';
+      }).join('');
+
+      document.getElementById('currentPass').innerHTML = hasSub
+        ? 'Your current pass is <b>active</b>' + (activeEnds ? ' until <b>' + new Date(activeEnds).toLocaleString() + '</b>.' : '.')
+        : 'You have no active pass. Everything is free to explore; a pass is needed only to generate.';
+
+      if (CREDIT) document.getElementById('creditsPrice').innerText = money(c, CREDIT.prices[c] || 0);
+
+      const cheapest = PLANS.map(p => p.prices[c]);
+      document.getElementById('priceHint').innerText = PLANS.map(p => p.label.replace(' Pass', '') + ' ' + money(c, p.prices[c])).join('  |  ') +
+        '  (a pass is needed to generate)';
+    }
+
+    async function subscribe(planId) {
       const st = document.getElementById('subscribeStatus');
       st.innerText = 'Opening the secure payment page...';
-      const data = await api('/subscribe', 'POST', { plan: 'starter', currency: document.getElementById('currencySelect').value });
+      const data = await api('/subscribe', 'POST', { plan: planId, currency: currentCurrency() });
       if (data.success) { window.location.href = data.authorization_url; }
       else { st.innerText = 'Error: ' + data.error; }
     }
@@ -372,7 +448,7 @@
     async function buyCredits() {
       const st = document.getElementById('creditsStatus');
       st.innerText = 'Opening the secure payment page...';
-      const data = await api('/buy-credits', 'POST', { credits: 100, currency: document.getElementById('currencySelect').value });
+      const data = await api('/buy-credits', 'POST', { credits: 100, currency: currentCurrency() });
       if (data.success) { window.location.href = data.authorization_url; }
       else { st.innerText = 'Error: ' + data.error; }
     }
@@ -381,21 +457,24 @@
       history.replaceState(null, '', '/dashboard.html');
       const banner = document.getElementById('paidBanner');
       banner.style.display = 'block';
-      banner.innerText = 'Payment received. Updating your plan...';
+      banner.innerText = 'Payment received. Updating your pass...';
       let tries = 0;
       const timer = setInterval(async () => {
         tries++;
-        const wasSub = hasSub;
         await loadOverview();
-        if (hasSub && !wasSub) { loadTemplates(); loadProfile(); }
         if (tries >= 6) {
           clearInterval(timer);
-          banner.innerText = 'Thank you! Your plan details are on the Overview tab. If they have not updated yet, refresh the page in a minute.';
+          banner.innerText = 'Thank you! Your pass details are on the Overview tab. If they have not updated yet, refresh the page in a minute.';
         }
       }, 3000);
     }
 
-    /* ---------- Templates ---------- */
+    function needPlan() {
+      document.getElementById('lockNotice').style.display = 'block';
+      goPlans();
+    }
+
+    /* ---------- Templates and previews ---------- */
     const PRESETS = {
       banner: "<html><body style='margin:0;width:800px;height:400px;background:#2b2d42;display:flex;align-items:center;justify-content:space-between;font-family:Arial;padding:40px;box-sizing:border-box;'><div style='color:white;'><h1>{{title}}</h1><p style='color:{{brandColor}};font-size:32px;'>{{price}}</p></div><img src='{{imageUrl}}' style='max-width:300px;border-radius:12px;' /></body></html>",
       certificate: "<html><body style='margin:0;width:900px;height:650px;background:linear-gradient(135deg,#fdfaf3,#f5ecd7);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:Georgia,serif;border:14px double #c9a24b;box-sizing:border-box;padding:50px;'><p style='letter-spacing:5px;color:#c9a24b;font-size:16px;margin:0;'>CERTIFICATE OF ACHIEVEMENT</p><div style='width:3px;height:20px;background:#c9a24b;margin:15px auto;'></div><p style='font-size:16px;color:#888;margin:0;'>This certificate is proudly presented to</p><h1 style='font-size:48px;color:#2b2d42;margin:15px 0;'>{{title}}</h1><p style='font-size:18px;color:#555;margin:0 0 25px;'>{{price}}</p><div style='width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#f4d78b,#c9a24b 75%);border:4px solid #fff;box-shadow:0 0 0 2px #c9a24b,0 6px 14px rgba(0,0,0,0.25);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2b2d42;font-weight:bold;'><div style='font-size:12px;letter-spacing:1px;padding:0 8px;'>{{businessName}}</div><div style='font-size:15px;margin-top:2px;'>&#9733;</div></div></body></html>",
@@ -409,23 +488,32 @@
       return { width: w ? parseInt(w[1]) : 800, height: h ? parseInt(h[1]) : 600 };
     }
 
-    function fillSample(html) {
-      const sampleImg = window.location.origin + '/assets/logo.png';
-      const color = detectedColor || '#ef233c';
-      const bizName = savedBusinessName || 'Your Business';
-      return html.replace(/{{title}}/g, 'Sample Title').replace(/{{price}}/g, '$29.99').replace(/{{imageUrl}}/g, sampleImg).replace(/{{brandColor}}/g, color).replace(/{{businessName}}/g, bizName);
+    function sampleValues() {
+      return {
+        title: 'Sample Title', price: '$29.99',
+        imageUrl: window.location.origin + '/assets/logo.png',
+        brandColor: detectedColor || '#ef233c',
+        businessName: savedBusinessName || 'Your Business'
+      };
     }
 
-    function buildThumbnail(html, boxWidth, boxHeight) {
+    function fillValues(html, vals) {
+      let out = html;
+      for (const k in vals) out = out.split('{{' + k + '}}').join(esc(vals[k]));
+      return out;
+    }
+
+    function buildThumbnail(html, boxWidth, boxHeight, vals) {
       const dims = extractDims(html);
       const scale = Math.min(boxWidth / dims.width, boxHeight / dims.height);
       const iframe = document.createElement('iframe');
       iframe.className = 'thumb-frame';
+      iframe.setAttribute('sandbox', '');
       iframe.style.width = dims.width + 'px';
       iframe.style.height = dims.height + 'px';
       iframe.style.transform = 'scale(' + scale + ')';
       iframe.style.transformOrigin = 'top left';
-      iframe.srcdoc = fillSample(html);
+      iframe.srcdoc = fillValues(html, vals || sampleValues());
       return iframe;
     }
 
@@ -434,6 +522,23 @@
       const box = document.getElementById('presetPreviewBox');
       box.innerHTML = '';
       box.appendChild(buildThumbnail(PRESETS[preset], box.clientWidth || 300, 140));
+    }
+
+    function updateLivePreview() {
+      const box = document.getElementById('livePreview');
+      box.innerHTML = '';
+      if (!selectedTemplateHtml) {
+        box.innerHTML = '<div class="empty">Select a template to see a live preview of your design</div>';
+        return;
+      }
+      const v = id => document.getElementById(id).value;
+      const vals = {
+        title: v('title'), price: v('price'),
+        imageUrl: v('imageUrl') || (window.location.origin + '/assets/logo.png'),
+        brandColor: detectedColor || '#ef233c',
+        businessName: savedBusinessName || 'Your Business'
+      };
+      box.appendChild(buildThumbnail(selectedTemplateHtml, box.clientWidth || 300, 230, vals));
     }
 
     async function loadTemplates() {
@@ -447,24 +552,53 @@
       data.templates.forEach(t => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
-        card.onclick = () => selectTemplate(t.id, t.template_name, card);
+        card.onclick = () => selectTemplate(t.id, t.template_name, card, t.html_content);
+
         const thumbWrap = document.createElement('div');
         thumbWrap.className = 'thumb-wrap';
         thumbWrap.appendChild(buildThumbnail(t.html_content, 300, 110));
+
         const label = document.createElement('div');
         label.className = 'label';
         label.innerText = t.template_name;
+
+        const del = document.createElement('button');
+        del.className = 'del';
+        del.title = 'Delete template';
+        del.innerText = '\u2715';
+        del.onclick = e => { e.stopPropagation(); deleteTemplate(t.id, t.template_name); };
+
         card.appendChild(thumbWrap);
         card.appendChild(label);
+        card.appendChild(del);
         listDiv.appendChild(card);
       });
     }
 
-    function selectTemplate(id, name, el) {
+    function selectTemplate(id, name, el, html) {
       selectedTemplateId = id;
+      selectedTemplateHtml = html;
       document.querySelectorAll('.gallery-card').forEach(e => e.classList.remove('selected'));
       el.classList.add('selected');
       document.getElementById('selectedTemplateLabel').innerText = 'Selected: ' + name;
+      updateLivePreview();
+    }
+
+    async function deleteTemplate(id, name) {
+      if (!confirm('Delete the template "' + name + '"?')) return;
+      const data = await api('/templates/' + id, 'DELETE');
+      if (data.success) {
+        if (selectedTemplateId === id) {
+          selectedTemplateId = null;
+          selectedTemplateHtml = '';
+          document.getElementById('selectedTemplateLabel').innerText = 'Select a template in the Templates tab first.';
+          updateLivePreview();
+        }
+        loadTemplates();
+        loadOverview();
+      } else {
+        document.getElementById('templateStatus').innerText = 'Error: ' + data.error;
+      }
     }
 
     async function createTemplate() {
@@ -485,11 +619,13 @@
     /* ---------- Generate ---------- */
     async function generate() {
       if (!selectedTemplateId) { document.getElementById('result').innerText = 'Please select a template in the Templates tab first.'; return; }
+      if (!hasSub) { needPlan(); return; }
+
       const title = document.getElementById('title').value;
       const price = document.getElementById('price').value;
       const imageUrl = document.getElementById('imageUrl').value;
 
-      document.getElementById('result').innerText = 'Generating... this can take up to 15 seconds.';
+      document.getElementById('result').innerText = 'Generating... this can take a few seconds.';
       document.getElementById('buyCreditsSection').style.display = 'none';
 
       const data = await api('/generate', 'POST', {
@@ -497,6 +633,7 @@
         data: { title, price, imageUrl, brandColor: detectedColor || '#ef233c', businessName: savedBusinessName || 'Your Business' }
       });
       if (data.success === false) {
+        if (data.needsSubscription) { document.getElementById('result').innerText = ''; needPlan(); return; }
         document.getElementById('result').innerText = 'Error: ' + data.error;
         if (data.needsCredits) document.getElementById('buyCreditsSection').style.display = 'block';
       } else {
@@ -521,6 +658,7 @@
 
     async function startBatch() {
       if (!selectedTemplateId) { document.getElementById('batchStatus').innerText = 'Please select a template above first.'; return; }
+      if (!hasSub) { needPlan(); return; }
       const fileInput = document.getElementById('csvFile');
       if (!fileInput.files.length) { document.getElementById('batchStatus').innerText = 'Please choose a CSV file first.'; return; }
 
@@ -540,8 +678,8 @@
         if (data.success === false) {
           item.innerHTML = '<div class="meta"><div class="name">Row ' + (i + 1) + ': ' + esc(rows[i].title) + '</div><div class="date" style="color:var(--danger);">Error: ' + esc(data.error) + '</div></div>';
           resultsDiv.appendChild(item);
-          if (data.needsCredits) {
-            document.getElementById('batchStatus').innerText = 'Stopped at row ' + (i + 1) + ': plan limit reached.';
+          if (data.needsCredits || data.needsSubscription) {
+            document.getElementById('batchStatus').innerText = 'Stopped at row ' + (i + 1) + ': you need more allowance to continue.';
             document.getElementById('buyCreditsSection').style.display = 'block';
             return;
           }
@@ -570,7 +708,7 @@
       });
     }
 
-    /* ---------- Profile ---------- */
+    /* ---------- Brand ---------- */
     async function loadProfile() {
       const data = await api('/profile');
       if (!data.success) return;
@@ -586,6 +724,7 @@
           document.getElementById('swatchHex').innerText = detectedColor;
           document.getElementById('colorSwatch').style.display = 'flex';
         }
+        updateLivePreview();
       }
     }
 
@@ -613,7 +752,7 @@
           document.getElementById('swatchBox').style.background = hex;
           document.getElementById('swatchHex').innerText = hex;
           document.getElementById('colorSwatch').style.display = 'flex';
-          document.getElementById('profileStatus').innerText = 'Color detected! Save profile to keep it.';
+          document.getElementById('profileStatus').innerText = 'Color detected! Save to keep it.';
         } catch (err) {
           document.getElementById('profileStatus').innerText = 'Could not read this image (it may not allow color analysis from this site).';
         }
@@ -633,10 +772,11 @@
       const logo_url = document.getElementById('logoUrl').value;
       const data = await api('/profile', 'POST', { business_name, logo_url, brand_color: detectedColor });
       if (data.success) {
-        document.getElementById('profileStatus').innerText = 'Profile saved!';
+        document.getElementById('profileStatus').innerText = 'Brand settings saved!';
         savedBusinessName = business_name;
         updateLogoPreview();
         if (logo_url) document.getElementById('imageUrl').value = logo_url;
+        updateLivePreview();
       } else {
         document.getElementById('profileStatus').innerText = 'Error: ' + data.error;
       }
@@ -645,7 +785,18 @@
     document.getElementById('logoUrl').addEventListener('input', updateLogoPreview);
 
     /* ---------- Settings ---------- */
-        async function updateAccount() {
+    async function saveInfo() {
+      const st = document.getElementById('infoStatus');
+      const data = await api('/profile-info', 'POST', {
+        fullName: document.getElementById('infoName').value,
+        phone: document.getElementById('infoPhone').value,
+        country: document.getElementById('infoCountry').value
+      });
+      if (data.success) { st.innerText = 'Saved!'; loadOverview(); }
+      else { st.innerText = 'Error: ' + data.error; }
+    }
+
+    async function updateAccount() {
       const currentPassword = document.getElementById('currentPassword').value;
       const newEmail = document.getElementById('newEmail').value;
       const newPassword = document.getElementById('newPassword').value;
@@ -664,9 +815,12 @@
 
     /* ---------- Start ---------- */
     async function init() {
-      updatePrices();
-      await loadOverview();
-      if (hasSub) { loadTemplates(); loadProfile(); updatePresetPreview(); }
+      await Promise.all([loadPlans(), loadOverview()]);
+      renderPlans();
+      loadTemplates();
+      loadProfile();
+      updatePresetPreview();
+      updateLivePreview();
       if (new URLSearchParams(location.search).get('paid')) handlePaidReturn();
     }
     init();

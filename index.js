@@ -12,10 +12,18 @@ app.set('trust proxy', 1);
 
 const BASE_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
 
-// Prices live on the server. The browser can never set them.
-const PLAN_PRICES = { starter: { KES: 10350, USD: 80 } };
+// USD only works after Paystack enables it. Then add ENABLE_USD = true in Render's Environment.
+const ENABLE_USD = process.env.ENABLE_USD === 'true';
+const CURRENCIES = ENABLE_USD ? ['KES', 'USD'] : ['KES'];
+
+// All prices live here and nowhere else. Change a number here and it changes everywhere.
+const PLANS = {
+  daily:   { label: 'Daily Pass',   days: 1,  generations: 40,   prices: { KES: 700,   USD: 6 } },
+  weekly:  { label: 'Weekly Pass',  days: 7,  generations: 200,  prices: { KES: 3000,  USD: 24 } },
+  monthly: { label: 'Monthly Pass', days: 30, generations: 1000, prices: { KES: 10350, USD: 80 } }
+};
 const CREDIT_PACKS = { 100: { KES: 2000, USD: 15 } };
-const PLAN_DAYS = 30;
+const MAX_TEMPLATES = 30;
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -88,23 +96,17 @@ app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (
           .limit(1);
 
         if (!existing || existing.length === 0) {
-          // Renewing early adds 30 days on top of the time already left
-          const current = await getActiveSubscription(user_id);
-          const base = current && current.expires_at && new Date(current.expires_at) > new Date()
-            ? new Date(current.expires_at).getTime()
-            : Date.now();
-          const expiresAt = new Date(base + PLAN_DAYS * 86400000).toISOString();
-
+          const p = PLANS[plan] || PLANS.monthly;
           await supabase.from('subscriptions').insert([{
             user_id: user_id,
             plan: plan,
             status: 'active',
             paystack_reference: reference,
-            generation_limit: 1000,
+            generation_limit: p.generations,
             extra_credits: 0,
-            expires_at: expiresAt
+            expires_at: new Date(Date.now() + p.days * 86400000).toISOString()
           }]);
-          console.log('Subscription activated for user:', user_id);
+          console.log('Pass activated for user:', user_id, plan);
         }
       }
     }
@@ -116,6 +118,18 @@ app.post('/webhook/paystack', express.raw({ type: 'application/json' }), async (
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/generated', express.static(path.join(__dirname, 'generated')));
+
+// Public: the website reads prices from here so they are always correct
+app.get('/plans', (req, res) => {
+  res.json({
+    success: true,
+    currencies: CURRENCIES,
+    plans: Object.entries(PLANS).map(([id, p]) => ({
+      id, label: p.label, days: p.days, generations: p.generations, prices: p.prices
+    })),
+    creditPack: { credits: 100, prices: CREDIT_PACKS[100] }
+  });
+});
 
 app.post('/signup', authLimiter, async (req, res) => {
   const { email, password, fullName, phone, country, acceptedTerms } = req.body;
@@ -152,7 +166,6 @@ app.post('/login', authLimiter, async (req, res) => {
   res.json({ success: true, session: data.session });
 });
 
-// Password reset step 1: email a reset link (always answers the same, so nobody can discover which emails have accounts)
 app.post('/forgot', authLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ success: false, error: 'Please enter your email.' });
@@ -161,7 +174,6 @@ app.post('/forgot', authLimiter, async (req, res) => {
   res.json({ success: true });
 });
 
-// Password reset step 2: set the new password using the token from the emailed link
 app.post('/reset-password', authLimiter, async (req, res) => {
   const { accessToken, newPassword } = req.body;
   if (!accessToken || !newPassword || newPassword.length < 8) {
@@ -190,27 +202,27 @@ async function requireAuth(req, res, next) {
   next();
 }
 
-// Must have an active (not expired) subscription
+// Used only for buying extra generations: you need a current pass first
 async function requireActive(req, res, next) {
   const sub = await getActiveSubscription(req.user.id);
   if (!sub) {
-    return res.status(403).json({ success: false, needsSubscription: true, error: 'An active subscription is required.' });
+    return res.status(403).json({ success: false, needsSubscription: true, error: 'You need an active pass first.' });
   }
   req.subscription = sub;
   next();
 }
 
-// Active subscription AND still within the generation allowance
+// Used for generating: needs an active pass AND some allowance left
 async function requireSubscription(req, res, next) {
   const sub = await getActiveSubscription(req.user.id);
   if (!sub) {
-    return res.status(403).json({ success: false, needsSubscription: true, error: 'An active subscription is required to generate images.' });
+    return res.status(403).json({ success: false, needsSubscription: true, error: 'Choose a pass to generate your design.' });
   }
   const used = await countUsage(req.user.id, sub);
   if (used >= sub.generation_limit + sub.extra_credits) {
     return res.status(402).json({
       success: false,
-      error: 'You have reached your plan limit. Purchase extra generations to continue.',
+      error: 'You have reached your pass limit. Buy extra generations to continue.',
       needsCredits: true
     });
   }
@@ -218,7 +230,6 @@ async function requireSubscription(req, res, next) {
   next();
 }
 
-// Everything the dashboard overview needs, in one call
 app.get('/overview', requireAuth, async (req, res) => {
   const sub = await getActiveSubscription(req.user.id);
   const meta = req.user.user_metadata || {};
@@ -229,6 +240,7 @@ app.get('/overview', requireAuth, async (req, res) => {
     const used = await countUsage(req.user.id, sub);
     subscription = {
       plan: sub.plan,
+      planLabel: (PLANS[sub.plan] && PLANS[sub.plan].label) || 'Starter Plan',
       used,
       limit: sub.generation_limit,
       extraCredits: sub.extra_credits,
@@ -270,6 +282,9 @@ app.get('/overview', requireAuth, async (req, res) => {
     success: true,
     email: req.user.email,
     name: meta.full_name || '',
+    phone: meta.phone || '',
+    country: meta.country || '',
+    memberSince: req.user.created_at,
     subscription,
     expiredAt,
     templatesCount: templatesCount || 0,
@@ -277,17 +292,44 @@ app.get('/overview', requireAuth, async (req, res) => {
   });
 });
 
-app.post('/templates', requireAuth, requireActive, async (req, res) => {
+// Update personal details (name, phone, country)
+app.post('/profile-info', requireAuth, async (req, res) => {
+  const clean = v => String(v || '').trim().slice(0, 80);
+  const fullName = clean(req.body.fullName);
+  if (!fullName) return res.status(400).json({ success: false, error: 'Please enter your name.' });
+  const meta = {
+    ...(req.user.user_metadata || {}),
+    full_name: fullName,
+    phone: clean(req.body.phone),
+    country: clean(req.body.country)
+  };
+  const { error } = await supabase.auth.admin.updateUserById(req.user.id, { user_metadata: meta });
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  res.json({ success: true });
+});
+
+// Everyone can create and browse templates for free
+app.post('/templates', requireAuth, async (req, res) => {
   const { template_name, html_content } = req.body;
+  if (!template_name || !html_content || html_content.length > 30000) {
+    return res.status(400).json({ success: false, error: 'Invalid template.' });
+  }
+  const { count } = await supabase
+    .from('templates')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', req.user.id);
+  if ((count || 0) >= MAX_TEMPLATES) {
+    return res.status(400).json({ success: false, error: `You can keep up to ${MAX_TEMPLATES} templates. Delete one to add another.` });
+  }
   const { data, error } = await supabase
     .from('templates')
-    .insert([{ template_name, html_content, user_id: req.user.id }])
+    .insert([{ template_name: String(template_name).slice(0, 80), html_content, user_id: req.user.id }])
     .select();
   if (error) return res.status(500).json({ success: false, error: error.message });
   res.json({ success: true, template: data[0] });
 });
 
-app.get('/templates', requireAuth, requireActive, async (req, res) => {
+app.get('/templates', requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from('templates')
     .select('*')
@@ -296,6 +338,17 @@ app.get('/templates', requireAuth, requireActive, async (req, res) => {
   res.json({ success: true, templates: data });
 });
 
+app.delete('/templates/:id', requireAuth, async (req, res) => {
+  const { error } = await supabase
+    .from('templates')
+    .delete()
+    .eq('id', req.params.id)
+    .eq('user_id', req.user.id);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  res.json({ success: true });
+});
+
+// Generating is the point where a pass is required
 app.post('/generate', requireAuth, requireSubscription, async (req, res) => {
   const { template_id, data } = req.body;
 
@@ -371,19 +424,28 @@ async function initPayment(req, res, amount, currency, metadata) {
 
 app.post('/subscribe', requireAuth, async (req, res) => {
   const { plan, currency = 'KES' } = req.body;
-  const price = PLAN_PRICES[plan] && PLAN_PRICES[plan][currency];
-  if (!price) return res.status(400).json({ success: false, error: 'Unknown plan or currency' });
-  await initPayment(req, res, price, currency, { user_id: req.user.id, plan: plan });
+  const chosen = PLANS[plan];
+  if (!chosen) return res.status(400).json({ success: false, error: 'Unknown pass.' });
+  if (!CURRENCIES.includes(currency)) return res.status(400).json({ success: false, error: 'That currency is not available yet.' });
+
+  const current = await getActiveSubscription(req.user.id);
+  if (current && current.expires_at) {
+    return res.status(400).json({
+      success: false,
+      error: 'You already have an active pass until ' + new Date(current.expires_at).toISOString().slice(0, 10) + '. You can buy a new pass when it ends.'
+    });
+  }
+  await initPayment(req, res, chosen.prices[currency], currency, { user_id: req.user.id, plan: plan });
 });
 
 app.post('/buy-credits', requireAuth, requireActive, async (req, res) => {
   const { credits, currency = 'KES' } = req.body;
   const price = CREDIT_PACKS[credits] && CREDIT_PACKS[credits][currency];
-  if (!price) return res.status(400).json({ success: false, error: 'Unknown credit pack or currency' });
+  if (!price || !CURRENCIES.includes(currency)) return res.status(400).json({ success: false, error: 'Unknown pack or currency.' });
   await initPayment(req, res, price, currency, { user_id: req.user.id, type: 'credits', credits: credits });
 });
 
-app.get('/profile', requireAuth, requireActive, async (req, res) => {
+app.get('/profile', requireAuth, async (req, res) => {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -393,7 +455,7 @@ app.get('/profile', requireAuth, requireActive, async (req, res) => {
   res.json({ success: true, profile: data && data.length ? data[0] : null, email: req.user.email });
 });
 
-app.post('/profile', requireAuth, requireActive, async (req, res) => {
+app.post('/profile', requireAuth, async (req, res) => {
   const { logo_url, business_name, brand_color } = req.body;
 
   const { data: existing } = await supabase
@@ -420,7 +482,6 @@ app.post('/profile', requireAuth, requireActive, async (req, res) => {
   res.json({ success: true, profile: result.data[0] });
 });
 
-// Changing email or password now requires the current password
 app.post('/account', requireAuth, authLimiter, async (req, res) => {
   const { currentPassword, newEmail, newPassword } = req.body;
 
@@ -445,7 +506,7 @@ app.post('/account', requireAuth, authLimiter, async (req, res) => {
   res.json({ success: true, message: 'Account updated successfully' });
 });
 
-app.get('/history', requireAuth, requireActive, async (req, res) => {
+app.get('/history', requireAuth, async (req, res) => {
   const { data: generations, error } = await supabase
     .from('generations')
     .select('*')

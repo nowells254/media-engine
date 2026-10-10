@@ -1,74 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Media Engine - Generate Professional Media in Seconds</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --brand: #4361ee;
-      --brand-dark: #2b2d42;
-      --bg: #f7f8fc;
-      --border: #e2e4ec;
-      --radius: 10px;
-    }
-    * { box-sizing: border-box; }
-    body { font-family: 'Inter', Arial, sans-serif; margin: 0; color: var(--brand-dark); }
-    .nav {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 40px; max-width: 1100px; margin: 0 auto;
-    }
-    .nav .logo { font-weight: 800; font-size: 20px; }
-    .nav a { color: var(--brand-dark); text-decoration: none; font-weight: 600; font-size: 14px; }
-    .btn { padding: 10px 20px; border-radius: var(--radius); font-weight: 600; font-size: 14px; text-decoration: none; display: inline-block; }
-    .btn-primary { background: var(--brand); color: white; }
+    :root { --brand:#4361ee; --dark:#2b2d42; --bg:#f7f8fc; --border:#e2e4ec; --radius:12px; }
+    * { box-sizing:border-box; }
+    body { font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; margin:0; color:var(--dark); }
+    .nav { display:flex; justify-content:space-between; align-items:center; padding:20px 28px; max-width:1100px; margin:0 auto; }
+    .nav .logo { font-weight:800; font-size:21px; background:linear-gradient(90deg,#4361ee,#f72585); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .nav a { color:var(--dark); text-decoration:none; font-weight:600; font-size:14px; }
+    .btn { padding:11px 22px; border-radius:var(--radius); font-weight:700; font-size:14px; text-decoration:none; display:inline-block; }
+    .btn-primary { background:linear-gradient(90deg,#4361ee,#7209b7); color:white !important; }
 
-    .hero { text-align: center; padding: 70px 24px 90px; background: var(--bg); }
-    .hero h1 { font-size: 42px; font-weight: 800; max-width: 700px; margin: 0 auto 16px; line-height: 1.2; }
-    .hero p { font-size: 18px; color: #666; max-width: 500px; margin: 0 auto 32px; }
-    .hero .btn { padding: 14px 32px; font-size: 16px; }
+    .hero { text-align:center; padding:80px 24px 90px; color:white; background:linear-gradient(135deg,#4361ee 0%,#7209b7 55%,#f72585 100%); }
+    .hero h1 { font-size:42px; font-weight:800; max-width:720px; margin:0 auto 16px; line-height:1.2; }
+    .hero p { font-size:18px; opacity:.92; max-width:540px; margin:0 auto 32px; }
+    .hero .btn { background:white; color:#7209b7 !important; padding:15px 34px; font-size:16px; }
 
-    .section { max-width: 1000px; margin: 0 auto; padding: 70px 24px; }
-    .section h2 { text-align: center; font-size: 30px; font-weight: 800; margin-bottom: 50px; }
+    .section { max-width:1000px; margin:0 auto; padding:70px 24px; }
+    .section h2 { text-align:center; font-size:30px; font-weight:800; margin:0 0 44px; }
+    .steps { display:flex; gap:30px; flex-wrap:wrap; justify-content:center; }
+    .step { flex:1; min-width:220px; text-align:center; }
+    .step .num { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#4361ee,#f72585); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; margin:0 auto 14px; }
+    .step h3 { font-size:17px; margin:0 0 8px; }
+    .step p { color:#666; font-size:14px; margin:0; }
 
-    .steps { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
-    .step { flex: 1; min-width: 220px; text-align: center; }
-    .step .num {
-      width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: white;
-      display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 16px;
-    }
-    .step h3 { font-size: 17px; margin-bottom: 8px; }
-    .step p { color: #666; font-size: 14px; }
+    .features { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; }
+    .feature-card { background:white; border:1px solid var(--border); border-radius:var(--radius); padding:24px; box-shadow:0 4px 20px rgba(43,45,66,.04); }
+    .feature-card h3 { font-size:16px; margin:0 0 8px; }
+    .feature-card p { color:#666; font-size:14px; margin:0; }
 
-    .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-    .feature-card {
-      background: white; border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 24px; box-shadow: 0 4px 20px rgba(43,45,66,0.04);
-    }
-    .feature-card h3 { font-size: 16px; margin: 0 0 8px; }
-    .feature-card p { color: #666; font-size: 14px; margin: 0; }
+    .plans { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+    .plan { background:white; border:2px solid var(--border); border-radius:16px; padding:26px; text-align:center; position:relative; }
+    .plan.pop { border-color:var(--brand); box-shadow:0 10px 34px rgba(67,97,238,.16); }
+    .plan .tag { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:linear-gradient(90deg,#4361ee,#f72585); color:white; font-size:10px; font-weight:700; letter-spacing:.5px; padding:5px 12px; border-radius:20px; white-space:nowrap; }
+    .plan h3 { margin:6px 0 0; }
+    .plan .price { font-size:32px; font-weight:800; margin:10px 0 0; }
+    .plan .usd { font-size:13px; color:#888; margin-bottom:10px; }
+    .plan ul { list-style:none; padding:0; margin:12px 0 20px; text-align:left; }
+    .plan li { padding:5px 0; font-size:14px; color:#555; }
+    .plan li:before { content:"\2713  "; color:var(--brand); font-weight:700; }
+    .note { text-align:center; color:#888; font-size:13px; margin-top:20px; }
 
-    .pricing-card {
-      background: white; border: 2px solid var(--brand); border-radius: var(--radius);
-      padding: 32px; max-width: 320px; margin: 0 auto; text-align: center;
-      box-shadow: 0 4px 20px rgba(67,97,238,0.1);
-    }
-    .pricing-card .price { font-size: 40px; font-weight: 800; margin: 10px 0; }
-    .pricing-card .price span { font-size: 15px; font-weight: 400; color: #888; }
-    .pricing-card ul { list-style: none; padding: 0; margin: 20px 0 28px; text-align: left; }
-    .pricing-card li { padding: 6px 0; font-size: 14px; color: #555; }
-    .pricing-card li:before { content: "✓ "; color: var(--brand); font-weight: 700; }
+    .cta { background:var(--dark); color:white; text-align:center; padding:70px 24px; }
+    .cta h2 { font-size:28px; margin:0 0 20px; }
+    .footer-links { text-align:center; color:#999; font-size:13px; padding:30px; }
+    .footer-links a { color:#999; text-decoration:none; }
 
-    .cta { background: var(--brand-dark); color: white; text-align: center; padding: 70px 24px; }
-    .cta h2 { font-size: 28px; margin-bottom: 20px; }
-    .cta .btn-primary { background: var(--brand); }
-
-    .footer-links { text-align: center; color: #999; font-size: 13px; padding: 30px; }
-    .footer-links a { color: #999; text-decoration: none; }
-
-    @media (max-width: 600px) {
-      .features { grid-template-columns: 1fr; }
-      .hero h1 { font-size: 30px; }
+    @media (max-width:700px) {
+      .features, .plans { grid-template-columns:1fr; }
+      .hero h1 { font-size:30px; }
     }
   </style>
 </head>
@@ -78,80 +61,67 @@
     <div class="logo">Media Engine</div>
     <div style="display:flex; gap:20px; align-items:center;">
       <a href="/login.html">Log In</a>
-      <a href="/signup.html" class="btn btn-primary">Get Started</a>
+      <a href="/signup.html" class="btn btn-primary">Create free account</a>
     </div>
   </div>
 
   <div class="hero">
     <h1>Generate Professional Media in Seconds</h1>
-    <p>Turn a title, a date, or a product into a polished banner, certificate, poster, or quote card — automatically, every time.</p>
-    <a href="/signup.html" class="btn btn-primary">Get Started</a>
+    <p>Turn a title, a date, or a product into a polished banner, certificate, poster, or quote card. Explore for free and pay only when you generate.</p>
+    <a href="/signup.html" class="btn">Create free account</a>
   </div>
 
   <div class="section">
     <h2>How It Works</h2>
     <div class="steps">
-      <div class="step">
-        <div class="num">1</div>
-        <h3>Choose a Template</h3>
-        <p>Pick from Product Banners, Certificates, Event Posters, and Quote Cards.</p>
-      </div>
-      <div class="step">
-        <div class="num">2</div>
-        <h3>Customize</h3>
-        <p>Add your title, price, date, or image — no design skills needed.</p>
-      </div>
-      <div class="step">
-        <div class="num">3</div>
-        <h3>Download</h3>
-        <p>Get a ready-to-use, print-quality image instantly.</p>
-      </div>
+      <div class="step"><div class="num">1</div><h3>Choose a Template</h3><p>Pick from banners, certificates, posters and quote cards.</p></div>
+      <div class="step"><div class="num">2</div><h3>Customise with a live preview</h3><p>Add your text and logo and watch the design update instantly.</p></div>
+      <div class="step"><div class="num">3</div><h3>Pick a pass and download</h3><p>Choose a daily, weekly or monthly pass when you are ready to generate.</p></div>
     </div>
   </div>
 
-  <div class="section" style="background:var(--bg);">
-    <h2>What You Can Create</h2>
-    <div class="features">
-      <div class="feature-card">
-        <h3>Product Banners</h3>
-        <p>Clean, branded banners for sales, promotions, and product launches.</p>
-      </div>
-      <div class="feature-card">
-        <h3>Certificates</h3>
-        <p>Elegant, print-ready certificates of achievement with a professional seal.</p>
-      </div>
-      <div class="feature-card">
-        <h3>Event Posters</h3>
-        <p>Bold, eye-catching posters for events, launches, and announcements.</p>
-      </div>
-      <div class="feature-card">
-        <h3>Quote Cards</h3>
-        <p>Shareable quote graphics perfect for social media.</p>
+  <div class="section" style="background:var(--bg); max-width:none;">
+    <div style="max-width:1000px; margin:0 auto;">
+      <h2>What You Can Create</h2>
+      <div class="features">
+        <div class="feature-card"><h3>Product Banners</h3><p>Clean, branded banners for sales, promotions, and product launches.</p></div>
+        <div class="feature-card"><h3>Certificates</h3><p>Elegant, print-ready certificates with a professional seal.</p></div>
+        <div class="feature-card"><h3>Event Posters</h3><p>Bold, eye-catching posters for events and announcements.</p></div>
+        <div class="feature-card"><h3>Quote Cards</h3><p>Shareable quote graphics, perfect for social media.</p></div>
       </div>
     </div>
   </div>
 
   <div class="section">
     <h2>Simple Pricing</h2>
-    <div class="pricing-card">
-      <h3>Starter</h3>
-      <div class="price">KES 10,350<span>/month (about $80)</span></div>
-      <ul>
-        <li>1,000 generations per month</li>
-        <li>All template types</li>
-        <li>High-res downloads</li>
-        <li>Pay-as-you-go beyond your limit</li>
-      </ul>
-      <a href="/signup.html" class="btn btn-primary" style="width:100%;">Get Started</a>
-    </div>
+    <div class="plans" id="plansBox"><p style="text-align:center; grid-column:1/-1;">Loading prices...</p></div>
+    <p class="note">Creating an account, browsing and designing are free. A pass is only needed to generate. Passes do not renew automatically.</p>
   </div>
 
   <div class="cta">
     <h2>Ready to save hours on design?</h2>
-    <a href="/signup.html" class="btn btn-primary">Get Started</a>
+    <a href="/signup.html" class="btn btn-primary">Create free account</a>
   </div>
 
   <p class="footer-links"><a href="/support.html">Support</a> &nbsp;|&nbsp; <a href="/privacy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="/terms.html">Terms of Service</a></p>
 
+  <script>
+    fetch('/plans').then(r => r.json()).then(d => {
+      document.getElementById('plansBox').innerHTML = d.plans.map(p => {
+        const pop = p.id === 'monthly';
+        return '<div class="plan' + (pop ? ' pop' : '') + '">' +
+          (pop ? '<div class="tag">LOWEST PRICE PER IMAGE</div>' : '') +
+          '<h3>' + p.label + '</h3>' +
+          '<div class="price">KES ' + p.prices.KES.toLocaleString('en-US') + '</div>' +
+          '<div class="usd">about $' + p.prices.USD + '</div>' +
+          '<ul><li>' + p.generations.toLocaleString('en-US') + ' generations</li>' +
+          '<li>Valid for ' + p.days + (p.days === 1 ? ' day' : ' days') + '</li>' +
+          '<li>All templates and CSV batch</li></ul>' +
+          '<a href="/signup.html" class="btn btn-primary">Get started</a></div>';
+      }).join('');
+    }).catch(() => {
+      document.getElementById('plansBox').innerHTML = '<p style="text-align:center; grid-column:1/-1;">Prices are shown after you create a free account.</p>';
+    });
+  </script>
 </body>
 </html>
