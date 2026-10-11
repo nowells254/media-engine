@@ -95,7 +95,7 @@
   <div class="section">
     <h2>Simple Pricing</h2>
     <div class="plans" id="plansBox"><p style="text-align:center; grid-column:1/-1;">Loading prices...</p></div>
-    <p class="note">Creating an account, browsing and designing are free. A pass is only needed to generate. Passes do not renew automatically.</p>
+    <p class="note" id="planNote">Creating an account, browsing and designing are free. A pass is only needed to generate. Passes do not renew automatically.</p>
   </div>
 
   <div class="cta">
@@ -119,6 +119,8 @@
           '<li>All templates and CSV batch</li></ul>' +
           '<a href="/signup.html" class="btn btn-primary">Get started</a></div>';
       }).join('');
+            document.getElementById('planNote').innerText = 'Creating an account, browsing and designing are free. You can also skip the pass and pay per image (KES ' + d.perImage.KES + ' each) when you generate. Passes do not renew automatically.';
+    }).catch(() => {
     }).catch(() => {
       document.getElementById('plansBox').innerHTML = '<p style="text-align:center; grid-column:1/-1;">Prices are shown after you create a free account.</p>';
     });
