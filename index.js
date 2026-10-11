@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
@@ -18,16 +19,21 @@ const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const ENABLE_USD = process.env.ENABLE_USD === 'true';
 const CURRENCIES = ENABLE_USD ? ['KES', 'USD'] : ['KES'];
 
-// All prices live here and nowhere else.
+// All prices live here and nowhere else. CNY prices are paid by Alipay QR and approved by hand.
 const PLANS = {
-  daily:   { label: 'Daily Pass',   days: 1,  generations: 40,   prices: { KES: 700,   USD: 6 } },
-  weekly:  { label: 'Weekly Pass',  days: 7,  generations: 200,  prices: { KES: 3000,  USD: 24 } },
-  monthly: { label: 'Monthly Pass', days: 30, generations: 1000, prices: { KES: 10350, USD: 80 } }
+  daily:   { label: 'Daily Pass',   days: 1,  generations: 40,   prices: { KES: 700,   USD: 6,  CNY: 42 } },
+  weekly:  { label: 'Weekly Pass',  days: 7,  generations: 200,  prices: { KES: 3000,  USD: 24, CNY: 168 } },
+  monthly: { label: 'Monthly Pass', days: 30, generations: 1000, prices: { KES: 10350, USD: 80, CNY: 548 } }
 };
-const CREDIT_PACKS = { 100: { KES: 2000, USD: 15 } };
-const PER_IMAGE = { KES: 20, USD: 0.15 };
+const CREDIT_PACKS = { 100: { KES: 2000, USD: 15, CNY: 105 } };
+const PER_IMAGE = { KES: 20, USD: 0.15, CNY: 1.1 };
 const MAX_TEMPLATES = 30;
 const MAX_ORDER = 200;
+
+const ADMIN_IDS = (process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+function alipayReady() {
+  return fs.existsSync(path.join(__dirname, 'public', 'assets', 'alipay-qr.png'));
+}
 
 class UserError extends Error {}
 
@@ -103,6 +109,7 @@ function cleanDesign(input) {
   return {
     product: input.product,
     style: prod.styles.includes(input.style) ? input.style : prod.styles[0],
+    lang: input.lang === 'zh' ? 'zh' : 'en',
     colors: {
       primary: hex(c.primary) || '#4361ee',
       accent: hex(c.accent) || '#f72585',
@@ -194,8 +201,7 @@ async function resumeOrders() {
   (data || []).forEach(o => processOrder(o.id));
 }
 
-/* ---------------- payments ---------------- */
-// Handles one successful Paystack charge. Safe to call twice for the same payment.
+/* ---------------- Paystack payments ---------------- */
 async function handleCharge(d) {
   const meta = d.metadata || {};
   const reference = d.reference;
@@ -268,14 +274,11 @@ app.use(express.json({ limit: '5mb' }));
 app.use('/assets/fonts', (req, res, next) => { res.setHeader('Access-Control-Allow-Origin', '*'); next(); });
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Second safety net: when the customer returns from Paystack, confirm the payment directly
-app.post('/verify', async (req, res, next) => next());
-
 /* ---------------- public ---------------- */
 app.get('/plans', (req, res) => {
   res.json({
     success: true,
-    currencies: CURRENCIES,
+    currencies: alipayReady() ? [...CURRENCIES, 'CNY'] : CURRENCIES,
     plans: Object.entries(PLANS).map(([id, p]) => ({ id, label: p.label, days: p.days, generations: p.generations, prices: p.prices })),
     creditPack: { credits: 100, prices: CREDIT_PACKS[100] },
     perImage: PER_IMAGE,
@@ -343,6 +346,11 @@ async function requireActive(req, res, next) {
   next();
 }
 
+function requireAdmin(req, res, next) {
+  if (!ADMIN_IDS.includes(req.user.id)) return res.status(403).json({ success: false, error: 'Not allowed.' });
+  next();
+}
+
 /* ---------------- account ---------------- */
 app.get('/overview', requireAuth, async (req, res) => {
   const sub = await getActiveSubscription(req.user.id);
@@ -383,7 +391,8 @@ app.get('/overview', requireAuth, async (req, res) => {
   res.json({
     success: true,
     email: req.user.email, name: meta.full_name || '', phone: meta.phone || '', country: meta.country || '',
-    memberSince: req.user.created_at, subscription, expiredAt, templatesCount: templatesCount || 0, daily
+    memberSince: req.user.created_at, subscription, expiredAt, templatesCount: templatesCount || 0, daily,
+    isAdmin: ADMIN_IDS.includes(req.user.id)
   });
 });
 
@@ -470,6 +479,149 @@ app.delete('/templates/:id', requireAuth, async (req, res) => {
   res.json({ success: true });
 });
 
+/* ---------------- Alipay QR payments (approved by hand) ---------------- */
+function newCode() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.randomBytes(6);
+  let s = 'ME';
+  for (let i = 0; i < 6; i++) s += chars[bytes[i] % chars.length];
+  return s;
+}
+
+async function createManual(userId, fields) {
+  const { count } = await supabase.from('manual_payments').select('*', { count: 'exact', head: true })
+    .eq('user_id', userId).in('status', ['awaiting', 'submitted']);
+  if ((count || 0) >= 5) throw new UserError('You have too many unfinished payments. Please finish or wait for them to be checked.');
+  for (let i = 0; i < 5; i++) {
+    const { data, error } = await supabase.from('manual_payments').insert([{ user_id: userId, code: newCode(), ...fields }]).select();
+    if (!error) return data[0];
+    if (error.code !== '23505') throw error;
+  }
+  throw new Error('Could not create a payment code');
+}
+
+function manualView(p) {
+  return { id: p.id, code: p.code, amount: Number(p.amount_cny), status: p.status, kind: p.kind, orderId: p.order_id, qr: '/assets/alipay-qr.png' };
+}
+
+async function fulfilManual(p) {
+  if (p.kind === 'pass') {
+    const plan = PLANS[p.plan] || PLANS.monthly;
+    const { error } = await supabase.from('subscriptions').insert([{
+      user_id: p.user_id, plan: p.plan, status: 'active', paystack_reference: 'ALIPAY-' + p.code,
+      generation_limit: plan.generations, extra_credits: 0,
+      expires_at: new Date(Date.now() + plan.days * 86400000).toISOString()
+    }]);
+    if (error) throw error;
+  } else if (p.kind === 'credits') {
+    const { data: sub } = await supabase.from('subscriptions').select('*')
+      .eq('user_id', p.user_id).eq('status', 'active').order('id', { ascending: false }).limit(1).single();
+    if (!sub) throw new Error('This customer has no active pass to add credits to.');
+    const { error } = await supabase.from('subscriptions').update({ extra_credits: sub.extra_credits + p.credits }).eq('id', sub.id);
+    if (error) throw error;
+  } else if (p.kind === 'order') {
+    const { data: upd } = await supabase.from('orders').update({ status: 'paid' }).eq('id', p.order_id).eq('status', 'pending').select();
+    if (upd && upd.length) processOrder(p.order_id);
+  }
+}
+
+app.post('/manual/pass', requireAuth, uploadLimiter, async (req, res) => {
+  try {
+    if (!alipayReady()) throw new UserError('Alipay payments are not available yet.');
+    const chosen = PLANS[req.body.plan];
+    if (!chosen) throw new UserError('Unknown pass.');
+    const current = await getActiveSubscription(req.user.id);
+    if (current && current.expires_at) {
+      throw new UserError('You already have an active pass until ' + new Date(current.expires_at).toISOString().slice(0, 10) + '. You can buy a new pass when it ends.');
+    }
+    const m = await createManual(req.user.id, { kind: 'pass', plan: req.body.plan, amount_cny: chosen.prices.CNY });
+    res.json({ success: true, manual: manualView(m) });
+  } catch (e) { sendError(res, e); }
+});
+
+app.post('/manual/credits', requireAuth, requireActive, uploadLimiter, async (req, res) => {
+  try {
+    if (!alipayReady()) throw new UserError('Alipay payments are not available yet.');
+    const m = await createManual(req.user.id, { kind: 'credits', credits: 100, amount_cny: CREDIT_PACKS[100].CNY });
+    res.json({ success: true, manual: manualView(m) });
+  } catch (e) { sendError(res, e); }
+});
+
+app.get('/manual/open', requireAuth, async (req, res) => {
+  const { data } = await supabase.from('manual_payments').select('*')
+    .eq('user_id', req.user.id).in('status', ['awaiting', 'submitted']).order('id', { ascending: false }).limit(1);
+  res.json({ success: true, manual: data && data.length ? manualView(data[0]) : null });
+});
+
+app.get('/manual/:id', requireAuth, async (req, res) => {
+  const { data } = await supabase.from('manual_payments').select('*').eq('id', req.params.id).eq('user_id', req.user.id).limit(1);
+  if (!data || !data.length) return res.status(404).json({ success: false, error: 'Payment not found.' });
+  res.json({ success: true, manual: manualView(data[0]) });
+});
+
+app.post('/manual/:id/submit', requireAuth, uploadLimiter, async (req, res) => {
+  const { data } = await supabase.from('manual_payments').select('*').eq('id', req.params.id).eq('user_id', req.user.id).limit(1);
+  if (!data || !data.length) return res.status(404).json({ success: false, error: 'Payment not found.' });
+  let p = data[0];
+  if (p.status === 'awaiting') {
+    const note = String(req.body.payerNote || '').trim().slice(0, 60);
+    const { data: upd } = await supabase.from('manual_payments').update({ status: 'submitted', payer_note: note })
+      .eq('id', p.id).eq('status', 'awaiting').select();
+    if (upd && upd.length) p = upd[0];
+  }
+  res.json({ success: true, manual: manualView(p) });
+});
+
+/* ---------------- admin ---------------- */
+app.get('/admin/payments', requireAuth, requireAdmin, async (req, res) => {
+  const { data: list } = await supabase.from('manual_payments').select('*').order('id', { ascending: false }).limit(100);
+  const rows = list || [];
+
+  const users = {};
+  for (const id of [...new Set(rows.map(r => r.user_id))]) {
+    const { data } = await supabase.auth.admin.getUserById(id);
+    if (data && data.user) {
+      const m = data.user.user_metadata || {};
+      users[id] = { email: data.user.email, name: m.full_name || '', phone: m.phone || '' };
+    }
+  }
+  const orderIds = rows.filter(r => r.order_id).map(r => r.order_id);
+  const orders = {};
+  if (orderIds.length) {
+    const { data } = await supabase.from('orders').select('id,label,quantity').in('id', orderIds);
+    (data || []).forEach(o => { orders[o.id] = o; });
+  }
+
+  res.json({
+    success: true,
+    payments: rows.map(r => ({
+      id: r.id, created_at: r.created_at, status: r.status, code: r.code,
+      amount: Number(r.amount_cny), payer_note: r.payer_note || '',
+      user: users[r.user_id] || { email: '(unknown)', name: '', phone: '' },
+      what: r.kind === 'pass' ? ((PLANS[r.plan] && PLANS[r.plan].label) || r.plan)
+        : r.kind === 'credits' ? r.credits + ' extra generations'
+        : (orders[r.order_id] ? 'Order: ' + orders[r.order_id].quantity + ' x ' + orders[r.order_id].label : 'Image order')
+    }))
+  });
+});
+
+async function decideManual(req, res, newStatus) {
+  const { data: upd } = await supabase.from('manual_payments')
+    .update({ status: newStatus, decided_at: new Date().toISOString(), decided_by: req.user.id })
+    .eq('id', req.params.id).in('status', ['awaiting', 'submitted']).select();
+  if (!upd || !upd.length) return res.status(409).json({ success: false, error: 'This payment was already decided.' });
+  if (newStatus === 'approved') {
+    try { await fulfilManual(upd[0]); }
+    catch (e) {
+      await supabase.from('manual_payments').update({ status: 'submitted', decided_at: null, decided_by: null }).eq('id', upd[0].id);
+      return res.status(500).json({ success: false, error: e.message || 'Could not apply this payment.' });
+    }
+  }
+  res.json({ success: true });
+}
+app.post('/admin/payments/:id/approve', requireAuth, requireAdmin, (req, res) => decideManual(req, res, 'approved'));
+app.post('/admin/payments/:id/reject', requireAuth, requireAdmin, (req, res) => decideManual(req, res, 'rejected'));
+
 /* ---------------- orders ---------------- */
 app.post('/orders', requireAuth, async (req, res) => {
   try {
@@ -501,6 +653,17 @@ app.post('/orders', requireAuth, async (req, res) => {
     }
 
     const currency = req.body.currency || 'KES';
+
+    if (currency === 'CNY') {
+      if (!alipayReady()) throw new UserError('Alipay payments are not available yet.');
+      const amount = Math.round(quantity * PER_IMAGE.CNY * 100);
+      const { data, error } = await supabase.from('orders')
+        .insert([{ user_id: req.user.id, label: prod.label, design, rows, quantity, payment: 'manual', currency: 'CNY', amount_subunits: amount, status: 'pending' }]).select();
+      if (error) throw error;
+      const m = await createManual(req.user.id, { kind: 'order', order_id: data[0].id, amount_cny: amount / 100 });
+      return res.json({ success: true, orderId: data[0].id, status: 'pending', manual: manualView(m) });
+    }
+
     if (!CURRENCIES.includes(currency)) throw new UserError('That currency is not available yet.');
     const amount = Math.round(quantity * PER_IMAGE[currency] * 100);
 
@@ -541,7 +704,7 @@ app.post('/orders/:id/retry', requireAuth, async (req, res) => {
   res.json({ success: true });
 });
 
-/* ---------------- passes and payments ---------------- */
+/* ---------------- passes and Paystack payments ---------------- */
 app.post('/subscribe', requireAuth, async (req, res) => {
   try {
     const { plan, currency = 'KES' } = req.body;

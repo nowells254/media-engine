@@ -67,6 +67,18 @@
     banner: { headline: 'Big Season Sale', subtitle: 'Up to 50% off selected products this week only', offer: 'Shop now', company: 'Pinnacle Edge Ltd', website: 'www.example.com', phone: '+254 700 000 000' }
   };
 
+    var SAMPLES_ZH = {
+    business_card: { company: '示例科技有限公司', name: '王小明', title: '市场总监', phone: '+86 138 0000 0000', email: 'wang@example.com', website: 'www.example.com', address: '深圳市南山区科技园', tagline: '创意方案,助力品牌成长' },
+    id_card: { company: '示例科技有限公司', name: '王小明', title: '市场部', idno: '工号:PR-0042', valid: '有效期至:2027年12月31日', phone: '+86 138 0000 0000', email: 'wang@example.com', address: '深圳市南山区科技园' },
+    certificate: { company: '示例培训学院', heading: '荣誉证书', recipient: '王小明', body: '表彰其在2026年度培训项目中表现突出、勤奋努力。', date: '2026年10月12日', location: '深圳', signer: '李明', signerrole: '院长' },
+    poster: { headline: '2026 年度商业峰会', subtitle: '创新 · 连接 · 成长', details: '与行业领袖相聚,共享一整天的演讲、工作坊与交流。', date: '2026年11月15日', location: '深圳会展中心', company: '示例科技有限公司', phone: '+86 138 0000 0000', email: 'hello@example.com', website: 'www.example.com' },
+    banner: { headline: '年度大促', subtitle: '精选商品低至五折,仅限本周', offer: '立即选购', company: '示例科技有限公司', website: 'www.example.com', phone: '+86 138 0000 0000' }
+  };
+  var TEXT = {
+    en: { presented: 'This certificate is proudly presented to', cert: 'Certificate of Achievement' },
+    zh: { presented: '兹授予', cert: '荣誉证书' }
+  };
+
   var PALETTES = [
     { name: 'Royal', colors: { primary: '#4361ee', accent: '#f72585', background: '#ffffff', text: '#2b2d42' } },
     { name: 'Ocean', colors: { primary: '#0077b6', accent: '#00b4d8', background: '#f8fdff', text: '#03045e' } },
@@ -134,8 +146,8 @@
       '<div style="height:100%;border:' + (classic ? '5px double ' : '12px solid ') + c.primary + ';padding:10px;">' +
       '<div style="height:100%;border:2px solid ' + c.accent + ';display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 70px 28px;">' + logo +
         '<div style="font-size:15px;letter-spacing:5px;text-transform:uppercase;color:' + c.primary + ';font-weight:700;margin-top:8px;">' + esc(f.company) + '</div>' +
-        '<div style="font-size:54px;font-weight:700;margin-top:20px;letter-spacing:2px;color:' + c.primary + ';' + (classic ? 'font-style:italic;' : '') + '">' + esc(f.heading || 'Certificate of Achievement') + '</div>' +
-        '<div style="font-size:16px;margin-top:18px;opacity:.7;">This certificate is proudly presented to</div>' +
+        '<div style="font-size:54px;font-weight:700;margin-top:20px;letter-spacing:2px;color:' + c.primary + ';' + (classic ? 'font-style:italic;' : '') + '">' + esc(f.heading || TEXT[d.lang].cert) + '</div>' +
+        '<div style="font-size:16px;margin-top:18px;opacity:.7;">' + esc(TEXT[d.lang].presented) + '</div>' +
         '<div style="font-size:56px;font-weight:700;margin:12px 0 4px;border-bottom:3px solid ' + c.accent + ';padding:0 40px 8px;">' + esc(f.recipient) + '</div>' +
         '<div style="font-size:19px;line-height:1.5;max-width:780px;margin-top:16px;white-space:pre-line;">' + esc(f.body) + '</div>' +
         '<div style="margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end;">' +
@@ -187,6 +199,7 @@
     var d = {
       product: design.product,
       style: design.style || 'modern',
+      lang: design.lang === 'zh' ? 'zh' : 'en',
       colors: design.colors || PALETTES[0].colors,
       fields: design.fields || {}
     };
@@ -198,7 +211,7 @@
       BUILDERS[d.product](d, opts) + '</body></html>';
   }
 
-  var api = { PRODUCTS: PRODUCTS, SAMPLES: SAMPLES, PALETTES: PALETTES, build: build, esc: esc };
+  var api = { PRODUCTS: PRODUCTS, SAMPLES: SAMPLES, SAMPLES_ZH: SAMPLES_ZH, PALETTES: PALETTES, build: build, esc: esc };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Designs = api;
 })(typeof window !== 'undefined' ? window : this);

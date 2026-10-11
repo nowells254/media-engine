@@ -7,14 +7,14 @@
   <style>
     :root { --brand:#4361ee; --dark:#2b2d42; --bg:#f4f5fb; --border:#e2e4ec; --radius:12px; --danger:#ef233c; }
     * { box-sizing:border-box; }
-    body { font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); max-width:980px; margin:0 auto; padding:20px; color:var(--dark); }
+    body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',Roboto,Arial,sans-serif; background:var(--bg); max-width:980px; margin:0 auto; padding:20px; color:var(--dark); }
     input, select, textarea { display:block; width:100%; margin:8px 0; padding:12px 14px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius); font-family:inherit; background:white; }
     input:focus, select:focus, textarea:focus { outline:none; border-color:var(--brand); }
     button { display:block; width:100%; margin:10px 0 0; padding:13px; font-size:15px; font-weight:600; border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; background:linear-gradient(90deg,#4361ee,#7209b7); color:white; transition:opacity .15s; }
     button:hover { opacity:.9; }
     button:disabled { opacity:.5; cursor:not-allowed; }
     button.light { background:#eef0f7; color:var(--dark); }
-    button.sm { width:auto; padding:6px 12px; font-size:12px; margin:6px 0 0; }
+    button.sm { width:auto; display:inline-block; padding:6px 12px; font-size:12px; margin:6px 0 0; }
     .nbtn { width:auto; padding:11px 22px; margin:0; }
     h2 { margin:0 0 10px; font-size:18px; }
     .hint { font-size:12px; color:#888; }
@@ -75,9 +75,9 @@
     .live .empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#999; font-size:13px; text-align:center; padding:12px; }
     .stepdots { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
     .dot { padding:8px 14px; border-radius:30px; background:#eef0f7; font-size:13px; font-weight:600; cursor:pointer; color:#666; }
-    .dot span { display:inline-block; width:20px; height:20px; border-radius:50%; background:#d5d9ea; color:white; text-align:center; line-height:20px; font-size:11px; margin-right:4px; }
+    .dot span.n { display:inline-block; width:20px; height:20px; border-radius:50%; background:#d5d9ea; color:white; text-align:center; line-height:20px; font-size:11px; margin-right:4px; }
     .dot.on { background:var(--dark); color:white; }
-    .dot.on span { background:#f72585; }
+    .dot.on span.n { background:#f72585; }
     .pgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
     .pcard { border:2px solid var(--border); border-radius:14px; padding:16px 12px; text-align:center; cursor:pointer; transition:all .15s; background:white; }
     .pcard:hover { border-color:#b8c2f0; }
@@ -89,7 +89,7 @@
     .chip.on { border-color:var(--brand); background:#f3f5ff; }
     .pal { display:flex; border:2px solid var(--border); border-radius:10px; overflow:hidden; cursor:pointer; }
     .pal span { width:26px; height:34px; }
-    .colors { display:flex; gap:18px; margin-top:8px; }
+    .colors { display:flex; gap:18px; margin-top:8px; flex-wrap:wrap; }
     .color-in { width:60px; height:40px; padding:2px; margin:0 0 2px; cursor:pointer; }
     .upl { margin-top:6px; }
     .upl img { height:60px; max-width:140px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:#fafafa; display:block; }
@@ -113,6 +113,12 @@
     .history-item a button { width:auto; padding:8px 14px; font-size:13px; margin:0; }
     .profile-logo-preview { width:100px; height:100px; border-radius:var(--radius); background:#f0f1f5; object-fit:contain; margin:10px 0; border:1px solid var(--border); }
 
+    #payModal { display:none; position:fixed; inset:0; background:rgba(20,20,40,.6); z-index:1000; overflow:auto; padding:20px; }
+    #payBox { max-width:420px; margin:20px auto; text-align:center; }
+    .bigamt { font-size:36px; font-weight:800; margin:4px 0 12px; }
+    .qr { width:230px; max-width:100%; border:1px solid var(--border); border-radius:12px; }
+    .steps { text-align:left; font-size:14px; line-height:1.8; margin:12px 0; }
+
     @media (max-width:760px) {
       .stats { grid-template-columns:repeat(2,1fr); }
       .charts, .plans-grid, .studio-grid { grid-template-columns:1fr; }
@@ -125,7 +131,7 @@
 
   <div class="topbar">
     <div class="left">
-      <div class="acct" onclick="toggleAcct(event)"><span class="avatar" id="avatar">?</span><span id="userName">Account</span><span style="font-size:10px;">&#9660;</span></div>
+      <div class="acct" onclick="toggleAcct(event)"><span class="avatar" id="avatar">?</span><span id="userName" translate="no">Account</span><span style="font-size:10px;">&#9660;</span></div>
       <div class="logo">Media Engine</div>
     </div>
     <button onclick="logout()">Log Out</button>
@@ -136,6 +142,7 @@
   </div>
 
   <div id="paidBanner" class="banner" style="display:none;"></div>
+  <div id="manualBanner" class="notice" style="display:none;"></div>
   <div id="expiryBanner" class="notice" style="display:none;"></div>
 
   <div class="tabs">
@@ -146,6 +153,7 @@
     <div class="tab-btn" onclick="showTab('profileTab', this, loadProfile)">Brand</div>
     <div class="tab-btn" id="settingsBtn" onclick="showTab('settingsTab', this)">Settings</div>
     <a href="/support.html" target="_blank" class="tab-btn">Support</a>
+    <a href="/admin.html" id="adminLink" class="tab-btn" style="display:none;">Admin</a>
   </div>
 
   <div id="overviewTab" class="tab-content active">
@@ -169,7 +177,7 @@
     <p class="hint">Designing and previewing are free. A pass starts when your payment is confirmed and does not renew automatically.</p>
     <div class="card" id="creditsCard" style="display:none; margin-top:16px;">
       <h2>Need more generations?</h2>
-      <p style="margin:0 0 4px;">100 extra generations: <b id="creditsPrice"></b></p>
+      <p style="margin:0 0 4px;"><span>100 extra generations:</span> <b id="creditsPrice"></b></p>
       <button onclick="buyCredits()">Buy 100 more</button>
       <p id="creditsStatus" class="hint"></p>
     </div>
@@ -230,7 +238,7 @@
     </div>
     <div class="card">
       <h2>Login &amp; Security</h2>
-      <p class="hint">Current email: <span id="settingsCurrentEmail"></span></p>
+      <p class="hint"><span>Current email:</span> <span id="settingsCurrentEmail" translate="no"></span></p>
       <label class="lbl">Current Password (required)</label>
       <input type="password" id="currentPassword" placeholder="Your current password">
       <label class="lbl">New Email (optional)</label>
@@ -242,7 +250,10 @@
     </div>
   </div>
 
+  <div id="payModal"><div class="card" id="payBox"></div></div>
+
   <script src="/designs.js"></script>
+  <script src="/i18n.js"></script>
   <script>
     const API_BASE = window.location.origin;
     const DS = window.Designs;
@@ -251,16 +262,20 @@
     let hasSub = false, activeEnds = null, passRemaining = 0;
     let PLANS = [], CREDIT = null, CURRENCIES = ['KES'], PER_IMAGE = { KES: 20 }, MAX_ORDER = 200;
     let detectedColor = '', savedBusinessName = '', brandLogoUrl = '';
-    let infoFilled = false;
+    let infoFilled = false, defaultCurrencySet = false;
 
     let design = null, step = 1, csvRows = null, csvName = '', userMode = null, payMode = 'payg';
     let savedDesigns = [], orderTimer = null, previewTimer = null;
+    let payState = null, payTimer = null;
 
     if (!token) { window.location.href = '/login.html'; }
 
     function esc(s) {
       return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     }
+    function curLang() { return (window.ME_LANG && window.ME_LANG() === 'zh') ? 'zh' : 'en'; }
+    function loc() { return curLang() === 'zh' ? 'zh-CN' : undefined; }
+    function T(s) { return window.ME_T ? window.ME_T(s) : s; }
     function logout() { localStorage.removeItem('mediaEngineToken'); window.location.href = '/login.html'; }
 
     async function api(path, method, body) {
@@ -314,10 +329,10 @@
       daily.forEach((d, i) => {
         const h = Math.round((d.count / max) * (base - 26));
         const x = 14 + i * (bw + gap);
-        const day = new Date(d.date + 'T00:00:00Z').toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' });
+        const day = new Date(d.date + 'T00:00:00Z').toLocaleDateString(loc(), { weekday: 'short', timeZone: 'UTC' });
         out += '<rect x="' + x + '" y="' + (base - h) + '" width="' + bw + '" height="' + Math.max(h, 3) + '" rx="8" fill="' + colors[i % colors.length] + '"/>';
         out += '<text x="' + (x + bw / 2) + '" y="' + (base - h - 6) + '" text-anchor="middle" font-size="11" fill="#2b2d42">' + d.count + '</text>';
-        out += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="#888">' + day + '</text>';
+        out += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="#888" translate="no">' + day + '</text>';
       });
       return out + '</svg>';
     }
@@ -328,11 +343,12 @@
       document.getElementById('userName').innerText = name;
       document.getElementById('avatar').innerText = (name || '?').trim().charAt(0).toUpperCase();
       document.getElementById('settingsCurrentEmail').innerText = d.email || '';
+      document.getElementById('adminLink').style.display = d.isAdmin ? 'block' : 'none';
 
       const rows = [
         ['Name', d.name || '-'], ['Email', d.email || '-'], ['Phone', d.phone || '-'], ['Country', d.country || '-'],
-        ['Member since', d.memberSince ? new Date(d.memberSince).toLocaleDateString() : '-'],
-        ['Pass', s ? s.planLabel + (s.expiresAt ? ' (until ' + new Date(s.expiresAt).toLocaleDateString() + ')' : '') : 'No active pass'],
+        ['Member since', d.memberSince ? new Date(d.memberSince).toLocaleDateString(loc()) : '-'],
+        ['Pass', s ? s.planLabel + (s.expiresAt ? ' (until ' + new Date(s.expiresAt).toLocaleDateString(loc()) + ')' : '') : 'No active pass'],
         ['Usage', s ? s.used + ' / ' + s.totalAllowed : '-']
       ];
       document.getElementById('acctRows').innerHTML = rows.map(r => '<div class="row"><span>' + r[0] + '</span><span>' + esc(r[1]) + '</span></div>').join('');
@@ -346,9 +362,9 @@
 
       const hero = document.getElementById('heroBox');
       const msg = s ? 'Your ' + s.planLabel + ' is active. Create something great today.'
-        : (d.expiredAt ? 'Your pass expired on ' + new Date(d.expiredAt).toLocaleDateString() + '. Pay per image or choose a new pass.'
+        : (d.expiredAt ? 'Your pass expired on ' + new Date(d.expiredAt).toLocaleDateString(loc()) + '. Pay per image or choose a new pass.'
         : 'Design for free. Pay per image, or choose a pass, only when you generate.');
-      hero.innerHTML = '<div><h2>Welcome, ' + esc(name) + '</h2><p>' + msg + '</p></div>';
+      hero.innerHTML = '<div><h2>Welcome, ' + esc(name) + '</h2><p>' + esc(msg) + '</p></div>';
       const btn = document.createElement('button');
       btn.innerText = 'Open Studio';
       btn.onclick = openStudio;
@@ -356,7 +372,7 @@
 
       const daysLeft = s && s.expiresAt ? Math.max(0, Math.ceil((new Date(s.expiresAt) - Date.now()) / 86400000)) : null;
       const soon = document.getElementById('expiryBanner');
-      if (s && daysLeft !== null && daysLeft <= 1) { soon.style.display = 'block'; soon.innerText = 'Your pass ends soon (' + new Date(s.expiresAt).toLocaleString() + ').'; }
+      if (s && daysLeft !== null && daysLeft <= 1) { soon.style.display = 'block'; soon.innerText = 'Your pass ends soon (' + new Date(s.expiresAt).toLocaleString(loc()) + ').'; }
       else if (s && daysLeft !== null && daysLeft <= 5) { soon.style.display = 'block'; soon.innerText = 'Your pass ends in ' + daysLeft + ' day(s).'; }
       else { soon.style.display = 'none'; }
 
@@ -369,8 +385,8 @@
       document.getElementById('statsBox').innerHTML = stats.map(x => '<div class="stat ' + x.cls + '"><div class="v">' + x.value + '</div><div class="l">' + x.label + '</div></div>').join('');
       document.getElementById('donutBox').innerHTML = renderDonut(s ? s.used : 0, s ? s.totalAllowed : 0);
       document.getElementById('donutLegend').innerHTML = s
-        ? 'Included: <b>' + s.limit + '</b><br>Extra credits: <b>' + s.extraCredits + '</b><br>Used: <b>' + s.used + '</b>'
-        : 'No active pass';
+        ? '<span>Included:</span> <b>' + s.limit + '</b><br><span>Extra credits:</span> <b>' + s.extraCredits + '</b><br><span>Used:</span> <b>' + s.used + '</b>'
+        : 'No active pass yet';
       document.getElementById('barsBox').innerHTML = renderBars(d.daily);
     }
 
@@ -389,15 +405,19 @@
     /* ---------- Plans and payments ---------- */
     function money(c, n) {
       if (c === 'USD') return '$' + (Number.isInteger(n) ? n : n.toFixed(2));
+      if (c === 'CNY') return '¥' + (Number.isInteger(n) ? n : n.toFixed(2));
       return c + ' ' + n.toLocaleString('en-US');
     }
+    function money2(c, n) { return money(c, +n.toFixed(2)); }
     function currentCurrency() { return document.getElementById('currencySelect').value || 'KES'; }
 
     async function loadPlans() {
       const d = await (await fetch(API_BASE + '/plans')).json();
       PLANS = d.plans; CREDIT = d.creditPack; CURRENCIES = d.currencies; PER_IMAGE = d.perImage; MAX_ORDER = d.maxOrder;
-      document.getElementById('currencySelect').innerHTML = CURRENCIES.map(c =>
-        '<option value="' + c + '">' + (c === 'KES' ? 'Kenyan Shilling (KES) - M-PESA or card' : 'US Dollar (USD) - card') + '</option>').join('');
+      const labels = { KES: 'Kenyan Shilling (KES) - M-PESA or card', USD: 'US Dollar (USD) - card', CNY: 'Chinese Yuan (CNY) - Alipay QR code' };
+      document.getElementById('currencySelect').innerHTML = CURRENCIES.map(c => '<option value="' + c + '">' + labels[c] + '</option>').join('');
+      if (!defaultCurrencySet && curLang() === 'zh' && CURRENCIES.includes('CNY')) document.getElementById('currencySelect').value = 'CNY';
+      defaultCurrencySet = true;
       renderPlans();
     }
 
@@ -405,7 +425,7 @@
       const c = currentCurrency();
       const blocked = hasSub && activeEnds;
       document.getElementById('plansGrid').innerHTML = PLANS.map(p => {
-        const per = c === 'USD' ? +(p.prices[c] / p.generations).toFixed(2) : Math.round(p.prices[c] / p.generations);
+        const per = c === 'KES' ? Math.round(p.prices[c] / p.generations) : +(p.prices[c] / p.generations).toFixed(2);
         const pop = p.id === 'monthly';
         return '<div class="plan' + (pop ? ' pop' : '') + '">' +
           (pop ? '<div class="tag">LOWEST PRICE PER IMAGE</div>' : '') +
@@ -414,8 +434,8 @@
           '<ul><li>' + p.generations.toLocaleString('en-US') + ' images</li><li>Valid for ' + p.days + (p.days === 1 ? ' day' : ' days') + '</li><li>All products and CSV batch</li></ul>' +
           '<button onclick="subscribe(\'' + p.id + '\')"' + (blocked ? ' disabled' : '') + '>' + (blocked ? 'Pass active' : 'Choose ' + p.label) + '</button></div>';
       }).join('');
-      document.getElementById('currentPass').innerHTML = hasSub
-        ? 'Your current pass is <b>active</b>' + (activeEnds ? ' until <b>' + new Date(activeEnds).toLocaleString() + '</b>.' : '.')
+      document.getElementById('currentPass').innerText = hasSub
+        ? (activeEnds ? 'Your current pass is active until ' + new Date(activeEnds).toLocaleString(loc()) + '.' : 'Your current pass is active.')
         : 'You have no active pass. Everything is free to explore.';
       document.getElementById('paygNote').innerText = 'No pass? You can pay per image instead: ' + money(c, PER_IMAGE[c]) + ' per image, chosen at the last step in the Studio.';
       if (CREDIT) document.getElementById('creditsPrice').innerText = money(c, CREDIT.prices[c] || 0);
@@ -423,46 +443,142 @@
 
     async function subscribe(planId) {
       const st = document.getElementById('subscribeStatus');
+      const c = currentCurrency();
       st.innerText = 'Opening the secure payment page...';
-      const data = await api('/subscribe', 'POST', { plan: planId, currency: currentCurrency() });
+      if (c === 'CNY') {
+        const r = await api('/manual/pass', 'POST', { plan: planId });
+        if (r.success) { st.innerText = ''; openPay(r.manual); } else st.innerText = 'Error: ' + r.error;
+        return;
+      }
+      const data = await api('/subscribe', 'POST', { plan: planId, currency: c });
       if (data.success) window.location.href = data.authorization_url; else st.innerText = 'Error: ' + data.error;
     }
     async function buyCredits() {
       const st = document.getElementById('creditsStatus');
+      const c = currentCurrency();
       st.innerText = 'Opening the secure payment page...';
-      const data = await api('/buy-credits', 'POST', { credits: 100, currency: currentCurrency() });
+      if (c === 'CNY') {
+        const r = await api('/manual/credits', 'POST', {});
+        if (r.success) { st.innerText = ''; openPay(r.manual); } else st.innerText = 'Error: ' + r.error;
+        return;
+      }
+      const data = await api('/buy-credits', 'POST', { credits: 100, currency: c });
       if (data.success) window.location.href = data.authorization_url; else st.innerText = 'Error: ' + data.error;
+    }
+
+    function showPaid(msg) {
+      const b = document.getElementById('paidBanner');
+      b.style.display = 'block';
+      b.innerText = msg;
     }
 
     async function handlePaidReturn(reference) {
       history.replaceState(null, '', '/dashboard.html');
-      const banner = document.getElementById('paidBanner');
-      banner.style.display = 'block';
-      banner.innerText = 'Confirming your payment...';
-      if (!reference) { banner.innerText = 'We could not read the payment reference. If you were charged, contact support.'; return; }
+      showPaid('Confirming your payment...');
+      if (!reference) { showPaid('We could not read the payment reference. If you were charged, contact support.'); return; }
       const r = await api('/verify-payment', 'POST', { reference });
       if (r.success && r.paid) {
         await loadOverview();
-        if (r.kind === 'order') { banner.innerText = 'Payment received. Your images are being made.'; trackOrder(r.orderId); }
-        else { banner.innerText = 'Payment received. Thank you!'; }
+        if (r.kind === 'order') { showPaid('Payment received. Your images are being made.'); trackOrder(r.orderId); }
+        else showPaid('Payment received. Thank you!');
       } else if (r.success) {
-        banner.innerText = 'We have not received confirmation yet. Refresh this page in a minute. If you were charged, contact support.';
+        showPaid('We have not received confirmation yet. Refresh this page in a minute. If you were charged, contact support.');
       } else {
-        banner.innerText = r.error || 'Could not confirm the payment.';
+        showPaid(r.error || 'Could not confirm the payment.');
+      }
+    }
+
+    /* ---------- Alipay QR payment ---------- */
+    function openPay(m) {
+      payState = m;
+      document.getElementById('payModal').style.display = 'block';
+      renderPay();
+      startPayPoll();
+    }
+    function closePay() { document.getElementById('payModal').style.display = 'none'; clearInterval(payTimer); checkManual(); }
+    function reopenPay() { if (payState) openPay(payState); }
+
+    function renderPay() {
+      const m = payState;
+      let h = '<h2>Pay with Alipay</h2>';
+      if (m.status === 'approved') {
+        h += '<p>Payment confirmed. Thank you!</p><button onclick="closePay()">Close</button>';
+      } else if (m.status === 'rejected') {
+        h += '<p>We could not confirm this payment. If you paid, please contact support and quote your code.</p><p class="hint"><span>Code:</span> <b translate="no">' + esc(m.code) + '</b></p><button class="light" onclick="closePay()">Close</button>';
+      } else {
+        h += '<div class="hint">Amount to pay</div><div class="bigamt">' + money('CNY', m.amount) + '</div>';
+        if (m.status === 'awaiting') {
+          h += '<img class="qr" src="' + esc(m.qr) + '">' +
+            '<div class="steps"><div>1. Open Alipay and scan this QR code.</div>' +
+            '<div>2. Pay exactly ' + money('CNY', m.amount) + '.</div>' +
+            '<div>3. In the remark / note box, write this code: <b translate="no">' + esc(m.code) + '</b></div>' +
+            '<div>4. Tap "I have paid" below.</div></div>' +
+            '<input type="text" id="payNote" maxlength="60" placeholder="Your Alipay name or last 4 digits of the order number (optional)">' +
+            '<button onclick="submitPaid()">I have paid</button><p class="hint" id="payStatus"></p>' +
+            '<button class="light" onclick="closePay()">Close</button>';
+        } else {
+          h += '<p>Thank you. We are checking your payment. This page updates by itself, and it usually takes a few hours.</p>' +
+            '<p class="hint"><span>Code:</span> <b translate="no">' + esc(m.code) + '</b></p><button class="light" onclick="closePay()">Close</button>';
+        }
+      }
+      document.getElementById('payBox').innerHTML = h;
+    }
+
+    async function submitPaid() {
+      const r = await api('/manual/' + payState.id + '/submit', 'POST', { payerNote: document.getElementById('payNote').value });
+      if (r.success) { payState = r.manual; renderPay(); }
+      else document.getElementById('payStatus').innerText = 'Error: ' + r.error;
+    }
+
+    function startPayPoll() {
+      clearInterval(payTimer);
+      payTimer = setInterval(async () => {
+        if (!payState) return;
+        const r = await api('/manual/' + payState.id);
+        if (!r.success) return;
+        const old = payState.status;
+        payState = r.manual;
+        if (r.manual.status === old) return;
+        renderPay();
+        if (r.manual.status === 'approved') {
+          clearInterval(payTimer);
+          await loadOverview();
+          if (r.manual.kind === 'order' && r.manual.orderId) { closePay(); trackOrder(r.manual.orderId); }
+          else showPaid('Payment confirmed. Thank you!');
+        }
+        if (r.manual.status === 'rejected') clearInterval(payTimer);
+      }, 8000);
+    }
+
+    async function checkManual() {
+      const r = await api('/manual/open');
+      const b = document.getElementById('manualBanner');
+      if (r.success && r.manual) {
+        payState = r.manual;
+        b.style.display = 'block';
+        b.innerHTML = '<span>You have an Alipay payment waiting.</span> <button class="sm" onclick="reopenPay()">Open</button>';
+      } else {
+        b.style.display = 'none';
       }
     }
 
     /* ---------- Studio ---------- */
-    function money2(c, n) { return money(c, +n.toFixed(2)); }
+    function samplesFor(lang) { return lang === 'zh' ? DS.SAMPLES_ZH : DS.SAMPLES; }
 
     function newDesign(product) {
+      const lang = curLang();
       const p = DS.PRODUCTS[product];
-      const fields = Object.assign({}, DS.SAMPLES[product]);
+      const fields = Object.assign({}, samplesFor(lang)[product]);
       if (savedBusinessName && 'company' in fields) fields.company = savedBusinessName;
       if (brandLogoUrl && p.fields.some(f => f.key === 'logo')) fields.logo = brandLogoUrl;
       const colors = Object.assign({}, DS.PALETTES[0].colors);
       if (detectedColor) colors.primary = detectedColor;
-      return { product, style: p.styles[0], colors, fields };
+      return { product, style: p.styles[0], lang, colors, fields };
+    }
+    function swapSamples(from, to) {
+      if (!design) return;
+      const a = samplesFor(from)[design.product], b = samplesFor(to)[design.product];
+      for (const k in b) if (design.fields[k] === a[k]) design.fields[k] = b[k];
     }
     function pickProduct(key) {
       if (!design || design.product !== key) { design = newDesign(key); csvRows = null; csvName = ''; userMode = null; }
@@ -470,6 +586,7 @@
     }
     function goStep(n) { if (!design && n > 1) return; step = n; renderStudio(); }
     function setStyle(s) { design.style = s; renderStudio(); }
+    function setDLang(l) { if (design.lang !== l) { swapSamples(design.lang, l); design.lang = l; } renderStudio(); }
     function setColor(k, v) { design.colors[k] = v; schedulePreview(); }
     function applyPalette(i) { design.colors = Object.assign({}, DS.PALETTES[i].colors); renderStudio(); }
     function useBrandColor() { design.colors.primary = detectedColor; renderStudio(); }
@@ -491,9 +608,12 @@
     }
 
     function stepStyle() {
-      const p = DS.PRODUCTS[design.product], c = design.colors;
+      const p = DS.PRODUCTS[design.product], c = design.colors, lg = design.lang || 'en';
       return '<h2>2. Choose a style and colours</h2>' +
         '<label class="lbl">Style</label><div class="chips">' + p.styles.map(s => '<div class="chip' + (design.style === s ? ' on' : '') + '" onclick="setStyle(\'' + s + '\')">' + (s === 'modern' ? 'Modern' : 'Classic') + '</div>').join('') + '</div>' +
+        '<label class="lbl">Text on the design</label><div class="chips">' +
+          '<div class="chip' + (lg === 'en' ? ' on' : '') + '" onclick="setDLang(\'en\')">English</div>' +
+          '<div class="chip' + (lg === 'zh' ? ' on' : '') + '" onclick="setDLang(\'zh\')" translate="no">中文</div></div>' +
         '<label class="lbl">Colour palettes</label><div class="chips">' + DS.PALETTES.map((pl, i) =>
           '<div class="pal" title="' + pl.name + '" onclick="applyPalette(' + i + ')">' + [pl.colors.primary, pl.colors.accent, pl.colors.background, pl.colors.text].map(x => '<span style="background:' + x + '"></span>').join('') + '</div>').join('') + '</div>' +
         (detectedColor ? '<button class="light sm" onclick="useBrandColor()">Use my brand colour (' + detectedColor + ')</button>' : '') +
@@ -535,23 +655,19 @@
 
       let h = '<h2>4. Finish</h2>' +
         '<label class="lbl">Make many images at once (optional)</label>' +
-        '<p class="hint">Upload a CSV where each row is one image (up to ' + MAX_ORDER + '). Column headings: <b>' + textKeys.join(', ') + '</b>. Columns you leave out use the text from step 3. If it contains Chinese, save it as CSV UTF-8.</p>' +
+        '<p class="hint">Upload a CSV where each row is one image (up to ' + MAX_ORDER + '). Column headings: <b translate="no">' + textKeys.join(', ') + '</b>. Columns you leave out use the text from step 3. If it contains Chinese, save it as CSV UTF-8.</p>' +
         '<a href="' + sample + '" download="sample-' + design.product + '.csv" class="hint">Download a sample CSV</a>' +
         '<input type="file" accept=".csv" onchange="loadCsv(this)">' +
-        (csvRows ? '<div class="hint" id="csvInfo"><b>' + esc(csvName) + '</b>: ' + N + ' images <button class="light sm" onclick="removeCsv()">Remove</button></div>' : '<div class="hint" id="csvInfo"></div>');
+        (csvRows ? '<div class="hint" id="csvInfo"><b translate="no">' + esc(csvName) + '</b>: ' + N + ' images <button class="light sm" onclick="removeCsv()">Remove</button></div>' : '<div class="hint" id="csvInfo"></div>');
 
-      h += '<div class="sumbox"><div><b>' + N + '</b> &times; ' + p.label + ' &middot; ' + p.size + '</div>';
-      if (CURRENCIES.length > 1) {
-        h += '<div><select onchange="document.getElementById(\'currencySelect\').value=this.value;renderStudio()">' +
-          CURRENCIES.map(x => '<option value="' + x + '"' + (x === c ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></div>';
-      }
+      h += '<div class="sumbox"><div><b>' + N + '</b> <span>&times;</span> <span>' + p.label + '</span> <span>&middot;</span> <span>' + p.size + '</span></div>';
       if (canPass) {
         h += '<label class="radio"><input type="radio" name="pm" ' + (payMode === 'pass' ? 'checked' : '') + ' onchange="setMode(\'pass\')">Use my pass (' + passRemaining + ' left)</label>' +
              '<label class="radio"><input type="radio" name="pm" ' + (payMode === 'payg' ? 'checked' : '') + ' onchange="setMode(\'payg\')">Pay per image: ' + cost + '</label>';
       } else {
         h += '<div>Pay per image: ' + N + ' &times; ' + money(c, PER_IMAGE[c]) + ' = <b>' + cost + '</b></div>';
         h += hasSub ? '<div class="hint">Your pass has ' + passRemaining + ' left, which is not enough for ' + N + '.</div>'
-                    : '<div class="hint">Prefer a pass? <a href="#" onclick="goPlans();return false;">See passes</a></div>';
+                    : '<div class="hint"><span>Prefer a pass?</span> <a href="#" onclick="goPlans();return false;">See passes</a></div>';
       }
       h += '</div><button id="orderBtn" onclick="submitOrder()">' + (payMode === 'pass' ? 'Generate ' + N + ' image' + (N > 1 ? 's' : '') : 'Pay ' + cost + ' and generate') + '</button><p class="hint" id="orderStatus"></p>';
 
@@ -562,7 +678,7 @@
 
     function renderStudio() {
       document.getElementById('stepDots').innerHTML = ['Product', 'Style', 'Details', 'Finish'].map((t, i) =>
-        '<div class="dot' + (step === i + 1 ? ' on' : '') + '" onclick="goStep(' + (i + 1) + ')"><span>' + (i + 1) + '</span>' + t + '</div>').join('');
+        '<div class="dot' + (step === i + 1 ? ' on' : '') + '" onclick="goStep(' + (i + 1) + ')"><span class="n">' + (i + 1) + '</span><span>' + t + '</span></div>').join('');
       if (!design) step = 1;
       document.getElementById('studioForm').innerHTML = step === 1 ? stepProduct() : step === 2 ? stepStyle() : step === 3 ? stepDetails() : stepFinish();
       renderPreview();
@@ -575,10 +691,11 @@
     function schedulePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 150); }
     function renderPreview() {
       const box = document.getElementById('studioPreview');
+      const note = document.getElementById('sizeNote');
       if (!design) {
         box.style.height = '240px';
         box.innerHTML = '<div class="empty">Choose a product to start designing</div>';
-        document.getElementById('sizeNote').innerText = '';
+        note.innerHTML = '';
         return;
       }
       const p = DS.PRODUCTS[design.product];
@@ -594,7 +711,7 @@
       iframe.srcdoc = DS.build(effectiveDesign(), { origin: window.location.origin });
       box.innerHTML = '';
       box.appendChild(iframe);
-      document.getElementById('sizeNote').innerText = p.label + ' - ' + p.size + (csvRows ? ' - previewing row 1' : '');
+      note.innerHTML = '<span>' + p.label + '</span> &middot; <span>' + p.size + '</span>';
     }
 
     /* uploads */
@@ -681,6 +798,7 @@
       const r = await api('/orders', 'POST', { design, rows: csvRows, mode: payMode, currency: currentCurrency() });
       btn.disabled = false;
       if (!r.success) { st.innerText = 'Error: ' + r.error; return; }
+      if (r.manual) { st.innerText = ''; openPay(r.manual); return; }
       if (r.authorization_url) { st.innerText = 'Opening the secure payment page...'; window.location.href = r.authorization_url; return; }
       st.innerText = '';
       trackOrder(r.orderId);
@@ -721,7 +839,7 @@
       }).filter(Boolean);
       const box = document.getElementById('savedList');
       box.innerHTML = savedDesigns.length ? savedDesigns.map(s =>
-        '<div class="saved-item"><div><b>' + esc(s.name) + '</b> <span class="hint">' + DS.PRODUCTS[s.design.product].label + '</span></div><div>' +
+        '<div class="saved-item"><div><b translate="no">' + esc(s.name) + '</b> <span class="hint">' + DS.PRODUCTS[s.design.product].label + '</span></div><div>' +
         '<button onclick="openSaved(' + s.id + ')">Open</button><button class="light" onclick="deleteSaved(' + s.id + ')">Delete</button></div></div>').join('')
         : '<p class="hint">Nothing saved yet. Use "Save design" on the last step.</p>';
     }
@@ -739,7 +857,7 @@
     }
     async function deleteSaved(id) {
       const s = savedDesigns.find(x => x.id === id);
-      if (!s || !confirm('Delete "' + s.name + '"?')) return;
+      if (!s || !confirm(T('Delete "' + s.name + '"?'))) return;
       await api('/templates/' + id, 'DELETE');
       loadSaved(); loadOverview();
     }
@@ -754,7 +872,7 @@
       data.generations.forEach(g => {
         const item = document.createElement('div');
         item.className = 'history-item';
-        item.innerHTML = '<img src="' + esc(g.image_url) + '"><div class="meta"><div class="name">' + esc(g.template_name) + '</div><div class="date">' + new Date(g.created_at).toLocaleString() + '</div></div><a href="' + esc(g.image_url) + '" download="media-engine-image.png"><button>Download</button></a>';
+        item.innerHTML = '<img src="' + esc(g.image_url) + '"><div class="meta"><div class="name">' + esc(g.template_name) + '</div><div class="date" translate="no">' + new Date(g.created_at).toLocaleString(loc()) + '</div></div><a href="' + esc(g.image_url) + '" download="media-engine-image.png"><button>Download</button></a>';
         listDiv.appendChild(item);
       });
     }
@@ -851,6 +969,14 @@
       } else { st.innerText = 'Error: ' + data.error; }
     }
 
+    /* ---------- Language switch ---------- */
+    window.addEventListener('melangchange', e => {
+      swapSamples(e.detail.prev, e.detail.lang);
+      if (design && design.lang === e.detail.prev) design.lang = e.detail.lang;
+      renderStudio();
+      loadOverview();
+    });
+
     /* ---------- Start ---------- */
     async function init() {
       await Promise.all([loadPlans(), loadOverview()]);
@@ -860,6 +986,7 @@
       const qs = new URLSearchParams(location.search);
       if (qs.get('paid')) { await handlePaidReturn(qs.get('reference') || qs.get('trxref')); }
       else { const o = await api('/orders/open'); if (o.success && o.order) trackOrder(o.order.id); }
+      checkManual();
     }
     window.addEventListener('resize', schedulePreview);
     init();
