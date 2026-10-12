@@ -158,7 +158,28 @@
     'Your Alipay name or last 4 digits of the order number (optional)': '您的支付宝姓名或订单号后 4 位(可选)', 'I have paid': '我已付款',
     'Thank you. We are checking your payment. This page updates by itself, and it usually takes a few hours.': '谢谢!我们正在核对您的付款,本页面会自动更新,通常需要几个小时。',
     'We could not confirm this payment. If you paid, please contact support and quote your code.': '我们未能确认这笔付款。如果您已付款,请联系客服并提供您的付款编号。',
-    'Code:': '付款编号:'
+    'Code:': '付款编号:',
+    'Workspace': '工作区', 'Help': '帮助', 'Plans & Billing': '套餐与账单', 'Profile': '个人资料',
+    'Quick start': '快速开始', 'Recent images': '最近生成的图片', 'See all': '查看全部',
+    'Profile photo': '头像', 'Remove photo': '移除头像', 'Images made': '已生成图片', 'Orders': '订单', 'Account summary': '账号概览',
+    'Photo ready. Click Save Personal Information to keep it.': '头像已就绪,请点击“保存个人信息”以保留。',
+    'Logo & colour': '标志与颜色', 'Brand colour': '品牌颜色', 'Business details': '公司信息', 'Tagline': '标语',
+    'Business phone': '公司电话', 'Business email': '公司邮箱', 'Business address': '公司地址', 'Contact details': '联系方式',
+    'Certificate signer': '证书签署人', 'Default signer name': '默认签署人姓名', 'Default signer title': '默认签署人职务', 'Default signature': '默认签名',
+    'Saved details are filled into new designs automatically.': '已保存的信息会自动填入新设计。',
+    'e.g. Creative solutions that grow your brand': '例如:创意方案,助力品牌成长',
+    'e.g. +254 700 000 000': '例如:+86 138 0000 0000', 'e.g. info@yourcompany.com': '例如:info@yourcompany.com',
+    'e.g. www.yourcompany.com': '例如:www.yourcompany.com', 'e.g. Nairobi, Kenya': '例如:深圳市南山区',
+    'e.g. John Otieno': '例如:李明', 'e.g. Director': '例如:总经理',
+    'Preferences': '偏好设置', 'Language': '语言', 'Default payment currency': '默认支付币种', 'Saved on this device.': '仅保存在本设备。',
+    'Privacy and data': '隐私与数据', 'To delete your account or request a copy of your data, please contact support.': '如需删除账号或获取您的数据副本,请联系客服。', 'Contact support': '联系客服',
+    'Billing history': '账单记录', 'Item': '项目', 'Amount': '金额', 'Status': '状态', 'Method': '支付方式', 'No payments yet.': '暂无付款记录。',
+    'Completed': '已完成', 'In progress': '处理中', 'Pending': '待处理', 'Failed': '失败', 'Active': '有效', 'Expired': '已过期',
+    'Card / M-PESA': '银行卡 / M-PESA', 'Alipay': '支付宝', 'Admin grant': '管理员赠送', 'Free (admin)': '免费(管理员赠送)',
+    '‹ Prev': '‹ 上一个', 'Next ›': '下一个 ›', '+ Add another (same details)': '+ 再添加一个(沿用当前信息)', '+ Add another (clear names)': '+ 再添加一个(清空姓名等)',
+    'Remove this one': '删除当前这一项', '(untitled)': '(未命名)',
+    'Fill in one set of details for each person. Use the buttons to add more people. Everything is made in one go at the end.': '为每个人填写一组信息,点击按钮即可添加更多人员,最后一次性全部生成。',
+    'Import many people from a CSV (optional)': '从 CSV 批量导入人员(可选)'
   };
 
   var PATTERNS = [
@@ -195,7 +216,11 @@
     [/^Delete "(.+)"\?$/, '删除“$1”?'],
     [/^2\. Pay exactly (.+)\.$/, '2. 请准确支付 $1。'],
     [/^You already have an active pass until (.+)\. You can buy a new pass when it ends\.$/, '您已有一个有效套餐,有效期至 $1。套餐结束后可再购买。'],
-    [/^Error: (.+)$/, '错误:$1']
+    [/^Error: (.+)$/, '错误:$1'],
+    [/^Order: (\d+) x (.+)$/, '订单:$1 × $2'],
+    [/^Item (\d+) of (\d+)$/, '第 $1 / $2 项'],
+    [/^(\d+) items imported\. You can edit each one in step 3\.$/, '已导入 $1 项,可在第 3 步逐项编辑。'],
+    [/^This replaces your (\d+) items\. Continue\?$/, '这将替换您现有的 $1 项,是否继续?']
   ];
 
   var lang = '';
@@ -302,9 +327,11 @@
   var btn = document.createElement('button');
   btn.type = 'button';
   btn.setAttribute('translate', 'no');
-  btn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;width:auto;display:block;margin:0;padding:8px 16px;' +
+  var slot = document.getElementById('langSlot');
+  btn.style.cssText = (slot ? 'position:static;' : 'position:fixed;top:14px;right:16px;z-index:9999;') +
+    'width:auto;display:inline-block;margin:0;padding:8px 16px;' +
     'border:1px solid #e2e4ec;border-radius:20px;background:#fff;color:#2b2d42;font-size:13px;font-weight:700;' +
-    'cursor:pointer;box-shadow:0 4px 14px rgba(43,45,66,.18);';
+    'cursor:pointer;box-shadow:0 2px 8px rgba(43,45,66,.12);';
   function label() { btn.textContent = lang === 'zh' ? 'English' : '中文'; }
   function setLang(l) {
     var prev = lang;
@@ -317,9 +344,10 @@
   }
   btn.onclick = function () { setLang(lang === 'zh' ? 'en' : 'zh'); };
   label();
-  document.body.appendChild(btn);
+   (slot || document.body).appendChild(btn);
 
-  window.ME_LANG = function () { return lang; };
+   window.ME_LANG = function () { return lang; };
+  window.ME_SETLANG = setLang;
   window.ME_T = function (s) { if (lang !== 'zh') return s; var t = tr(s); return t === null ? s : t; };
 
   var obs = new MutationObserver(function (muts) {

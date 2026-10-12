@@ -7,37 +7,48 @@
   <style>
     :root { --brand:#4361ee; --dark:#2b2d42; --bg:#f4f5fb; --border:#e2e4ec; --radius:12px; --danger:#ef233c; }
     * { box-sizing:border-box; }
-    body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',Roboto,Arial,sans-serif; background:var(--bg); max-width:980px; margin:0 auto; padding:20px; color:var(--dark); }
+    body { margin:0; font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',Roboto,Arial,sans-serif; background:var(--bg); color:var(--dark); }
     input, select, textarea { display:block; width:100%; margin:8px 0; padding:12px 14px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius); font-family:inherit; background:white; }
     input:focus, select:focus, textarea:focus { outline:none; border-color:var(--brand); }
     button { display:block; width:100%; margin:10px 0 0; padding:13px; font-size:15px; font-weight:600; border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; background:linear-gradient(90deg,#4361ee,#7209b7); color:white; transition:opacity .15s; }
     button:hover { opacity:.9; }
     button:disabled { opacity:.5; cursor:not-allowed; }
     button.light { background:#eef0f7; color:var(--dark); }
-    button.sm { width:auto; display:inline-block; padding:6px 12px; font-size:12px; margin:6px 0 0; }
+    button.sm { width:auto; display:inline-block; padding:6px 12px; font-size:12px; margin:6px 6px 0 0; }
     .nbtn { width:auto; padding:11px 22px; margin:0; }
     h2 { margin:0 0 10px; font-size:18px; }
+    h3.sec { font-size:13px; letter-spacing:1px; text-transform:uppercase; color:#7209b7; margin:22px 0 4px; }
     .hint { font-size:12px; color:#888; }
     .lbl { display:block; font-size:13px; font-weight:600; margin-top:14px; }
+    .card { background:white; border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:0 4px 20px rgba(43,45,66,.05); margin-bottom:16px; }
+    .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 
-    .card { background:white; border:1px solid var(--border); border-radius:var(--radius); padding:22px; box-shadow:0 4px 20px rgba(43,45,66,.05); }
-    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; position:relative; }
-    .left { display:flex; align-items:center; gap:14px; }
-    .logo { font-size:21px; font-weight:800; background:linear-gradient(90deg,#4361ee,#f72585); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    .topbar > button { width:auto; margin:0; padding:9px 16px; background:#eef0f7; color:var(--dark); }
-    .acct { display:flex; align-items:center; gap:8px; background:white; border:1px solid var(--border); border-radius:30px; padding:5px 12px 5px 5px; cursor:pointer; font-size:14px; font-weight:600; }
-    .avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#4361ee,#f72585); color:white; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
-    .acct-panel { position:absolute; top:52px; left:0; z-index:20; width:310px; background:white; border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 40px rgba(43,45,66,.2); padding:18px; }
-    .acct-panel .row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; font-size:13px; border-bottom:1px solid #f0f1f5; }
-    .acct-panel .row span:first-child { color:#888; }
-    .acct-panel .row span:last-child { font-weight:600; text-align:right; word-break:break-all; }
+    /* layout */
+    .app { display:flex; min-height:100vh; }
+    .side { width:262px; background:linear-gradient(180deg,#1f2140,#2b2d42); color:#fff; padding:18px 14px; position:fixed; top:0; bottom:0; left:0; overflow-y:auto; display:flex; flex-direction:column; z-index:50; transition:transform .2s; }
+    .side-logo { font-size:21px; font-weight:800; padding:4px 8px 14px; background:linear-gradient(90deg,#8ea2ff,#ff8fc0); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .me { display:flex; gap:12px; align-items:center; background:rgba(255,255,255,.08); border-radius:14px; padding:12px; cursor:pointer; margin-bottom:10px; }
+    .me:hover { background:rgba(255,255,255,.13); }
+    .me-info { min-width:0; }
+    .me-name { font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .me-mail { font-size:11px; opacity:.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .chip-plan { display:inline-block; margin-top:4px; background:rgba(255,255,255,.16); padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+    .avatar { width:44px; height:44px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,#4361ee,#f72585) center/cover no-repeat; color:white; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; }
+    .avatar.xl { width:84px; height:84px; font-size:34px; }
+    .navgroup { font-size:11px; letter-spacing:1.2px; text-transform:uppercase; opacity:.5; margin:16px 8px 4px; }
+    .nav-item { display:block; padding:10px 12px; border-radius:10px; color:#d6d9f5; cursor:pointer; font-size:14px; font-weight:600; text-decoration:none; margin:2px 0; }
+    .nav-item:hover { background:rgba(255,255,255,.09); }
+    .nav-item.active { background:linear-gradient(90deg,#4361ee,#7209b7); color:#fff; }
+    .side .logout { margin-top:auto; background:rgba(255,255,255,.1); }
+    .main { margin-left:262px; flex:1; min-width:0; padding:20px 28px 50px; max-width:1180px; }
+    .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:12px; }
+    .top h1 { font-size:22px; margin:0; }
+    .burger { display:none; width:auto; margin:0 12px 0 0; padding:8px 14px; background:white; color:var(--dark); border:1px solid var(--border); }
+    .top-left { display:flex; align-items:center; }
+    .overlay { display:none; position:fixed; inset:0; background:rgba(20,20,40,.45); z-index:40; }
 
     .banner { background:#e8fff6; border:1px solid #9be7c8; color:#0a7a55; padding:12px 16px; border-radius:var(--radius); margin-bottom:14px; font-size:14px; }
     .notice { background:#fff4e5; border:1px solid #ffd59a; color:#8a5a00; padding:12px 16px; border-radius:var(--radius); margin-bottom:14px; font-size:14px; }
-
-    .tabs { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
-    .tab-btn { flex:1; min-width:90px; padding:11px 8px; text-align:center; background:white; border:1px solid var(--border); color:var(--dark); border-radius:var(--radius); cursor:pointer; font-size:14px; font-weight:600; transition:all .15s; text-decoration:none; }
-    .tab-btn.active { background:var(--dark); color:white; border-color:var(--dark); }
     .tab-content { display:none; }
     .tab-content.active { display:block; }
 
@@ -47,7 +58,7 @@
     .hero button { width:auto; margin:0; padding:12px 22px; background:white; color:#7209b7; white-space:nowrap; }
     .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
     .stat { border-radius:14px; padding:18px 14px; color:white; }
-    .stat .v { font-size:28px; font-weight:800; }
+    .stat .v { font-size:26px; font-weight:800; }
     .stat .l { font-size:12px; opacity:.92; margin-top:2px; }
     .c1 { background:linear-gradient(135deg,#4361ee,#7209b7); }
     .c2 { background:linear-gradient(135deg,#f72585,#ff9e00); }
@@ -56,6 +67,11 @@
     .charts { display:grid; grid-template-columns:1fr 1.6fr; gap:14px; }
     .center { text-align:center; }
     .legend { font-size:13px; color:#555; line-height:1.8; text-align:center; margin-top:6px; }
+    .quick { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+    .qcard { border:2px solid var(--border); border-radius:14px; padding:16px 12px; text-align:center; cursor:pointer; background:white; transition:all .15s; }
+    .qcard:hover { border-color:var(--brand); transform:translateY(-2px); }
+    .recent { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; }
+    .recent img { width:100%; border-radius:8px; border:1px solid var(--border); }
 
     .plans-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
     .plan { background:white; border:2px solid var(--border); border-radius:16px; padding:20px; text-align:center; position:relative; }
@@ -67,12 +83,18 @@
     .plan ul { list-style:none; padding:0; margin:10px 0 6px; text-align:left; }
     .plan li { padding:4px 0; font-size:13px; color:#555; }
     .plan li:before { content:"\2713  "; color:var(--brand); font-weight:700; }
+    .table-wrap { overflow-x:auto; }
+    .tbl { width:100%; border-collapse:collapse; font-size:13px; }
+    .tbl th { text-align:left; color:#888; font-weight:600; padding:8px; border-bottom:2px solid var(--border); white-space:nowrap; }
+    .tbl td { padding:8px; border-bottom:1px solid #f0f1f5; vertical-align:middle; }
 
     .studio-grid { display:grid; grid-template-columns:1fr 360px; gap:24px; }
     .studio-preview { position:sticky; top:12px; align-self:start; }
     .live { width:100%; height:240px; overflow:hidden; background:#eceef6; border-radius:var(--radius); position:relative; border:1px solid var(--border); }
     .live iframe { position:absolute; top:0; left:0; border:none; pointer-events:none; background:white; }
     .live .empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#999; font-size:13px; text-align:center; padding:12px; }
+    .pnav { display:flex; justify-content:center; align-items:center; gap:10px; margin-top:8px; font-size:12px; color:#666; }
+    .pnav button { margin:0; }
     .stepdots { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
     .dot { padding:8px 14px; border-radius:30px; background:#eef0f7; font-size:13px; font-weight:600; cursor:pointer; color:#666; }
     .dot span.n { display:inline-block; width:20px; height:20px; border-radius:50%; background:#d5d9ea; color:white; text-align:center; line-height:20px; font-size:11px; margin-right:4px; }
@@ -93,6 +115,11 @@
     .color-in { width:60px; height:40px; padding:2px; margin:0 0 2px; cursor:pointer; }
     .upl { margin-top:6px; }
     .upl img { height:60px; max-width:140px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:#fafafa; display:block; }
+    .entries { border:2px solid var(--border); border-radius:14px; padding:12px; margin:10px 0 6px; background:#fafbff; }
+    .ebar { display:flex; gap:8px; align-items:center; }
+    .ebar select { margin:0; flex:1; }
+    .ebar button { margin:0; }
+    .ebar2 { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
     .nav { display:flex; justify-content:space-between; gap:10px; margin-top:22px; }
     .sumbox { border:2px solid var(--border); border-radius:14px; padding:16px; margin-top:16px; font-size:14px; line-height:1.7; }
     .radio { display:block; margin-top:8px; font-size:14px; cursor:pointer; }
@@ -111,7 +138,10 @@
     .history-item .meta .name { font-weight:600; font-size:14px; }
     .history-item .meta .date { color:#888; font-size:12px; }
     .history-item a button { width:auto; padding:8px 14px; font-size:13px; margin:0; }
-    .profile-logo-preview { width:100px; height:100px; border-radius:var(--radius); background:#f0f1f5; object-fit:contain; margin:10px 0; border:1px solid var(--border); }
+    .prev-img { max-width:120px; max-height:80px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:#fafafa; margin:8px 0; display:block; }
+    .profile-head { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+    .profile-head h2 { font-size:22px; margin:0 0 4px; }
+    .chip-plan.dark { background:#eef0ff; color:var(--brand); }
 
     #payModal { display:none; position:fixed; inset:0; background:rgba(20,20,40,.6); z-index:1000; overflow:auto; padding:20px; }
     #payBox { max-width:420px; margin:20px auto; text-align:center; }
@@ -119,877 +149,1163 @@
     .qr { width:230px; max-width:100%; border:1px solid var(--border); border-radius:12px; }
     .steps { text-align:left; font-size:14px; line-height:1.8; margin:12px 0; }
 
-    @media (max-width:760px) {
+    @media (max-width:900px) {
+      .side { transform:translateX(-100%); }
+      .side.open { transform:none; }
+      .side.open ~ .overlay { display:block; }
+      .main { margin-left:0; padding:16px 14px 50px; }
+      .burger { display:block; }
       .stats { grid-template-columns:repeat(2,1fr); }
-      .charts, .plans-grid, .studio-grid { grid-template-columns:1fr; }
+      .charts, .plans-grid, .studio-grid, .two { grid-template-columns:1fr; }
       .studio-preview { position:static; }
       .hero { flex-direction:column; align-items:flex-start; }
     }
   </style>
 </head>
 <body>
+<div class="app">
 
-  <div class="topbar">
-    <div class="left">
-      <div class="acct" onclick="toggleAcct(event)"><span class="avatar" id="avatar">?</span><span id="userName" translate="no">Account</span><span style="font-size:10px;">&#9660;</span></div>
-      <div class="logo">Media Engine</div>
-    </div>
-    <button onclick="logout()">Log Out</button>
-    <div class="acct-panel" id="acctPanel" style="display:none;">
-      <div id="acctRows"></div>
-      <button onclick="openSettings()" style="margin-top:12px;">Account settings</button>
-    </div>
-  </div>
-
-  <div id="paidBanner" class="banner" style="display:none;"></div>
-  <div id="manualBanner" class="notice" style="display:none;"></div>
-  <div id="expiryBanner" class="notice" style="display:none;"></div>
-
-  <div class="tabs">
-    <div class="tab-btn active" onclick="showTab('overviewTab', this)">Overview</div>
-    <div class="tab-btn" id="plansBtn" onclick="showTab('plansTab', this)">Plans</div>
-    <div class="tab-btn" id="studioBtn" onclick="showTab('studioTab', this, renderStudio)">Studio</div>
-    <div class="tab-btn" onclick="showTab('historyTab', this, loadHistory)">History</div>
-    <div class="tab-btn" onclick="showTab('profileTab', this, loadProfile)">Brand</div>
-    <div class="tab-btn" id="settingsBtn" onclick="showTab('settingsTab', this)">Settings</div>
-    <a href="/support.html" target="_blank" class="tab-btn">Support</a>
-    <a href="/admin.html" id="adminLink" class="tab-btn" style="display:none;">Admin</a>
-  </div>
-
-  <div id="overviewTab" class="tab-content active">
-    <div class="hero" id="heroBox"></div>
-    <div class="stats" id="statsBox"></div>
-    <div class="charts">
-      <div class="card"><h2>Pass usage</h2><div class="center" id="donutBox"></div><div class="legend" id="donutLegend"></div></div>
-      <div class="card"><h2>Images made, last 7 days</h2><div id="barsBox"></div></div>
-    </div>
-  </div>
-
-  <div id="plansTab" class="tab-content">
-    <div class="card" style="margin-bottom:16px;">
-      <div id="currentPass" style="font-size:14px; margin-bottom:6px;"></div>
-      <label class="lbl" style="margin-top:0;">Pay in</label>
-      <select id="currencySelect" onchange="renderPlans()"></select>
-      <p class="hint" id="paygNote"></p>
-    </div>
-    <div class="plans-grid" id="plansGrid"></div>
-    <p id="subscribeStatus" class="hint"></p>
-    <p class="hint">Designing and previewing are free. A pass starts when your payment is confirmed and does not renew automatically.</p>
-    <div class="card" id="creditsCard" style="display:none; margin-top:16px;">
-      <h2>Need more generations?</h2>
-      <p style="margin:0 0 4px;"><span>100 extra generations:</span> <b id="creditsPrice"></b></p>
-      <button onclick="buyCredits()">Buy 100 more</button>
-      <p id="creditsStatus" class="hint"></p>
-    </div>
-  </div>
-
-  <div id="studioTab" class="tab-content">
-    <div id="orderPanel" class="card" style="display:none; margin-bottom:16px;"></div>
-    <div class="card">
-      <div class="stepdots" id="stepDots"></div>
-      <div class="studio-grid">
-        <div id="studioForm"></div>
-        <div class="studio-preview">
-          <div class="live" id="studioPreview"></div>
-          <p class="hint" id="sizeNote" style="text-align:center;"></p>
-        </div>
+  <aside class="side" id="side">
+    <div class="side-logo">Media Engine</div>
+    <div class="me" onclick="go('profile')">
+      <div class="avatar" id="sideAvatar">?</div>
+      <div class="me-info">
+        <div class="me-name" id="sideName" translate="no"></div>
+        <div class="me-mail" id="sideMail" translate="no"></div>
+        <div class="chip-plan" id="sidePlan"></div>
       </div>
     </div>
-    <div class="card" style="margin-top:16px;">
-      <h2>My saved designs</h2>
-      <div id="savedList"><p class="hint">Loading...</p></div>
-    </div>
+
+    <div class="navgroup">Workspace</div>
+    <a class="nav-item active" data-tab="overview" onclick="go('overview')">Overview</a>
+    <a class="nav-item" data-tab="studio" onclick="go('studio')">Studio</a>
+    <a class="nav-item" data-tab="history" onclick="go('history')">History</a>
+    <a class="nav-item" data-tab="plans" onclick="go('plans')">Plans &amp; Billing</a>
+
+    <div class="navgroup">Account</div>
+    <a class="nav-item" data-tab="profile" onclick="go('profile')">Profile</a>
+    <a class="nav-item" data-tab="brand" onclick="go('brand')">Brand</a>
+    <a class="nav-item" data-tab="settings" onclick="go('settings')">Settings</a>
+    <a class="nav-item" data-tab="admin" id="navAdmin" style="display:none;" onclick="go('admin')">Admin</a>
+
+    <div class="navgroup">Help</div>
+    <a class="nav-item" href="/support.html" target="_blank">Support</a>
+
+    <button class="logout" onclick="logout()">Log Out</button>
+  </aside>
+  <div class="overlay" id="overlay" onclick="toggleSide()"></div>
+
+  <div class="main">
+    <header class="top">
+      <div class="top-left"><button class="burger" onclick="toggleSide()">&#9776;</button><h1 id="pageTitle">Overview</h1></div>
+      <div id="langSlot"></div>
+    </header>
+
+    <div id="paidBanner" class="banner" style="display:none;"></div>
+    <div id="manualBanner" class="notice" style="display:none;"></div>
+    <div id="expiryBanner" class="notice" style="display:none;"></div>
+
+    <!-- OVERVIEW -->
+    <section id="overviewTab" class="tab-content active">
+      <div class="hero" id="heroBox"></div>
+      <div class="stats" id="statsBox"></div>
+      <div class="card">
+        <h2>Quick start</h2>
+        <div class="quick" id="quickBox"></div>
+      </div>
+      <div class="charts">
+        <div class="card"><h2>Pass usage</h2><div class="center" id="donutBox"></div><div class="legend" id="donutLegend"></div></div>
+        <div class="card"><h2>Images made, last 7 days</h2><div id="barsBox"></div></div>
+      </div>
+      <div class="card">
+        <h2>Recent images</h2>
+        <div class="recent" id="recentBox"></div>
+      </div>
+    </section>
+
+    <!-- STUDIO -->
+    <section id="studioTab" class="tab-content">
+      <div id="orderPanel" class="card" style="display:none;"></div>
+      <div class="card">
+        <div class="stepdots" id="stepDots"></div>
+        <div class="studio-grid">
+          <div id="studioForm"></div>
+          <div class="studio-preview">
+            <div class="live" id="studioPreview"></div>
+            <div class="pnav" id="previewNav"></div>
+            <p class="hint" id="sizeNote" style="text-align:center;"></p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>My saved designs</h2>
+        <div id="savedList"><p class="hint">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="historyTab" class="tab-content">
+      <div class="card">
+        <h2>My Downloads</h2>
+        <div id="historyList"><p>Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- PLANS & BILLING -->
+    <section id="plansTab" class="tab-content">
+      <div class="card">
+        <div id="currentPass" style="font-size:14px; margin-bottom:6px;"></div>
+        <label class="lbl" style="margin-top:0;">Pay in</label>
+        <select id="currencySelect" onchange="onCurrencyChange()"></select>
+        <p class="hint" id="paygNote"></p>
+      </div>
+      <div class="plans-grid" id="plansGrid"></div>
+      <p id="subscribeStatus" class="hint"></p>
+      <p class="hint">Designing and previewing are free. A pass starts when your payment is confirmed and does not renew automatically.</p>
+      <div class="card" id="creditsCard" style="display:none; margin-top:16px;">
+        <h2>Need more generations?</h2>
+        <p style="margin:0 0 4px;"><span>100 extra generations:</span> <b id="creditsPrice"></b></p>
+        <button onclick="buyCredits()">Buy 100 more</button>
+        <p id="creditsStatus" class="hint"></p>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <h2>Billing history</h2>
+        <div id="billingBox"><p class="hint">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profileTab" class="tab-content">
+      <div class="card profile-head">
+        <div class="avatar xl" id="profAvatar">?</div>
+        <div>
+          <h2 id="profName" translate="no"></h2>
+          <div class="hint" id="profMail" translate="no"></div>
+          <div class="chip-plan dark" id="profPlan"></div>
+        </div>
+      </div>
+      <div class="stats" id="profStats"></div>
+      <div class="card">
+        <h2>Personal Information</h2>
+        <label class="lbl">Profile photo</label>
+        <input type="file" accept="image/png,image/jpeg" onchange="uploadAvatar(this)">
+        <button class="light sm" onclick="removeAvatar()">Remove photo</button>
+        <div class="two">
+          <div><label class="lbl">Full name</label><input type="text" id="infoName"></div>
+          <div><label class="lbl">Phone</label><input type="text" id="infoPhone"></div>
+        </div>
+        <label class="lbl">Country</label>
+        <input type="text" id="infoCountry">
+        <button onclick="saveInfo()">Save Personal Information</button>
+        <p id="infoStatus"></p>
+      </div>
+    </section>
+
+    <!-- BRAND -->
+    <section id="brandTab" class="tab-content">
+      <div class="card">
+        <h2>Brand Settings</h2>
+        <p class="hint">Saved details are filled into new designs automatically.</p>
+
+        <h3 class="sec">Logo &amp; colour</h3>
+        <input type="hidden" id="brLogoUrl">
+        <img id="brLogoPrev" class="prev-img" style="display:none;">
+        <input type="file" accept="image/png,image/jpeg" onchange="uploadBrandLogo(this)">
+        <button class="light sm" onclick="extractBrandColor()">Detect Brand Color from Logo</button>
+        <label class="lbl">Brand colour</label>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <input type="color" id="brColor" class="color-in" value="#4361ee" oninput="setBrandColor(this.value)">
+          <span id="swatchHex" style="font-family:monospace; font-size:14px;"></span>
+        </div>
+
+        <h3 class="sec">Business details</h3>
+        <label class="lbl">Business Name</label>
+        <input type="text" id="brName" placeholder="e.g. Pinnacle Edge Ltd">
+        <label class="lbl">Tagline</label>
+        <input type="text" id="brTagline" placeholder="e.g. Creative solutions that grow your brand">
+
+        <h3 class="sec">Contact details</h3>
+        <div class="two">
+          <div><label class="lbl">Business phone</label><input type="text" id="brPhone" placeholder="e.g. +254 700 000 000"></div>
+          <div><label class="lbl">Business email</label><input type="text" id="brEmail" placeholder="e.g. info@yourcompany.com"></div>
+        </div>
+        <label class="lbl">Website</label>
+        <input type="text" id="brWebsite" placeholder="e.g. www.yourcompany.com">
+        <label class="lbl">Business address</label>
+        <input type="text" id="brAddress" placeholder="e.g. Nairobi, Kenya">
+
+        <h3 class="sec">Certificate signer</h3>
+        <div class="two">
+          <div><label class="lbl">Default signer name</label><input type="text" id="brSigner" placeholder="e.g. John Otieno"></div>
+          <div><label class="lbl">Default signer title</label><input type="text" id="brSignerTitle" placeholder="e.g. Director"></div>
+        </div>
+        <label class="lbl">Default signature</label>
+        <input type="hidden" id="brSigUrl">
+        <img id="brSigPrev" class="prev-img" style="display:none;">
+        <input type="file" accept="image/png,image/jpeg" onchange="uploadSignature(this)">
+
+        <button onclick="saveBrand()">Save Brand Settings</button>
+        <p id="brandStatus"></p>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="settingsTab" class="tab-content">
+      <div class="card">
+        <h2>Preferences</h2>
+        <label class="lbl">Language</label>
+        <select id="prefLang" translate="no" onchange="ME_SETLANG(this.value)"><option value="en">English</option><option value="zh">中文</option></select>
+        <label class="lbl">Default payment currency</label>
+        <select id="prefCurrency" onchange="savePrefCurrency(this.value)"></select>
+        <p class="hint">Saved on this device.</p>
+      </div>
+      <div class="card">
+        <h2>Login &amp; Security</h2>
+        <p class="hint"><span>Current email:</span> <span id="settingsCurrentEmail" translate="no"></span></p>
+        <label class="lbl">Current Password (required)</label>
+        <input type="password" id="currentPassword" placeholder="Your current password">
+        <label class="lbl">New Email (optional)</label>
+        <input type="email" id="newEmail" placeholder="Leave blank to keep current email">
+        <label class="lbl">New Password (optional)</label>
+        <input type="password" id="newPassword" placeholder="Leave blank to keep current password">
+        <button onclick="updateAccount()">Save Changes</button>
+        <p id="settingsStatus"></p>
+      </div>
+      <div class="card">
+        <h2>Privacy and data</h2>
+        <p style="font-size:14px;">To delete your account or request a copy of your data, please contact support.</p>
+        <a href="/support.html" target="_blank"><button class="light sm">Contact support</button></a>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="adminTab" class="tab-content" translate="no">
+      <div id="adminBody"><p class="hint">Loading...</p></div>
+    </section>
   </div>
+</div>
 
-  <div id="historyTab" class="tab-content card">
-    <h2>My Downloads</h2>
-    <div id="historyList"><p>Loading...</p></div>
-  </div>
+<div id="payModal"><div class="card" id="payBox"></div></div>
 
-  <div id="profileTab" class="tab-content card">
-    <h2>Brand Settings</h2>
-    <p class="hint">Your business name, logo and colour are filled into new designs automatically.</p>
-    <label class="lbl">Business Name</label>
-    <input type="text" id="businessName" placeholder="e.g. Pinnacle Edge Ltd">
-    <label class="lbl">Logo</label>
-    <input type="hidden" id="logoUrl">
-    <img id="logoPreview" class="profile-logo-preview" style="display:none;">
-    <input type="file" accept="image/png,image/jpeg" onchange="uploadBrandLogo(this)">
-    <button onclick="extractBrandColor()" class="light">Detect Brand Color from Logo</button>
-    <div id="colorSwatch" style="display:none; align-items:center; gap:10px; margin-top:10px;">
-      <div id="swatchBox" style="width:32px; height:32px; border-radius:6px; border:1px solid var(--border);"></div>
-      <span id="swatchHex" style="font-size:14px; font-family:monospace;"></span>
-    </div>
-    <button onclick="saveProfile()">Save Brand Settings</button>
-    <p id="profileStatus"></p>
-  </div>
+<script src="/designs.js"></script>
+<script src="/i18n.js"></script>
+<script>
+  const API_BASE = window.location.origin;
+  const DS = window.Designs;
+  const TITLES = { overview:'Overview', studio:'Studio', history:'History', plans:'Plans & Billing', profile:'Profile', brand:'Brand', settings:'Settings', admin:'Admin' };
+  const LABEL_KEY = { certificate:'recipient', business_card:'name', id_card:'name', poster:'headline', banner:'headline' };
+  const PERSONAL = {
+    certificate: ['recipient', 'body'],
+    business_card: ['name', 'title', 'phone', 'email'],
+    id_card: ['name', 'title', 'idno', 'phone', 'email', 'photo'],
+    poster: ['headline', 'subtitle', 'details', 'date', 'location'],
+    banner: ['headline', 'subtitle', 'offer']
+  };
 
-  <div id="settingsTab" class="tab-content">
-    <div class="card" style="margin-bottom:16px;">
-      <h2>Personal Information</h2>
-      <label class="lbl">Full name</label>
-      <input type="text" id="infoName">
-      <label class="lbl">Phone</label>
-      <input type="text" id="infoPhone">
-      <label class="lbl">Country</label>
-      <input type="text" id="infoCountry">
-      <button onclick="saveInfo()">Save Personal Information</button>
-      <p id="infoStatus"></p>
-    </div>
-    <div class="card">
-      <h2>Login &amp; Security</h2>
-      <p class="hint"><span>Current email:</span> <span id="settingsCurrentEmail" translate="no"></span></p>
-      <label class="lbl">Current Password (required)</label>
-      <input type="password" id="currentPassword" placeholder="Your current password">
-      <label class="lbl">New Email (optional)</label>
-      <input type="email" id="newEmail" placeholder="Leave blank to keep current email">
-      <label class="lbl">New Password (optional)</label>
-      <input type="password" id="newPassword" placeholder="Leave blank to keep current password">
-      <button onclick="updateAccount()">Save Changes</button>
-      <p id="settingsStatus"></p>
-    </div>
-  </div>
+  let token = localStorage.getItem('mediaEngineToken') || '';
+  let hasSub = false, isAdmin = false, activeEnds = null, passRemaining = 0;
+  let PLANS = [], CREDIT = null, CURRENCIES = ['KES'], PER_IMAGE = { KES: 20 }, MAX_ORDER = 200;
+  let brand = {}, detectedColor = '', avatarUrl = '', lastOverview = null;
 
-  <div id="payModal"><div class="card" id="payBox"></div></div>
+  let design = null, entries = [], cur = 0, step = 1, csvMsg = '', userMode = null, payMode = 'payg';
+  let savedDesigns = [], orderTimer = null, previewTimer = null;
+  let payState = null, payTimer = null;
 
-  <script src="/designs.js"></script>
-  <script src="/i18n.js"></script>
-  <script>
-    const API_BASE = window.location.origin;
-    const DS = window.Designs;
+  if (!token) { window.location.href = '/login.html'; }
 
-    let token = localStorage.getItem('mediaEngineToken') || '';
-    let hasSub = false, activeEnds = null, passRemaining = 0;
-    let PLANS = [], CREDIT = null, CURRENCIES = ['KES'], PER_IMAGE = { KES: 20 }, MAX_ORDER = 200;
-    let detectedColor = '', savedBusinessName = '', brandLogoUrl = '';
-    let infoFilled = false, defaultCurrencySet = false;
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+  function $(id) { return document.getElementById(id); }
+  function curLang() { return (window.ME_LANG && window.ME_LANG() === 'zh') ? 'zh' : 'en'; }
+  function loc() { return curLang() === 'zh' ? 'zh-CN' : undefined; }
+  function T(s) { return window.ME_T ? window.ME_T(s) : s; }
+  function logout() { localStorage.removeItem('mediaEngineToken'); window.location.href = '/login.html'; }
 
-    let design = null, step = 1, csvRows = null, csvName = '', userMode = null, payMode = 'payg';
-    let savedDesigns = [], orderTimer = null, previewTimer = null;
-    let payState = null, payTimer = null;
-
-    if (!token) { window.location.href = '/login.html'; }
-
-    function esc(s) {
-      return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-    }
-    function curLang() { return (window.ME_LANG && window.ME_LANG() === 'zh') ? 'zh' : 'en'; }
-    function loc() { return curLang() === 'zh' ? 'zh-CN' : undefined; }
-    function T(s) { return window.ME_T ? window.ME_T(s) : s; }
-    function logout() { localStorage.removeItem('mediaEngineToken'); window.location.href = '/login.html'; }
-
-    async function api(path, method, body) {
-      const res = await fetch(API_BASE + path, {
-        method: method || 'GET',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: body ? JSON.stringify(body) : undefined
-      });
-      if (res.status === 401) { logout(); throw new Error('Session expired'); }
-      return res.json();
-    }
-
-    function showTab(tabId, btn, callback) {
-      document.getElementById('acctPanel').style.display = 'none';
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      btn.classList.add('active');
-      if (callback) callback();
-    }
-    function goPlans() { showTab('plansTab', document.getElementById('plansBtn')); }
-    function openStudio() { showTab('studioTab', document.getElementById('studioBtn'), renderStudio); }
-    function openSettings() { showTab('settingsTab', document.getElementById('settingsBtn')); }
-
-    function toggleAcct(e) {
-      e.stopPropagation();
-      const p = document.getElementById('acctPanel');
-      p.style.display = p.style.display === 'none' ? 'block' : 'none';
-    }
-    document.addEventListener('click', e => {
-      const p = document.getElementById('acctPanel');
-      if (!p.contains(e.target)) p.style.display = 'none';
+  async function api(path, method, body) {
+    const res = await fetch(API_BASE + path, {
+      method: method || 'GET',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: body ? JSON.stringify(body) : undefined
     });
+    if (res.status === 401) { logout(); throw new Error('Session expired'); }
+    return res.json();
+  }
 
-    /* ---------- Overview ---------- */
-    function renderDonut(used, total) {
-      const pct = total > 0 ? Math.min(1, used / total) : 0;
-      const r = 54, c = 2 * Math.PI * r;
-      return '<svg viewBox="0 0 140 140" width="170" height="170">' +
-        '<defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4361ee"/><stop offset="100%" stop-color="#f72585"/></linearGradient></defs>' +
-        '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#eef0f7" stroke-width="16"/>' +
-        '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="url(#dg)" stroke-width="16" stroke-linecap="round" stroke-dasharray="' + (pct * c) + ' ' + c + '" transform="rotate(-90 70 70)"/>' +
-        '<text x="70" y="68" text-anchor="middle" font-size="24" font-weight="700" fill="#2b2d42">' + Math.round(pct * 100) + '%</text>' +
-        '<text x="70" y="88" text-anchor="middle" font-size="11" fill="#888">used</text></svg>';
+  function setAvatar(el, url, name) {
+    if (url) { el.style.backgroundImage = 'url("' + String(url).replace(/"/g, '%22') + '")'; el.textContent = ''; }
+    else { el.style.backgroundImage = ''; el.textContent = (name || '?').trim().charAt(0).toUpperCase(); }
+  }
+
+  /* ---------- navigation ---------- */
+  function toggleSide() { $('side').classList.toggle('open'); }
+
+  function go(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item[data-tab]').forEach(a => a.classList.toggle('active', a.dataset.tab === name));
+    $(name + 'Tab').classList.add('active');
+    $('pageTitle').innerText = TITLES[name];
+    $('side').classList.remove('open');
+    history.replaceState(null, '', '#' + name);
+    const loaders = { overview: loadOverview, studio: renderStudio, history: loadHistory, plans: onPlans, profile: renderProfile, brand: renderBrand, settings: renderSettings, admin: loadAdmin };
+    loaders[name]();
+    window.scrollTo(0, 0);
+  }
+  function goPlans() { go('plans'); }
+  function openStudio() { go('studio'); }
+
+  /* ---------- overview ---------- */
+  function renderDonut(used, total) {
+    const pct = total > 0 ? Math.min(1, used / total) : 0;
+    const r = 54, c = 2 * Math.PI * r;
+    return '<svg viewBox="0 0 140 140" width="170" height="170">' +
+      '<defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4361ee"/><stop offset="100%" stop-color="#f72585"/></linearGradient></defs>' +
+      '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="#eef0f7" stroke-width="16"/>' +
+      '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="url(#dg)" stroke-width="16" stroke-linecap="round" stroke-dasharray="' + (pct * c) + ' ' + c + '" transform="rotate(-90 70 70)"/>' +
+      '<text x="70" y="68" text-anchor="middle" font-size="24" font-weight="700" fill="#2b2d42">' + Math.round(pct * 100) + '%</text>' +
+      '<text x="70" y="88" text-anchor="middle" font-size="11" fill="#888">used</text></svg>';
+  }
+  function renderBars(daily) {
+    const max = Math.max(1, ...daily.map(d => d.count));
+    const colors = ['#4361ee', '#7209b7', '#f72585', '#ff9e00', '#06d6a0', '#118ab2', '#ef476f'];
+    const W = 420, H = 180, bw = 34, gap = 24, base = H - 28;
+    let out = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">';
+    daily.forEach((d, i) => {
+      const h = Math.round((d.count / max) * (base - 26));
+      const x = 14 + i * (bw + gap);
+      const day = new Date(d.date + 'T00:00:00Z').toLocaleDateString(loc(), { weekday: 'short', timeZone: 'UTC' });
+      out += '<rect x="' + x + '" y="' + (base - h) + '" width="' + bw + '" height="' + Math.max(h, 3) + '" rx="8" fill="' + colors[i % colors.length] + '"/>';
+      out += '<text x="' + (x + bw / 2) + '" y="' + (base - h - 6) + '" text-anchor="middle" font-size="11" fill="#2b2d42">' + d.count + '</text>';
+      out += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="#888" translate="no">' + day + '</text>';
+    });
+    return out + '</svg>';
+  }
+
+  function renderOverview(d) {
+    lastOverview = d;
+    avatarUrl = d.avatar || '';
+    const s = d.subscription;
+    const name = d.name || (d.email || '').split('@')[0];
+    $('sideName').innerText = name;
+    $('sideMail').innerText = d.email || '';
+    $('sidePlan').innerText = s ? s.planLabel : 'No active pass';
+    setAvatar($('sideAvatar'), avatarUrl, name);
+    $('settingsCurrentEmail').innerText = d.email || '';
+    $('navAdmin').style.display = d.isAdmin ? 'block' : 'none';
+    isAdmin = !!d.isAdmin;
+
+    const hero = $('heroBox');
+    const msg = s ? 'Your ' + s.planLabel + ' is active. Create something great today.'
+      : (d.expiredAt ? 'Your pass expired on ' + new Date(d.expiredAt).toLocaleDateString(loc()) + '. Pay per image or choose a new pass.'
+      : 'Design for free. Pay per image, or choose a pass, only when you generate.');
+    hero.innerHTML = '<div><h2>Welcome, ' + esc(name) + '</h2><p>' + esc(msg) + '</p></div>';
+    const btn = document.createElement('button');
+    btn.innerText = 'Open Studio';
+    btn.onclick = openStudio;
+    hero.appendChild(btn);
+
+    const daysLeft = s && s.expiresAt ? Math.max(0, Math.ceil((new Date(s.expiresAt) - Date.now()) / 86400000)) : null;
+    const soon = $('expiryBanner');
+    if (s && daysLeft !== null && daysLeft <= 1) { soon.style.display = 'block'; soon.innerText = 'Your pass ends soon (' + new Date(s.expiresAt).toLocaleString(loc()) + ').'; }
+    else if (s && daysLeft !== null && daysLeft <= 5) { soon.style.display = 'block'; soon.innerText = 'Your pass ends in ' + daysLeft + ' day(s).'; }
+    else { soon.style.display = 'none'; }
+
+    const stats = [
+      { cls: 'c1', label: 'Pass generations used', value: s ? s.used : '-' },
+      { cls: 'c2', label: 'Pass remaining', value: s ? s.remaining : '-' },
+      { cls: 'c3', label: 'Days left', value: s ? (daysLeft === null ? 'No expiry' : daysLeft) : '-' },
+      { cls: 'c4', label: 'Saved designs', value: d.templatesCount }
+    ];
+    $('statsBox').innerHTML = stats.map(x => '<div class="stat ' + x.cls + '"><div class="v">' + x.value + '</div><div class="l">' + x.label + '</div></div>').join('');
+    $('quickBox').innerHTML = Object.keys(DS.PRODUCTS).map(k =>
+      '<div class="qcard" onclick="quickStart(\'' + k + '\')"><div class="ptitle">' + DS.PRODUCTS[k].label + '</div><div class="psize">' + DS.PRODUCTS[k].size + '</div></div>').join('');
+    $('donutBox').innerHTML = renderDonut(s ? s.used : 0, s ? s.totalAllowed : 0);
+    $('donutLegend').innerHTML = s
+      ? '<span>Included:</span> <b>' + s.limit + '</b><br><span>Extra credits:</span> <b>' + s.extraCredits + '</b><br><span>Used:</span> <b>' + s.used + '</b>'
+      : 'No active pass yet';
+    $('barsBox').innerHTML = renderBars(d.daily);
+  }
+
+  async function loadOverview() {
+    const d = await api('/overview');
+    if (!d.success) return d;
+    hasSub = !!d.subscription;
+    activeEnds = d.subscription ? d.subscription.expiresAt : null;
+    passRemaining = d.subscription ? d.subscription.remaining : 0;
+    renderOverview(d);
+    $('creditsCard').style.display = hasSub ? 'block' : 'none';
+    if (PLANS.length) renderPlans();
+    loadRecent();
+    return d;
+  }
+
+  async function loadRecent() {
+    const r = await api('/history');
+    const box = $('recentBox');
+    if (!r.success || !r.generations.length) { box.innerHTML = '<p class="hint">No images yet.</p>'; return; }
+    box.innerHTML = r.generations.slice(0, 8).map(g => '<a href="' + esc(g.image_url) + '" target="_blank"><img src="' + esc(g.image_url) + '"></a>').join('');
+  }
+
+  function quickStart(key) { pickProduct(key); go('studio'); }
+
+  /* ---------- plans, billing, payments ---------- */
+  function money(c, n) {
+    if (c === 'USD') return '$' + (Number.isInteger(n) ? n : n.toFixed(2));
+    if (c === 'CNY') return '¥' + (Number.isInteger(n) ? n : n.toFixed(2));
+    return c + ' ' + n.toLocaleString('en-US');
+  }
+  function money2(c, n) { return money(c, +n.toFixed(2)); }
+  function currentCurrency() { return $('currencySelect').value || 'KES'; }
+  const CUR_LABELS = { KES: 'Kenyan Shilling (KES) - M-PESA or card', USD: 'US Dollar (USD) - card', CNY: 'Chinese Yuan (CNY) - Alipay QR code' };
+
+  async function loadPlans() {
+    const d = await (await fetch(API_BASE + '/plans')).json();
+    PLANS = d.plans; CREDIT = d.creditPack; CURRENCIES = d.currencies; PER_IMAGE = d.perImage; MAX_ORDER = d.maxOrder;
+    const opts = CURRENCIES.map(c => '<option value="' + c + '">' + CUR_LABELS[c] + '</option>').join('');
+    $('currencySelect').innerHTML = opts;
+    $('prefCurrency').innerHTML = opts;
+    const saved = localStorage.getItem('meCurrency');
+    let pick = CURRENCIES.includes(saved) ? saved : (curLang() === 'zh' && CURRENCIES.includes('CNY') ? 'CNY' : CURRENCIES[0]);
+    $('currencySelect').value = pick;
+    $('prefCurrency').value = pick;
+    renderPlans();
+  }
+  function onCurrencyChange() { localStorage.setItem('meCurrency', currentCurrency()); $('prefCurrency').value = currentCurrency(); renderPlans(); renderStudioIfFinish(); }
+  function savePrefCurrency(v) { localStorage.setItem('meCurrency', v); $('currencySelect').value = v; renderPlans(); renderStudioIfFinish(); }
+  function renderStudioIfFinish() { if (design && step === 4) renderStudio(); }
+
+  function renderPlans() {
+    const c = currentCurrency();
+    const blocked = hasSub && activeEnds;
+    $('plansGrid').innerHTML = PLANS.map(p => {
+      const per = c === 'KES' ? Math.round(p.prices[c] / p.generations) : +(p.prices[c] / p.generations).toFixed(2);
+      const pop = p.id === 'monthly';
+      return '<div class="plan' + (pop ? ' pop' : '') + '">' +
+        (pop ? '<div class="tag">LOWEST PRICE PER IMAGE</div>' : '') +
+        '<h3>' + p.label + '</h3><div class="price">' + money(c, p.prices[c]) + '</div>' +
+        '<div class="per">about ' + money(c, per) + ' per image</div>' +
+        '<ul><li>' + p.generations.toLocaleString('en-US') + ' images</li><li>Valid for ' + p.days + (p.days === 1 ? ' day' : ' days') + '</li><li>All products and CSV batch</li></ul>' +
+        '<button onclick="subscribe(\'' + p.id + '\')"' + (blocked ? ' disabled' : '') + '>' + (blocked ? 'Pass active' : 'Choose ' + p.label) + '</button></div>';
+    }).join('');
+    $('currentPass').innerText = hasSub
+      ? (activeEnds ? 'Your current pass is active until ' + new Date(activeEnds).toLocaleString(loc()) + '.' : 'Your current pass is active.')
+      : 'You have no active pass. Everything is free to explore.';
+    $('paygNote').innerText = 'No pass? You can pay per image instead: ' + money(c, PER_IMAGE[c]) + ' per image, chosen at the last step in the Studio.';
+    if (CREDIT) $('creditsPrice').innerText = money(c, CREDIT.prices[c] || 0);
+  }
+
+  function onPlans() { renderPlans(); loadBilling(); }
+
+  async function loadBilling() {
+    const box = $('billingBox');
+    const r = await api('/billing');
+    if (!r.success || !r.items.length) { box.innerHTML = '<p class="hint">No payments yet.</p>'; return; }
+    box.innerHTML = '<div class="table-wrap"><table class="tbl"><tr><th>Date</th><th>Item</th><th>Amount</th><th>Method</th><th>Status</th></tr>' +
+      r.items.map(i => '<tr><td translate="no">' + new Date(i.date).toLocaleDateString(loc()) + '</td><td>' + esc(i.item) + '</td><td translate="no">' + esc(i.amount || '-') + '</td><td>' + esc(i.method) + '</td><td>' + esc(i.status) + '</td></tr>').join('') +
+      '</table></div>';
+  }
+
+  async function subscribe(planId) {
+    const st = $('subscribeStatus');
+    const c = currentCurrency();
+    st.innerText = 'Opening the secure payment page...';
+    if (c === 'CNY') {
+      const r = await api('/manual/pass', 'POST', { plan: planId });
+      if (r.success) { st.innerText = ''; openPay(r.manual); } else st.innerText = 'Error: ' + r.error;
+      return;
     }
-    function renderBars(daily) {
-      const max = Math.max(1, ...daily.map(d => d.count));
-      const colors = ['#4361ee', '#7209b7', '#f72585', '#ff9e00', '#06d6a0', '#118ab2', '#ef476f'];
-      const W = 420, H = 180, bw = 34, gap = 24, base = H - 28;
-      let out = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">';
-      daily.forEach((d, i) => {
-        const h = Math.round((d.count / max) * (base - 26));
-        const x = 14 + i * (bw + gap);
-        const day = new Date(d.date + 'T00:00:00Z').toLocaleDateString(loc(), { weekday: 'short', timeZone: 'UTC' });
-        out += '<rect x="' + x + '" y="' + (base - h) + '" width="' + bw + '" height="' + Math.max(h, 3) + '" rx="8" fill="' + colors[i % colors.length] + '"/>';
-        out += '<text x="' + (x + bw / 2) + '" y="' + (base - h - 6) + '" text-anchor="middle" font-size="11" fill="#2b2d42">' + d.count + '</text>';
-        out += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="#888" translate="no">' + day + '</text>';
-      });
-      return out + '</svg>';
+    const data = await api('/subscribe', 'POST', { plan: planId, currency: c });
+    if (data.success) window.location.href = data.authorization_url; else st.innerText = 'Error: ' + data.error;
+  }
+  async function buyCredits() {
+    const st = $('creditsStatus');
+    const c = currentCurrency();
+    st.innerText = 'Opening the secure payment page...';
+    if (c === 'CNY') {
+      const r = await api('/manual/credits', 'POST', {});
+      if (r.success) { st.innerText = ''; openPay(r.manual); } else st.innerText = 'Error: ' + r.error;
+      return;
     }
+    const data = await api('/buy-credits', 'POST', { credits: 100, currency: c });
+    if (data.success) window.location.href = data.authorization_url; else st.innerText = 'Error: ' + data.error;
+  }
 
-    function renderOverview(d) {
-      const s = d.subscription;
-      const name = d.name || (d.email || '').split('@')[0];
-      document.getElementById('userName').innerText = name;
-      document.getElementById('avatar').innerText = (name || '?').trim().charAt(0).toUpperCase();
-      document.getElementById('settingsCurrentEmail').innerText = d.email || '';
-      document.getElementById('adminLink').style.display = d.isAdmin ? 'block' : 'none';
+  function showPaid(msg) { const b = $('paidBanner'); b.style.display = 'block'; b.innerText = msg; }
 
-      const rows = [
-        ['Name', d.name || '-'], ['Email', d.email || '-'], ['Phone', d.phone || '-'], ['Country', d.country || '-'],
-        ['Member since', d.memberSince ? new Date(d.memberSince).toLocaleDateString(loc()) : '-'],
-        ['Pass', s ? s.planLabel + (s.expiresAt ? ' (until ' + new Date(s.expiresAt).toLocaleDateString(loc()) + ')' : '') : 'No active pass'],
-        ['Usage', s ? s.used + ' / ' + s.totalAllowed : '-']
-      ];
-      document.getElementById('acctRows').innerHTML = rows.map(r => '<div class="row"><span>' + r[0] + '</span><span>' + esc(r[1]) + '</span></div>').join('');
-
-      if (!infoFilled) {
-        document.getElementById('infoName').value = d.name || '';
-        document.getElementById('infoPhone').value = d.phone || '';
-        document.getElementById('infoCountry').value = d.country || '';
-        infoFilled = true;
-      }
-
-      const hero = document.getElementById('heroBox');
-      const msg = s ? 'Your ' + s.planLabel + ' is active. Create something great today.'
-        : (d.expiredAt ? 'Your pass expired on ' + new Date(d.expiredAt).toLocaleDateString(loc()) + '. Pay per image or choose a new pass.'
-        : 'Design for free. Pay per image, or choose a pass, only when you generate.');
-      hero.innerHTML = '<div><h2>Welcome, ' + esc(name) + '</h2><p>' + esc(msg) + '</p></div>';
-      const btn = document.createElement('button');
-      btn.innerText = 'Open Studio';
-      btn.onclick = openStudio;
-      hero.appendChild(btn);
-
-      const daysLeft = s && s.expiresAt ? Math.max(0, Math.ceil((new Date(s.expiresAt) - Date.now()) / 86400000)) : null;
-      const soon = document.getElementById('expiryBanner');
-      if (s && daysLeft !== null && daysLeft <= 1) { soon.style.display = 'block'; soon.innerText = 'Your pass ends soon (' + new Date(s.expiresAt).toLocaleString(loc()) + ').'; }
-      else if (s && daysLeft !== null && daysLeft <= 5) { soon.style.display = 'block'; soon.innerText = 'Your pass ends in ' + daysLeft + ' day(s).'; }
-      else { soon.style.display = 'none'; }
-
-      const stats = [
-        { cls: 'c1', label: 'Pass generations used', value: s ? s.used : '-' },
-        { cls: 'c2', label: 'Pass remaining', value: s ? s.remaining : '-' },
-        { cls: 'c3', label: 'Days left', value: s ? (daysLeft === null ? 'No expiry' : daysLeft) : '-' },
-        { cls: 'c4', label: 'Saved designs', value: d.templatesCount }
-      ];
-      document.getElementById('statsBox').innerHTML = stats.map(x => '<div class="stat ' + x.cls + '"><div class="v">' + x.value + '</div><div class="l">' + x.label + '</div></div>').join('');
-      document.getElementById('donutBox').innerHTML = renderDonut(s ? s.used : 0, s ? s.totalAllowed : 0);
-      document.getElementById('donutLegend').innerHTML = s
-        ? '<span>Included:</span> <b>' + s.limit + '</b><br><span>Extra credits:</span> <b>' + s.extraCredits + '</b><br><span>Used:</span> <b>' + s.used + '</b>'
-        : 'No active pass yet';
-      document.getElementById('barsBox').innerHTML = renderBars(d.daily);
+  async function handlePaidReturn(reference) {
+    history.replaceState(null, '', '/dashboard.html');
+    showPaid('Confirming your payment...');
+    if (!reference) { showPaid('We could not read the payment reference. If you were charged, contact support.'); return; }
+    const r = await api('/verify-payment', 'POST', { reference });
+    if (r.success && r.paid) {
+      await loadOverview();
+      if (r.kind === 'order') { showPaid('Payment received. Your images are being made.'); trackOrder(r.orderId); }
+      else showPaid('Payment received. Thank you!');
+    } else if (r.success) {
+      showPaid('We have not received confirmation yet. Refresh this page in a minute. If you were charged, contact support.');
+    } else {
+      showPaid(r.error || 'Could not confirm the payment.');
     }
+  }
 
-    async function loadOverview() {
-      const d = await api('/overview');
-      if (!d.success) return d;
-      hasSub = !!d.subscription;
-      activeEnds = d.subscription ? d.subscription.expiresAt : null;
-      passRemaining = d.subscription ? d.subscription.remaining : 0;
-      renderOverview(d);
-      document.getElementById('creditsCard').style.display = hasSub ? 'block' : 'none';
-      if (PLANS.length) renderPlans();
-      return d;
-    }
+  /* ---------- Alipay QR payment ---------- */
+  function openPay(m) { payState = m; $('payModal').style.display = 'block'; renderPay(); startPayPoll(); }
+  function closePay() { $('payModal').style.display = 'none'; clearInterval(payTimer); checkManual(); }
+  function reopenPay() { if (payState) openPay(payState); }
 
-    /* ---------- Plans and payments ---------- */
-    function money(c, n) {
-      if (c === 'USD') return '$' + (Number.isInteger(n) ? n : n.toFixed(2));
-      if (c === 'CNY') return '¥' + (Number.isInteger(n) ? n : n.toFixed(2));
-      return c + ' ' + n.toLocaleString('en-US');
-    }
-    function money2(c, n) { return money(c, +n.toFixed(2)); }
-    function currentCurrency() { return document.getElementById('currencySelect').value || 'KES'; }
-
-    async function loadPlans() {
-      const d = await (await fetch(API_BASE + '/plans')).json();
-      PLANS = d.plans; CREDIT = d.creditPack; CURRENCIES = d.currencies; PER_IMAGE = d.perImage; MAX_ORDER = d.maxOrder;
-      const labels = { KES: 'Kenyan Shilling (KES) - M-PESA or card', USD: 'US Dollar (USD) - card', CNY: 'Chinese Yuan (CNY) - Alipay QR code' };
-      document.getElementById('currencySelect').innerHTML = CURRENCIES.map(c => '<option value="' + c + '">' + labels[c] + '</option>').join('');
-      if (!defaultCurrencySet && curLang() === 'zh' && CURRENCIES.includes('CNY')) document.getElementById('currencySelect').value = 'CNY';
-      defaultCurrencySet = true;
-      renderPlans();
-    }
-
-    function renderPlans() {
-      const c = currentCurrency();
-      const blocked = hasSub && activeEnds;
-      document.getElementById('plansGrid').innerHTML = PLANS.map(p => {
-        const per = c === 'KES' ? Math.round(p.prices[c] / p.generations) : +(p.prices[c] / p.generations).toFixed(2);
-        const pop = p.id === 'monthly';
-        return '<div class="plan' + (pop ? ' pop' : '') + '">' +
-          (pop ? '<div class="tag">LOWEST PRICE PER IMAGE</div>' : '') +
-          '<h3>' + p.label + '</h3><div class="price">' + money(c, p.prices[c]) + '</div>' +
-          '<div class="per">about ' + money(c, per) + ' per image</div>' +
-          '<ul><li>' + p.generations.toLocaleString('en-US') + ' images</li><li>Valid for ' + p.days + (p.days === 1 ? ' day' : ' days') + '</li><li>All products and CSV batch</li></ul>' +
-          '<button onclick="subscribe(\'' + p.id + '\')"' + (blocked ? ' disabled' : '') + '>' + (blocked ? 'Pass active' : 'Choose ' + p.label) + '</button></div>';
-      }).join('');
-      document.getElementById('currentPass').innerText = hasSub
-        ? (activeEnds ? 'Your current pass is active until ' + new Date(activeEnds).toLocaleString(loc()) + '.' : 'Your current pass is active.')
-        : 'You have no active pass. Everything is free to explore.';
-      document.getElementById('paygNote').innerText = 'No pass? You can pay per image instead: ' + money(c, PER_IMAGE[c]) + ' per image, chosen at the last step in the Studio.';
-      if (CREDIT) document.getElementById('creditsPrice').innerText = money(c, CREDIT.prices[c] || 0);
-    }
-
-    async function subscribe(planId) {
-      const st = document.getElementById('subscribeStatus');
-      const c = currentCurrency();
-      st.innerText = 'Opening the secure payment page...';
-      if (c === 'CNY') {
-        const r = await api('/manual/pass', 'POST', { plan: planId });
-        if (r.success) { st.innerText = ''; openPay(r.manual); } else st.innerText = 'Error: ' + r.error;
-        return;
-      }
-      const data = await api('/subscribe', 'POST', { plan: planId, currency: c });
-      if (data.success) window.location.href = data.authorization_url; else st.innerText = 'Error: ' + data.error;
-    }
-    async function buyCredits() {
-      const st = document.getElementById('creditsStatus');
-      const c = currentCurrency();
-      st.innerText = 'Opening the secure payment page...';
-      if (c === 'CNY') {
-        const r = await api('/manual/credits', 'POST', {});
-        if (r.success) { st.innerText = ''; openPay(r.manual); } else st.innerText = 'Error: ' + r.error;
-        return;
-      }
-      const data = await api('/buy-credits', 'POST', { credits: 100, currency: c });
-      if (data.success) window.location.href = data.authorization_url; else st.innerText = 'Error: ' + data.error;
-    }
-
-    function showPaid(msg) {
-      const b = document.getElementById('paidBanner');
-      b.style.display = 'block';
-      b.innerText = msg;
-    }
-
-    async function handlePaidReturn(reference) {
-      history.replaceState(null, '', '/dashboard.html');
-      showPaid('Confirming your payment...');
-      if (!reference) { showPaid('We could not read the payment reference. If you were charged, contact support.'); return; }
-      const r = await api('/verify-payment', 'POST', { reference });
-      if (r.success && r.paid) {
-        await loadOverview();
-        if (r.kind === 'order') { showPaid('Payment received. Your images are being made.'); trackOrder(r.orderId); }
-        else showPaid('Payment received. Thank you!');
-      } else if (r.success) {
-        showPaid('We have not received confirmation yet. Refresh this page in a minute. If you were charged, contact support.');
+  function renderPay() {
+    const m = payState;
+    let h = '<h2>Pay with Alipay</h2>';
+    if (m.status === 'approved') {
+      h += '<p>Payment confirmed. Thank you!</p><button onclick="closePay()">Close</button>';
+    } else if (m.status === 'rejected') {
+      h += '<p>We could not confirm this payment. If you paid, please contact support and quote your code.</p><p class="hint"><span>Code:</span> <b translate="no">' + esc(m.code) + '</b></p><button class="light" onclick="closePay()">Close</button>';
+    } else {
+      h += '<div class="hint">Amount to pay</div><div class="bigamt">' + money('CNY', m.amount) + '</div>';
+      if (m.status === 'awaiting') {
+        h += '<img class="qr" src="' + esc(m.qr) + '">' +
+          '<div class="steps"><div>1. Open Alipay and scan this QR code.</div>' +
+          '<div>2. Pay exactly ' + money('CNY', m.amount) + '.</div>' +
+          '<div>3. In the remark / note box, write this code: <b translate="no">' + esc(m.code) + '</b></div>' +
+          '<div>4. Tap "I have paid" below.</div></div>' +
+          '<input type="text" id="payNote" maxlength="60" placeholder="Your Alipay name or last 4 digits of the order number (optional)">' +
+          '<button onclick="submitPaid()">I have paid</button><p class="hint" id="payStatus"></p>' +
+          '<button class="light" onclick="closePay()">Close</button>';
       } else {
-        showPaid(r.error || 'Could not confirm the payment.');
+        h += '<p>Thank you. We are checking your payment. This page updates by itself, and it usually takes a few hours.</p>' +
+          '<p class="hint"><span>Code:</span> <b translate="no">' + esc(m.code) + '</b></p><button class="light" onclick="closePay()">Close</button>';
       }
     }
+    $('payBox').innerHTML = h;
+  }
 
-    /* ---------- Alipay QR payment ---------- */
-    function openPay(m) {
-      payState = m;
-      document.getElementById('payModal').style.display = 'block';
+  async function submitPaid() {
+    const r = await api('/manual/' + payState.id + '/submit', 'POST', { payerNote: $('payNote').value });
+    if (r.success) { payState = r.manual; renderPay(); } else $('payStatus').innerText = 'Error: ' + r.error;
+  }
+
+  function startPayPoll() {
+    clearInterval(payTimer);
+    payTimer = setInterval(async () => {
+      if (!payState) return;
+      const r = await api('/manual/' + payState.id);
+      if (!r.success) return;
+      const old = payState.status;
+      payState = r.manual;
+      if (r.manual.status === old) return;
       renderPay();
-      startPayPoll();
-    }
-    function closePay() { document.getElementById('payModal').style.display = 'none'; clearInterval(payTimer); checkManual(); }
-    function reopenPay() { if (payState) openPay(payState); }
+      if (r.manual.status === 'approved') {
+        clearInterval(payTimer);
+        await loadOverview();
+        if (r.manual.kind === 'order' && r.manual.orderId) { closePay(); trackOrder(r.manual.orderId); }
+        else showPaid('Payment confirmed. Thank you!');
+      }
+      if (r.manual.status === 'rejected') clearInterval(payTimer);
+    }, 8000);
+  }
 
-    function renderPay() {
-      const m = payState;
-      let h = '<h2>Pay with Alipay</h2>';
-      if (m.status === 'approved') {
-        h += '<p>Payment confirmed. Thank you!</p><button onclick="closePay()">Close</button>';
-      } else if (m.status === 'rejected') {
-        h += '<p>We could not confirm this payment. If you paid, please contact support and quote your code.</p><p class="hint"><span>Code:</span> <b translate="no">' + esc(m.code) + '</b></p><button class="light" onclick="closePay()">Close</button>';
+  async function checkManual() {
+    const r = await api('/manual/open');
+    const b = $('manualBanner');
+    if (r.success && r.manual) {
+      payState = r.manual;
+      b.style.display = 'block';
+      b.innerHTML = '<span>You have an Alipay payment waiting.</span> <button class="sm" onclick="reopenPay()">Open</button>';
+    } else {
+      b.style.display = 'none';
+    }
+  }
+
+  /* ---------- Studio: people / items ---------- */
+  function samplesFor(lang) { return lang === 'zh' ? DS.SAMPLES_ZH : DS.SAMPLES; }
+  function E() { return entries[cur]; }
+
+  function prefillBrand(fields, p) {
+    const map = {
+      company: brand.business_name, phone: brand.brand_phone, email: brand.brand_email, website: brand.brand_website,
+      address: brand.brand_address, tagline: brand.brand_tagline, logo: brand.logo_url,
+      signer: brand.signer_name, signerrole: brand.signer_title, signature: brand.signature_url
+    };
+    p.fields.forEach(f => { if (map[f.key]) fields[f.key] = map[f.key]; });
+  }
+
+  function newDesign(product) {
+    const lang = curLang();
+    const p = DS.PRODUCTS[product];
+    const entry = Object.assign({}, samplesFor(lang)[product]);
+    prefillBrand(entry, p);
+    const colors = Object.assign({}, DS.PALETTES[0].colors);
+    if (detectedColor) colors.primary = detectedColor;
+    return { design: { product, style: p.styles[0], lang, colors }, entry };
+  }
+
+  function swapSamples(from, to) {
+    if (!design) return;
+    const a = samplesFor(from)[design.product], b = samplesFor(to)[design.product];
+    entries.forEach(en => { for (const k in b) if (en[k] === a[k]) en[k] = b[k]; });
+  }
+
+  function pickProduct(key) {
+    if (!design || design.product !== key) {
+      const made = newDesign(key);
+      design = made.design; entries = [made.entry]; cur = 0; csvMsg = ''; userMode = null;
+    }
+    step = 2; renderStudio();
+  }
+  function goStep(n) { if (!design && n > 1) return; step = n; renderStudio(); }
+  function setStyle(s) { design.style = s; renderStudio(); }
+  function setDLang(l) { if (design.lang !== l) { swapSamples(design.lang, l); design.lang = l; } renderStudio(); }
+  function setColor(k, v) { design.colors[k] = v; schedulePreview(); }
+  function applyPalette(i) { design.colors = Object.assign({}, DS.PALETTES[i].colors); renderStudio(); }
+  function useBrandColor() { design.colors.primary = detectedColor; renderStudio(); }
+  function setField(k, v) {
+    E()[k] = v; schedulePreview();
+    const o = document.querySelector('.ebar select option:checked');
+    if (o && k === LABEL_KEY[design.product]) o.textContent = entryLabel(cur);
+  }
+  function removeImage(k) { E()[k] = ''; renderStudio(); }
+  function setMode(m) { userMode = m; renderStudio(); }
+
+  function entryLabel(i) {
+    const v = String(entries[i][LABEL_KEY[design.product]] || '').trim();
+    return (i + 1) + '. ' + (v || T('(untitled)'));
+  }
+  function gotoEntry(i) { cur = Math.max(0, Math.min(entries.length - 1, i)); renderStudio(); }
+  function addEntry(copyAll) {
+    if (entries.length >= MAX_ORDER) { alert(T('You can make up to ' + MAX_ORDER + ' images in one order.')); return; }
+    const copy = Object.assign({}, E());
+    if (!copyAll) (PERSONAL[design.product] || []).forEach(k => { copy[k] = ''; });
+    entries.splice(cur + 1, 0, copy);
+    cur = cur + 1;
+    renderStudio();
+  }
+  function removeEntry() {
+    if (entries.length < 2) return;
+    entries.splice(cur, 1);
+    cur = Math.min(cur, entries.length - 1);
+    renderStudio();
+  }
+
+  function entriesBar() {
+    const n = entries.length;
+    return '<div class="entries"><div class="ebar">' +
+      '<button class="light sm" onclick="gotoEntry(' + (cur - 1) + ')"' + (cur === 0 ? ' disabled' : '') + '>&lsaquo; Prev</button>' +
+      '<select translate="no" onchange="gotoEntry(+this.value)">' + entries.map((e, i) => '<option value="' + i + '"' + (i === cur ? ' selected' : '') + '>' + esc(entryLabel(i)) + '</option>').join('') + '</select>' +
+      '<button class="light sm" onclick="gotoEntry(' + (cur + 1) + ')"' + (cur === n - 1 ? ' disabled' : '') + '>Next &rsaquo;</button></div>' +
+      '<div class="ebar2"><button class="sm" onclick="addEntry(true)">+ Add another (same details)</button>' +
+      '<button class="light sm" onclick="addEntry(false)">+ Add another (clear names)</button>' +
+      (n > 1 ? '<button class="light sm" onclick="removeEntry()">Remove this one</button>' : '') + '</div>' +
+      '<div class="hint">Item ' + (cur + 1) + ' of ' + n + '</div></div>';
+  }
+
+  function navButtons(back, next) {
+    return '<div class="nav">' + (back ? '<button class="light nbtn" onclick="goStep(' + back + ')">&larr; Back</button>' : '<span></span>') +
+      (next ? '<button class="nbtn" onclick="goStep(' + next + ')">Continue &rarr;</button>' : '<span></span>') + '</div>';
+  }
+
+  function stepProduct() {
+    return '<h2>1. What do you want to create?</h2><div class="pgrid">' +
+      Object.keys(DS.PRODUCTS).map(k => {
+        const p = DS.PRODUCTS[k];
+        return '<div class="pcard' + (design && design.product === k ? ' sel' : '') + '" onclick="pickProduct(\'' + k + '\')"><div class="ptitle">' + p.label + '</div><div class="psize">' + p.size + '</div></div>';
+      }).join('') + '</div><p class="hint" style="margin-top:12px;">Sizes are standard print sizes and images are made in high resolution.</p>' +
+      (design ? '<div class="nav"><span></span><button class="nbtn" onclick="goStep(2)">Continue &rarr;</button></div>' : '');
+  }
+
+  function stepStyle() {
+    const p = DS.PRODUCTS[design.product], c = design.colors, lg = design.lang || 'en';
+    return '<h2>2. Choose a style and colours</h2>' +
+      '<label class="lbl">Style</label><div class="chips">' + p.styles.map(s => '<div class="chip' + (design.style === s ? ' on' : '') + '" onclick="setStyle(\'' + s + '\')">' + (s === 'modern' ? 'Modern' : 'Classic') + '</div>').join('') + '</div>' +
+      '<label class="lbl">Text on the design</label><div class="chips">' +
+        '<div class="chip' + (lg === 'en' ? ' on' : '') + '" onclick="setDLang(\'en\')">English</div>' +
+        '<div class="chip' + (lg === 'zh' ? ' on' : '') + '" onclick="setDLang(\'zh\')" translate="no">中文</div></div>' +
+      '<label class="lbl">Colour palettes</label><div class="chips">' + DS.PALETTES.map((pl, i) =>
+        '<div class="pal" title="' + pl.name + '" onclick="applyPalette(' + i + ')">' + [pl.colors.primary, pl.colors.accent, pl.colors.background, pl.colors.text].map(x => '<span style="background:' + x + '"></span>').join('') + '</div>').join('') + '</div>' +
+      (detectedColor ? '<button class="light sm" onclick="useBrandColor()">Use my brand colour (' + detectedColor + ')</button>' : '') +
+      '<label class="lbl">Fine-tune colours</label><div class="colors">' +
+      [['primary', 'Main'], ['accent', 'Accent'], ['background', 'Background'], ['text', 'Text']].map(x =>
+        '<div><input type="color" class="color-in" value="' + c[x[0]] + '" oninput="setColor(\'' + x[0] + '\', this.value)"><div class="hint">' + x[1] + '</div></div>').join('') + '</div>' +
+      navButtons(1, 3);
+  }
+
+  function stepDetails() {
+    const p = DS.PRODUCTS[design.product];
+    const f = E();
+    let h = '<h2>3. Add your details</h2><p class="hint">Fill in one set of details for each person. Use the buttons to add more people. Everything is made in one go at the end.</p>' + entriesBar() +
+      '<p class="hint">Replace the example text with your own. Empty fields are left out of the design.</p>';
+    p.fields.forEach(fd => {
+      const v = f[fd.key] || '';
+      h += '<label class="lbl">' + fd.label + '</label>';
+      if (fd.type === 'image') {
+        h += '<div class="upl">' + (v ? '<img src="' + esc(v) + '"><button class="light sm" onclick="removeImage(\'' + fd.key + '\')">Remove</button>' : '') +
+          '<input type="file" accept="image/png,image/jpeg" onchange="uploadFor(\'' + fd.key + '\', this)"><div class="hint" id="upl_' + fd.key + '">' + fd.hint + '</div></div>';
+      } else if (fd.type === 'textarea') {
+        h += '<textarea rows="3" placeholder="' + esc(fd.ph) + '" oninput="setField(\'' + fd.key + '\', this.value)">' + esc(v) + '</textarea>';
       } else {
-        h += '<div class="hint">Amount to pay</div><div class="bigamt">' + money('CNY', m.amount) + '</div>';
-        if (m.status === 'awaiting') {
-          h += '<img class="qr" src="' + esc(m.qr) + '">' +
-            '<div class="steps"><div>1. Open Alipay and scan this QR code.</div>' +
-            '<div>2. Pay exactly ' + money('CNY', m.amount) + '.</div>' +
-            '<div>3. In the remark / note box, write this code: <b translate="no">' + esc(m.code) + '</b></div>' +
-            '<div>4. Tap "I have paid" below.</div></div>' +
-            '<input type="text" id="payNote" maxlength="60" placeholder="Your Alipay name or last 4 digits of the order number (optional)">' +
-            '<button onclick="submitPaid()">I have paid</button><p class="hint" id="payStatus"></p>' +
-            '<button class="light" onclick="closePay()">Close</button>';
-        } else {
-          h += '<p>Thank you. We are checking your payment. This page updates by itself, and it usually takes a few hours.</p>' +
-            '<p class="hint"><span>Code:</span> <b translate="no">' + esc(m.code) + '</b></p><button class="light" onclick="closePay()">Close</button>';
-        }
+        h += '<input type="text" value="' + esc(v) + '" placeholder="' + esc(fd.ph) + '" oninput="setField(\'' + fd.key + '\', this.value)">';
       }
-      document.getElementById('payBox').innerHTML = h;
-    }
-
-    async function submitPaid() {
-      const r = await api('/manual/' + payState.id + '/submit', 'POST', { payerNote: document.getElementById('payNote').value });
-      if (r.success) { payState = r.manual; renderPay(); }
-      else document.getElementById('payStatus').innerText = 'Error: ' + r.error;
-    }
-
-    function startPayPoll() {
-      clearInterval(payTimer);
-      payTimer = setInterval(async () => {
-        if (!payState) return;
-        const r = await api('/manual/' + payState.id);
-        if (!r.success) return;
-        const old = payState.status;
-        payState = r.manual;
-        if (r.manual.status === old) return;
-        renderPay();
-        if (r.manual.status === 'approved') {
-          clearInterval(payTimer);
-          await loadOverview();
-          if (r.manual.kind === 'order' && r.manual.orderId) { closePay(); trackOrder(r.manual.orderId); }
-          else showPaid('Payment confirmed. Thank you!');
-        }
-        if (r.manual.status === 'rejected') clearInterval(payTimer);
-      }, 8000);
-    }
-
-    async function checkManual() {
-      const r = await api('/manual/open');
-      const b = document.getElementById('manualBanner');
-      if (r.success && r.manual) {
-        payState = r.manual;
-        b.style.display = 'block';
-        b.innerHTML = '<span>You have an Alipay payment waiting.</span> <button class="sm" onclick="reopenPay()">Open</button>';
-      } else {
-        b.style.display = 'none';
-      }
-    }
-
-    /* ---------- Studio ---------- */
-    function samplesFor(lang) { return lang === 'zh' ? DS.SAMPLES_ZH : DS.SAMPLES; }
-
-    function newDesign(product) {
-      const lang = curLang();
-      const p = DS.PRODUCTS[product];
-      const fields = Object.assign({}, samplesFor(lang)[product]);
-      if (savedBusinessName && 'company' in fields) fields.company = savedBusinessName;
-      if (brandLogoUrl && p.fields.some(f => f.key === 'logo')) fields.logo = brandLogoUrl;
-      const colors = Object.assign({}, DS.PALETTES[0].colors);
-      if (detectedColor) colors.primary = detectedColor;
-      return { product, style: p.styles[0], lang, colors, fields };
-    }
-    function swapSamples(from, to) {
-      if (!design) return;
-      const a = samplesFor(from)[design.product], b = samplesFor(to)[design.product];
-      for (const k in b) if (design.fields[k] === a[k]) design.fields[k] = b[k];
-    }
-    function pickProduct(key) {
-      if (!design || design.product !== key) { design = newDesign(key); csvRows = null; csvName = ''; userMode = null; }
-      step = 2; renderStudio();
-    }
-    function goStep(n) { if (!design && n > 1) return; step = n; renderStudio(); }
-    function setStyle(s) { design.style = s; renderStudio(); }
-    function setDLang(l) { if (design.lang !== l) { swapSamples(design.lang, l); design.lang = l; } renderStudio(); }
-    function setColor(k, v) { design.colors[k] = v; schedulePreview(); }
-    function applyPalette(i) { design.colors = Object.assign({}, DS.PALETTES[i].colors); renderStudio(); }
-    function useBrandColor() { design.colors.primary = detectedColor; renderStudio(); }
-    function setField(k, v) { design.fields[k] = v; schedulePreview(); }
-    function removeImage(k) { design.fields[k] = ''; renderStudio(); }
-    function setMode(m) { userMode = m; renderStudio(); }
-    function navButtons(back, next) {
-      return '<div class="nav">' + (back ? '<button class="light nbtn" onclick="goStep(' + back + ')">&larr; Back</button>' : '<span></span>') +
-        (next ? '<button class="nbtn" onclick="goStep(' + next + ')">Continue &rarr;</button>' : '<span></span>') + '</div>';
-    }
-
-    function stepProduct() {
-      return '<h2>1. What do you want to create?</h2><div class="pgrid">' +
-        Object.keys(DS.PRODUCTS).map(k => {
-          const p = DS.PRODUCTS[k];
-          return '<div class="pcard' + (design && design.product === k ? ' sel' : '') + '" onclick="pickProduct(\'' + k + '\')"><div class="ptitle">' + p.label + '</div><div class="psize">' + p.size + '</div></div>';
-        }).join('') + '</div><p class="hint" style="margin-top:12px;">Sizes are standard print sizes and images are made in high resolution.</p>' +
-        (design ? '<div class="nav"><span></span><button class="nbtn" onclick="goStep(2)">Continue &rarr;</button></div>' : '');
-    }
-
-    function stepStyle() {
-      const p = DS.PRODUCTS[design.product], c = design.colors, lg = design.lang || 'en';
-      return '<h2>2. Choose a style and colours</h2>' +
-        '<label class="lbl">Style</label><div class="chips">' + p.styles.map(s => '<div class="chip' + (design.style === s ? ' on' : '') + '" onclick="setStyle(\'' + s + '\')">' + (s === 'modern' ? 'Modern' : 'Classic') + '</div>').join('') + '</div>' +
-        '<label class="lbl">Text on the design</label><div class="chips">' +
-          '<div class="chip' + (lg === 'en' ? ' on' : '') + '" onclick="setDLang(\'en\')">English</div>' +
-          '<div class="chip' + (lg === 'zh' ? ' on' : '') + '" onclick="setDLang(\'zh\')" translate="no">中文</div></div>' +
-        '<label class="lbl">Colour palettes</label><div class="chips">' + DS.PALETTES.map((pl, i) =>
-          '<div class="pal" title="' + pl.name + '" onclick="applyPalette(' + i + ')">' + [pl.colors.primary, pl.colors.accent, pl.colors.background, pl.colors.text].map(x => '<span style="background:' + x + '"></span>').join('') + '</div>').join('') + '</div>' +
-        (detectedColor ? '<button class="light sm" onclick="useBrandColor()">Use my brand colour (' + detectedColor + ')</button>' : '') +
-        '<label class="lbl">Fine-tune colours</label><div class="colors">' +
-        [['primary', 'Main'], ['accent', 'Accent'], ['background', 'Background'], ['text', 'Text']].map(x =>
-          '<div><input type="color" class="color-in" value="' + c[x[0]] + '" oninput="setColor(\'' + x[0] + '\', this.value)"><div class="hint">' + x[1] + '</div></div>').join('') + '</div>' +
-        navButtons(1, 3);
-    }
-
-    function stepDetails() {
-      const p = DS.PRODUCTS[design.product];
-      let h = '<h2>3. Add your details</h2><p class="hint">Replace the example text with your own. Empty fields are left out of the design.</p>';
-      p.fields.forEach(fd => {
-        const v = design.fields[fd.key] || '';
-        h += '<label class="lbl">' + fd.label + '</label>';
-        if (fd.type === 'image') {
-          h += '<div class="upl">' + (v ? '<img src="' + esc(v) + '"><button class="light sm" onclick="removeImage(\'' + fd.key + '\')">Remove</button>' : '') +
-            '<input type="file" accept="image/png,image/jpeg" onchange="uploadFor(\'' + fd.key + '\', this)"><div class="hint" id="upl_' + fd.key + '">' + fd.hint + '</div></div>';
-        } else if (fd.type === 'textarea') {
-          h += '<textarea rows="3" placeholder="' + esc(fd.ph) + '" oninput="setField(\'' + fd.key + '\', this.value)">' + esc(v) + '</textarea>';
-        } else {
-          h += '<input type="text" value="' + esc(v) + '" placeholder="' + esc(fd.ph) + '" oninput="setField(\'' + fd.key + '\', this.value)">';
-        }
-      });
-      return h + navButtons(2, 4);
-    }
-
-    function stepFinish() {
-      const p = DS.PRODUCTS[design.product];
-      const N = csvRows ? csvRows.length : 1;
-      const c = currentCurrency();
-      const cost = money2(c, N * PER_IMAGE[c]);
-      const canPass = hasSub && N <= passRemaining;
-      payMode = canPass ? (userMode || 'pass') : 'payg';
-
-      const textKeys = p.fields.filter(f => f.type !== 'image').map(f => f.key);
-      const sample = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + textKeys.join(',') + '\n' +
-        textKeys.map(k => '"' + String(design.fields[k] || '').replace(/"/g, '""') + '"').join(','));
-
-      let h = '<h2>4. Finish</h2>' +
-        '<label class="lbl">Make many images at once (optional)</label>' +
-        '<p class="hint">Upload a CSV where each row is one image (up to ' + MAX_ORDER + '). Column headings: <b translate="no">' + textKeys.join(', ') + '</b>. Columns you leave out use the text from step 3. If it contains Chinese, save it as CSV UTF-8.</p>' +
-        '<a href="' + sample + '" download="sample-' + design.product + '.csv" class="hint">Download a sample CSV</a>' +
-        '<input type="file" accept=".csv" onchange="loadCsv(this)">' +
-        (csvRows ? '<div class="hint" id="csvInfo"><b translate="no">' + esc(csvName) + '</b>: ' + N + ' images <button class="light sm" onclick="removeCsv()">Remove</button></div>' : '<div class="hint" id="csvInfo"></div>');
-
-      h += '<div class="sumbox"><div><b>' + N + '</b> <span>&times;</span> <span>' + p.label + '</span> <span>&middot;</span> <span>' + p.size + '</span></div>';
-      if (canPass) {
-        h += '<label class="radio"><input type="radio" name="pm" ' + (payMode === 'pass' ? 'checked' : '') + ' onchange="setMode(\'pass\')">Use my pass (' + passRemaining + ' left)</label>' +
-             '<label class="radio"><input type="radio" name="pm" ' + (payMode === 'payg' ? 'checked' : '') + ' onchange="setMode(\'payg\')">Pay per image: ' + cost + '</label>';
-      } else {
-        h += '<div>Pay per image: ' + N + ' &times; ' + money(c, PER_IMAGE[c]) + ' = <b>' + cost + '</b></div>';
-        h += hasSub ? '<div class="hint">Your pass has ' + passRemaining + ' left, which is not enough for ' + N + '.</div>'
-                    : '<div class="hint"><span>Prefer a pass?</span> <a href="#" onclick="goPlans();return false;">See passes</a></div>';
-      }
-      h += '</div><button id="orderBtn" onclick="submitOrder()">' + (payMode === 'pass' ? 'Generate ' + N + ' image' + (N > 1 ? 's' : '') : 'Pay ' + cost + ' and generate') + '</button><p class="hint" id="orderStatus"></p>';
-
-      h += '<label class="lbl">Save this design for later</label><input type="text" id="saveName" placeholder="Design name">' +
-        '<button class="light" onclick="saveDesign()">Save design</button><p class="hint" id="saveStatus"></p>' + navButtons(3, null);
-      return h;
-    }
-
-    function renderStudio() {
-      document.getElementById('stepDots').innerHTML = ['Product', 'Style', 'Details', 'Finish'].map((t, i) =>
-        '<div class="dot' + (step === i + 1 ? ' on' : '') + '" onclick="goStep(' + (i + 1) + ')"><span class="n">' + (i + 1) + '</span><span>' + t + '</span></div>').join('');
-      if (!design) step = 1;
-      document.getElementById('studioForm').innerHTML = step === 1 ? stepProduct() : step === 2 ? stepStyle() : step === 3 ? stepDetails() : stepFinish();
-      renderPreview();
-    }
-
-    function effectiveDesign() {
-      if (csvRows && csvRows.length) return Object.assign({}, design, { fields: Object.assign({}, design.fields, csvRows[0]) });
-      return design;
-    }
-    function schedulePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 150); }
-    function renderPreview() {
-      const box = document.getElementById('studioPreview');
-      const note = document.getElementById('sizeNote');
-      if (!design) {
-        box.style.height = '240px';
-        box.innerHTML = '<div class="empty">Choose a product to start designing</div>';
-        note.innerHTML = '';
-        return;
-      }
-      const p = DS.PRODUCTS[design.product];
-      const width = box.parentElement.clientWidth || 340;
-      const scale = width / p.w;
-      box.style.height = Math.round(p.h * scale) + 'px';
-      const iframe = document.createElement('iframe');
-      iframe.setAttribute('sandbox', '');
-      iframe.style.width = p.w + 'px';
-      iframe.style.height = p.h + 'px';
-      iframe.style.transform = 'scale(' + scale + ')';
-      iframe.style.transformOrigin = 'top left';
-      iframe.srcdoc = DS.build(effectiveDesign(), { origin: window.location.origin });
-      box.innerHTML = '';
-      box.appendChild(iframe);
-      note.innerHTML = '<span>' + p.label + '</span> &middot; <span>' + p.size + '</span>';
-    }
-
-    /* uploads */
-    function fileToDataUrl(file, maxSide, type) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        img.onload = () => {
-          const k = Math.min(1, maxSide / Math.max(img.width, img.height));
-          const cv = document.createElement('canvas');
-          cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
-          const ctx = cv.getContext('2d');
-          if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); }
-          ctx.drawImage(img, 0, 0, cv.width, cv.height);
-          URL.revokeObjectURL(url);
-          resolve(cv.toDataURL(type, 0.9));
-        };
-        img.onerror = () => reject(new Error('Could not read that image.'));
-        img.src = url;
-      });
-    }
-    async function uploadImage(file, isPhoto) {
-      const dataUrl = await fileToDataUrl(file, isPhoto ? 700 : 900, isPhoto ? 'image/jpeg' : 'image/png');
-      return api('/upload', 'POST', { dataUrl });
-    }
-    async function uploadFor(key, input) {
-      const file = input.files[0];
-      if (!file) return;
-      const st = document.getElementById('upl_' + key);
-      st.innerText = 'Uploading...';
-      try {
-        const r = await uploadImage(file, key === 'photo');
-        if (!r.success) throw new Error(r.error);
-        design.fields[key] = r.url;
-        renderStudio();
-      } catch (e) { st.innerText = e.message || 'Upload failed.'; }
-    }
-    async function uploadBrandLogo(input) {
-      const file = input.files[0];
-      if (!file) return;
-      const st = document.getElementById('profileStatus');
-      st.innerText = 'Uploading...';
-      try {
-        const r = await uploadImage(file, false);
-        if (!r.success) throw new Error(r.error);
-        document.getElementById('logoUrl').value = r.url;
-        updateLogoPreview();
-        st.innerText = 'Logo uploaded. Click Save Brand Settings to keep it.';
-      } catch (e) { st.innerText = e.message || 'Upload failed.'; }
-    }
-
-    /* csv */
-    function parseCSV(text) {
-      const rows = []; let row = [], cur = '', q = false;
-      text = text.replace(/^\uFEFF/, '');
-      for (let i = 0; i < text.length; i++) {
-        const ch = text[i];
-        if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
-        else if (ch === '"') q = true;
-        else if (ch === ',') { row.push(cur); cur = ''; }
-        else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); cur = ''; if (row.some(x => x.trim() !== '')) rows.push(row); row = []; }
-        else cur += ch;
-      }
-      row.push(cur); if (row.some(x => x.trim() !== '')) rows.push(row);
-      if (!rows.length) return [];
-      const headers = rows.shift().map(h => h.trim().toLowerCase());
-      return rows.map(r => { const o = {}; headers.forEach((h, i) => { o[h] = (r[i] || '').trim(); }); return o; });
-    }
-    async function loadCsv(input) {
-      const file = input.files[0];
-      if (!file) return;
-      const keys = DS.PRODUCTS[design.product].fields.filter(f => f.type !== 'image').map(f => f.key);
-      const rows = parseCSV(await file.text()).map(r => { const o = {}; keys.forEach(k => { if (k in r) o[k] = r[k]; }); return o; });
-      if (!rows.length) { document.getElementById('csvInfo').innerText = 'No usable rows found. Check the column headings.'; return; }
-      if (rows.length > MAX_ORDER) { document.getElementById('csvInfo').innerText = 'Too many rows (max ' + MAX_ORDER + ').'; return; }
-      csvRows = rows; csvName = file.name; renderStudio();
-    }
-    function removeCsv() { csvRows = null; csvName = ''; renderStudio(); }
-
-    /* orders */
-    async function submitOrder() {
-      const btn = document.getElementById('orderBtn'), st = document.getElementById('orderStatus');
-      btn.disabled = true; st.innerText = 'Working...';
-      const r = await api('/orders', 'POST', { design, rows: csvRows, mode: payMode, currency: currentCurrency() });
-      btn.disabled = false;
-      if (!r.success) { st.innerText = 'Error: ' + r.error; return; }
-      if (r.manual) { st.innerText = ''; openPay(r.manual); return; }
-      if (r.authorization_url) { st.innerText = 'Opening the secure payment page...'; window.location.href = r.authorization_url; return; }
-      st.innerText = '';
-      trackOrder(r.orderId);
-    }
-
-    function renderOrder(id, o) {
-      const pct = o.quantity ? Math.round(o.completed / o.quantity * 100) : 0;
-      let title, extra = '';
-      if (o.status === 'done') { title = 'All ' + o.quantity + ' image' + (o.quantity > 1 ? 's are' : ' is') + ' ready'; extra = '<button class="light sm" onclick="closeOrder()">Close</button>'; }
-      else if (o.status === 'failed') { title = 'Something went wrong'; extra = '<p class="hint">Your payment is safe. Press try again to continue where it stopped.</p><button class="nbtn" onclick="retryOrder(' + id + ')">Try again</button>'; }
-      else if (o.status === 'pending') title = 'Waiting for payment confirmation...';
-      else title = 'Making your images: ' + o.completed + ' of ' + o.quantity;
-      document.getElementById('orderPanel').innerHTML = '<h2>' + title + '</h2><div class="progress"><div style="width:' + pct + '%"></div></div>' + extra +
-        '<div class="res-grid">' + (o.results || []).map(u => '<div class="res"><img src="' + esc(u) + '"><a href="' + esc(u) + '" download="media-engine-image.png"><button class="sm">Download</button></a></div>').join('') + '</div>';
-    }
-    function trackOrder(id) {
-      clearInterval(orderTimer);
-      document.getElementById('orderPanel').style.display = 'block';
-      openStudio();
-      const tick = async () => {
-        const r = await api('/orders/' + id);
-        if (!r.success) return;
-        renderOrder(id, r.order);
-        if (r.order.status === 'done' || r.order.status === 'failed') { clearInterval(orderTimer); loadOverview(); }
-      };
-      tick();
-      orderTimer = setInterval(tick, 3000);
-    }
-    function closeOrder() { clearInterval(orderTimer); document.getElementById('orderPanel').style.display = 'none'; }
-    async function retryOrder(id) { await api('/orders/' + id + '/retry', 'POST'); trackOrder(id); }
-
-    /* saved designs */
-    async function loadSaved() {
-      const data = await api('/templates');
-      savedDesigns = (data.templates || []).map(t => {
-        try { const j = JSON.parse(t.html_content); return j && j.v === 2 && DS.PRODUCTS[j.design.product] ? { id: t.id, name: t.template_name, design: j.design } : null; }
-        catch (e) { return null; }
-      }).filter(Boolean);
-      const box = document.getElementById('savedList');
-      box.innerHTML = savedDesigns.length ? savedDesigns.map(s =>
-        '<div class="saved-item"><div><b translate="no">' + esc(s.name) + '</b> <span class="hint">' + DS.PRODUCTS[s.design.product].label + '</span></div><div>' +
-        '<button onclick="openSaved(' + s.id + ')">Open</button><button class="light" onclick="deleteSaved(' + s.id + ')">Delete</button></div></div>').join('')
-        : '<p class="hint">Nothing saved yet. Use "Save design" on the last step.</p>';
-    }
-    function openSaved(id) {
-      const s = savedDesigns.find(x => x.id === id);
-      if (!s) return;
-      design = JSON.parse(JSON.stringify(s.design)); csvRows = null; csvName = ''; userMode = null; step = 3; renderStudio();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    async function saveDesign() {
-      const name = document.getElementById('saveName').value.trim(), st = document.getElementById('saveStatus');
-      if (!name) { st.innerText = 'Please give your design a name.'; return; }
-      const r = await api('/templates', 'POST', { template_name: name, html_content: JSON.stringify({ v: 2, design }) });
-      if (r.success) { st.innerText = 'Saved!'; loadSaved(); loadOverview(); } else st.innerText = 'Error: ' + r.error;
-    }
-    async function deleteSaved(id) {
-      const s = savedDesigns.find(x => x.id === id);
-      if (!s || !confirm(T('Delete "' + s.name + '"?'))) return;
-      await api('/templates/' + id, 'DELETE');
-      loadSaved(); loadOverview();
-    }
-
-    /* ---------- History ---------- */
-    async function loadHistory() {
-      const listDiv = document.getElementById('historyList');
-      listDiv.innerHTML = '<p>Loading...</p>';
-      const data = await api('/history');
-      if (!data.success || data.generations.length === 0) { listDiv.innerHTML = '<p>No images yet.</p>'; return; }
-      listDiv.innerHTML = '';
-      data.generations.forEach(g => {
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        item.innerHTML = '<img src="' + esc(g.image_url) + '"><div class="meta"><div class="name">' + esc(g.template_name) + '</div><div class="date" translate="no">' + new Date(g.created_at).toLocaleString(loc()) + '</div></div><a href="' + esc(g.image_url) + '" download="media-engine-image.png"><button>Download</button></a>';
-        listDiv.appendChild(item);
-      });
-    }
-
-    /* ---------- Brand ---------- */
-    function isOurImage(u) { return !!u && (u.startsWith(window.location.origin + '/assets/') || u.includes('/storage/v1/object/public/')); }
-
-    async function loadProfile() {
-      const data = await api('/profile');
-      if (!data.success || !data.profile) return;
-      document.getElementById('businessName').value = data.profile.business_name || '';
-      savedBusinessName = data.profile.business_name || '';
-      document.getElementById('logoUrl').value = data.profile.logo_url || '';
-      brandLogoUrl = isOurImage(data.profile.logo_url) ? data.profile.logo_url : '';
-      updateLogoPreview();
-      if (data.profile.brand_color) {
-        detectedColor = data.profile.brand_color;
-        document.getElementById('swatchBox').style.background = detectedColor;
-        document.getElementById('swatchHex').innerText = detectedColor;
-        document.getElementById('colorSwatch').style.display = 'flex';
-      }
-    }
-
-    async function extractBrandColor() {
-      const url = document.getElementById('logoUrl').value;
-      const st = document.getElementById('profileStatus');
-      if (!url) { st.innerText = 'Please upload a logo first.'; return; }
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const cv = document.createElement('canvas');
-        cv.width = img.width; cv.height = img.height;
-        const ctx = cv.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        try {
-          const px = ctx.getImageData(0, 0, cv.width, cv.height).data;
-          let r = 0, g = 0, b = 0, n = 0;
-          for (let i = 0; i < px.length; i += 40) { if (px[i + 3] > 200) { r += px[i]; g += px[i + 1]; b += px[i + 2]; n++; } }
-          if (!n) { st.innerText = 'Could not detect a color from this image.'; return; }
-          const hex = '#' + [r, g, b].map(x => Math.round(x / n).toString(16).padStart(2, '0')).join('');
-          detectedColor = hex;
-          document.getElementById('swatchBox').style.background = hex;
-          document.getElementById('swatchHex').innerText = hex;
-          document.getElementById('colorSwatch').style.display = 'flex';
-          st.innerText = 'Color detected! Save to keep it.';
-        } catch (err) { st.innerText = 'Could not read this image.'; }
-      };
-      img.onerror = () => { st.innerText = 'Could not load that image.'; };
-      img.src = url;
-    }
-
-    function updateLogoPreview() {
-      const url = document.getElementById('logoUrl').value;
-      const img = document.getElementById('logoPreview');
-      if (url) { img.src = url; img.style.display = 'block'; } else { img.style.display = 'none'; }
-    }
-
-    async function saveProfile() {
-      const business_name = document.getElementById('businessName').value;
-      const logo_url = document.getElementById('logoUrl').value;
-      const data = await api('/profile', 'POST', { business_name, logo_url, brand_color: detectedColor });
-      if (data.success) {
-        document.getElementById('profileStatus').innerText = 'Brand settings saved!';
-        savedBusinessName = business_name;
-        brandLogoUrl = isOurImage(logo_url) ? logo_url : '';
-        updateLogoPreview();
-      } else {
-        document.getElementById('profileStatus').innerText = 'Error: ' + data.error;
-      }
-    }
-
-    /* ---------- Settings ---------- */
-    async function saveInfo() {
-      const st = document.getElementById('infoStatus');
-      const data = await api('/profile-info', 'POST', {
-        fullName: document.getElementById('infoName').value,
-        phone: document.getElementById('infoPhone').value,
-        country: document.getElementById('infoCountry').value
-      });
-      if (data.success) { st.innerText = 'Saved!'; loadOverview(); } else { st.innerText = 'Error: ' + data.error; }
-    }
-    async function updateAccount() {
-      const currentPassword = document.getElementById('currentPassword').value;
-      const newEmail = document.getElementById('newEmail').value;
-      const newPassword = document.getElementById('newPassword').value;
-      const st = document.getElementById('settingsStatus');
-      if (!currentPassword) { st.innerText = 'Please enter your current password.'; return; }
-      if (!newEmail && !newPassword) { st.innerText = 'Enter a new email or a new password.'; return; }
-      if (newPassword && newPassword.length < 8) { st.innerText = 'New password must be at least 8 characters.'; return; }
-      const data = await api('/account', 'POST', { currentPassword, newEmail, newPassword });
-      if (data.success) {
-        st.innerText = 'Account updated! Please log in again with your new details.';
-        ['currentPassword', 'newEmail', 'newPassword'].forEach(id => { document.getElementById(id).value = ''; });
-      } else { st.innerText = 'Error: ' + data.error; }
-    }
-
-    /* ---------- Language switch ---------- */
-    window.addEventListener('melangchange', e => {
-      swapSamples(e.detail.prev, e.detail.lang);
-      if (design && design.lang === e.detail.prev) design.lang = e.detail.lang;
-      renderStudio();
-      loadOverview();
     });
+    return h + navButtons(2, 4);
+  }
 
-    /* ---------- Start ---------- */
-    async function init() {
-      await Promise.all([loadPlans(), loadOverview()]);
-      await loadProfile();
-      loadSaved();
-      renderStudio();
-      const qs = new URLSearchParams(location.search);
-      if (qs.get('paid')) { await handlePaidReturn(qs.get('reference') || qs.get('trxref')); }
-      else { const o = await api('/orders/open'); if (o.success && o.order) trackOrder(o.order.id); }
-      checkManual();
+  function stepFinish() {
+    const p = DS.PRODUCTS[design.product];
+    const N = entries.length;
+    const c = currentCurrency();
+    const cost = money2(c, N * PER_IMAGE[c]);
+    const canPass = hasSub && N <= passRemaining;
+    payMode = canPass ? (userMode || 'pass') : 'payg';
+
+    const textKeys = p.fields.filter(x => x.type !== 'image').map(x => x.key);
+    const sample = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + textKeys.join(',') + '\n' +
+      textKeys.map(k => '"' + String(E()[k] || '').replace(/"/g, '""') + '"').join(','));
+
+    let h = '<h2>4. Finish</h2>' +
+      '<label class="lbl">Import many people from a CSV (optional)</label>' +
+      '<p class="hint">Upload a CSV where each row is one image (up to ' + MAX_ORDER + '). Column headings: <b translate="no">' + textKeys.join(', ') + '</b>. Columns you leave out use the text from step 3. If it contains Chinese, save it as CSV UTF-8.</p>' +
+      '<a href="' + sample + '" download="sample-' + design.product + '.csv" class="hint">Download a sample CSV</a>' +
+      '<input type="file" accept=".csv" onchange="loadCsv(this)">' +
+      '<div class="hint" id="csvInfo">' + esc(csvMsg) + '</div>';
+
+    h += '<div class="sumbox"><div><b>' + N + '</b> <span>&times;</span> <span>' + p.label + '</span> <span>&middot;</span> <span>' + p.size + '</span></div>';
+    if (canPass) {
+      h += '<label class="radio"><input type="radio" name="pm" ' + (payMode === 'pass' ? 'checked' : '') + ' onchange="setMode(\'pass\')">Use my pass (' + passRemaining + ' left)</label>' +
+           '<label class="radio"><input type="radio" name="pm" ' + (payMode === 'payg' ? 'checked' : '') + ' onchange="setMode(\'payg\')">Pay per image: ' + cost + '</label>';
+    } else {
+      h += '<div>Pay per image: ' + N + ' &times; ' + money(c, PER_IMAGE[c]) + ' = <b>' + cost + '</b></div>';
+      h += hasSub ? '<div class="hint">Your pass has ' + passRemaining + ' left, which is not enough for ' + N + '.</div>'
+                  : '<div class="hint"><span>Prefer a pass?</span> <a href="#" onclick="goPlans();return false;">See passes</a></div>';
     }
-    window.addEventListener('resize', schedulePreview);
-    init();
-  </script>
+    h += '</div><button id="orderBtn" onclick="submitOrder()">' + (payMode === 'pass' ? 'Generate ' + N + ' image' + (N > 1 ? 's' : '') : 'Pay ' + cost + ' and generate') + '</button><p class="hint" id="orderStatus"></p>';
+
+    h += '<label class="lbl">Save this design for later</label><input type="text" id="saveName" placeholder="Design name">' +
+      '<button class="light" onclick="saveDesign()">Save design</button><p class="hint" id="saveStatus"></p>' + navButtons(3, null);
+    return h;
+  }
+
+  function renderStudio() {
+    $('stepDots').innerHTML = ['Product', 'Style', 'Details', 'Finish'].map((t, i) =>
+      '<div class="dot' + (step === i + 1 ? ' on' : '') + '" onclick="goStep(' + (i + 1) + ')"><span class="n">' + (i + 1) + '</span><span>' + t + '</span></div>').join('');
+    if (!design) step = 1;
+    $('studioForm').innerHTML = step === 1 ? stepProduct() : step === 2 ? stepStyle() : step === 3 ? stepDetails() : stepFinish();
+    renderPreview();
+  }
+
+  function effectiveDesign() { return Object.assign({}, design, { fields: E() }); }
+  function schedulePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 150); }
+  function renderPreview() {
+    const box = $('studioPreview');
+    const note = $('sizeNote');
+    const pn = $('previewNav');
+    if (!design) {
+      box.style.height = '240px';
+      box.innerHTML = '<div class="empty">Choose a product to start designing</div>';
+      note.innerHTML = ''; pn.innerHTML = '';
+      return;
+    }
+    const p = DS.PRODUCTS[design.product];
+    const width = box.parentElement.clientWidth || 340;
+    const scale = width / p.w;
+    box.style.height = Math.round(p.h * scale) + 'px';
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('sandbox', '');
+    iframe.style.width = p.w + 'px';
+    iframe.style.height = p.h + 'px';
+    iframe.style.transform = 'scale(' + scale + ')';
+    iframe.style.transformOrigin = 'top left';
+    iframe.srcdoc = DS.build(effectiveDesign(), { origin: window.location.origin });
+    box.innerHTML = '';
+    box.appendChild(iframe);
+    note.innerHTML = '<span>' + p.label + '</span> &middot; <span>' + p.size + '</span>';
+    pn.innerHTML = entries.length > 1
+      ? '<button class="light sm" onclick="gotoEntry(' + (cur - 1) + ')"' + (cur === 0 ? ' disabled' : '') + '>&lsaquo; Prev</button><span>Item ' + (cur + 1) + ' of ' + entries.length + '</span><button class="light sm" onclick="gotoEntry(' + (cur + 1) + ')"' + (cur === entries.length - 1 ? ' disabled' : '') + '>Next &rsaquo;</button>'
+      : '';
+  }
+
+  /* uploads */
+  function fileToDataUrl(file, maxSide, type) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const k = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+        const ctx = cv.getContext('2d');
+        if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); }
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL(type, 0.9));
+      };
+      img.onerror = () => reject(new Error('Could not read that image.'));
+      img.src = url;
+    });
+  }
+  async function uploadImage(file, isPhoto) {
+    const dataUrl = await fileToDataUrl(file, isPhoto ? 700 : 900, isPhoto ? 'image/jpeg' : 'image/png');
+    return api('/upload', 'POST', { dataUrl });
+  }
+  async function uploadFor(key, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const st = $('upl_' + key);
+    st.innerText = 'Uploading...';
+    try {
+      const r = await uploadImage(file, key === 'photo');
+      if (!r.success) throw new Error(r.error);
+      E()[key] = r.url;
+      renderStudio();
+    } catch (e) { st.innerText = e.message || 'Upload failed.'; }
+  }
+
+  /* csv */
+  function parseCSV(text) {
+    const rows = []; let row = [], cur2 = '', q = false;
+    text = text.replace(/^\uFEFF/, '');
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur2 += '"'; i++; } else q = false; } else cur2 += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === ',') { row.push(cur2); cur2 = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur2); cur2 = ''; if (row.some(x => x.trim() !== '')) rows.push(row); row = []; }
+      else cur2 += ch;
+    }
+    row.push(cur2); if (row.some(x => x.trim() !== '')) rows.push(row);
+    if (!rows.length) return [];
+    const headers = rows.shift().map(h => h.trim().toLowerCase());
+    return rows.map(r => { const o = {}; headers.forEach((h, i) => { o[h] = (r[i] || '').trim(); }); return o; });
+  }
+  async function loadCsv(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const keys = DS.PRODUCTS[design.product].fields.filter(f => f.type !== 'image').map(f => f.key);
+    const rows = parseCSV(await file.text()).map(r => { const o = {}; keys.forEach(k => { if (k in r) o[k] = r[k]; }); return o; });
+    if (!rows.length) { $('csvInfo').innerText = 'No usable rows found. Check the column headings.'; return; }
+    if (rows.length > MAX_ORDER) { $('csvInfo').innerText = 'Too many rows (max ' + MAX_ORDER + ').'; return; }
+    if (entries.length > 1 && !confirm(T('This replaces your ' + entries.length + ' items. Continue?'))) return;
+    const base = Object.assign({}, E());
+    entries = rows.map(r => Object.assign({}, base, r));
+    cur = 0;
+    csvMsg = rows.length + ' items imported. You can edit each one in step 3.';
+    renderStudio();
+  }
+
+  /* orders */
+  async function submitOrder() {
+    const btn = $('orderBtn'), st = $('orderStatus');
+    btn.disabled = true; st.innerText = 'Working...';
+    const payload = {
+      design: Object.assign({}, design, { fields: entries[0] }),
+      rows: entries.length > 1 ? entries : null,
+      mode: payMode, currency: currentCurrency()
+    };
+    const r = await api('/orders', 'POST', payload);
+    btn.disabled = false;
+    if (!r.success) { st.innerText = 'Error: ' + r.error; return; }
+    if (r.manual) { st.innerText = ''; openPay(r.manual); return; }
+    if (r.authorization_url) { st.innerText = 'Opening the secure payment page...'; window.location.href = r.authorization_url; return; }
+    st.innerText = '';
+    trackOrder(r.orderId);
+  }
+
+  function renderOrder(id, o) {
+    const pct = o.quantity ? Math.round(o.completed / o.quantity * 100) : 0;
+    let title, extra = '';
+    if (o.status === 'done') { title = 'All ' + o.quantity + ' image' + (o.quantity > 1 ? 's are' : ' is') + ' ready'; extra = '<button class="light sm" onclick="closeOrder()">Close</button>'; }
+    else if (o.status === 'failed') { title = 'Something went wrong'; extra = '<p class="hint">Your payment is safe. Press try again to continue where it stopped.</p><button class="nbtn" onclick="retryOrder(' + id + ')">Try again</button>'; }
+    else if (o.status === 'pending') title = 'Waiting for payment confirmation...';
+    else title = 'Making your images: ' + o.completed + ' of ' + o.quantity;
+    $('orderPanel').innerHTML = '<h2>' + title + '</h2><div class="progress"><div style="width:' + pct + '%"></div></div>' + extra +
+      '<div class="res-grid">' + (o.results || []).map(u => '<div class="res"><img src="' + esc(u) + '"><a href="' + esc(u) + '" download="media-engine-image.png"><button class="sm">Download</button></a></div>').join('') + '</div>';
+  }
+  function trackOrder(id) {
+    clearInterval(orderTimer);
+    $('orderPanel').style.display = 'block';
+    openStudio();
+    const tick = async () => {
+      const r = await api('/orders/' + id);
+      if (!r.success) return;
+      renderOrder(id, r.order);
+      if (r.order.status === 'done' || r.order.status === 'failed') { clearInterval(orderTimer); loadOverview(); }
+    };
+    tick();
+    orderTimer = setInterval(tick, 3000);
+  }
+  function closeOrder() { clearInterval(orderTimer); $('orderPanel').style.display = 'none'; }
+  async function retryOrder(id) { await api('/orders/' + id + '/retry', 'POST'); trackOrder(id); }
+
+  /* saved designs */
+  async function loadSaved() {
+    const data = await api('/templates');
+    savedDesigns = (data.templates || []).map(t => {
+      try {
+        const j = JSON.parse(t.html_content);
+        if (j && j.v === 3 && DS.PRODUCTS[j.design.product] && Array.isArray(j.entries) && j.entries.length) return { id: t.id, name: t.template_name, design: j.design, entries: j.entries };
+        if (j && j.v === 2 && DS.PRODUCTS[j.design.product]) {
+          const d = Object.assign({}, j.design); const f = d.fields || {}; delete d.fields;
+          return { id: t.id, name: t.template_name, design: d, entries: [f] };
+        }
+        return null;
+      } catch (e) { return null; }
+    }).filter(Boolean);
+    $('savedList').innerHTML = savedDesigns.length ? savedDesigns.map(s =>
+      '<div class="saved-item"><div><b translate="no">' + esc(s.name) + '</b> <span class="hint">' + DS.PRODUCTS[s.design.product].label + ' &middot; ' + s.entries.length + '</span></div><div>' +
+      '<button onclick="openSaved(' + s.id + ')">Open</button><button class="light" onclick="deleteSaved(' + s.id + ')">Delete</button></div></div>').join('')
+      : '<p class="hint">Nothing saved yet. Use "Save design" on the last step.</p>';
+  }
+  function openSaved(id) {
+    const s = savedDesigns.find(x => x.id === id);
+    if (!s) return;
+    design = JSON.parse(JSON.stringify(s.design));
+    entries = JSON.parse(JSON.stringify(s.entries));
+    cur = 0; csvMsg = ''; userMode = null; step = 3; renderStudio();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  async function saveDesign() {
+    const name = $('saveName').value.trim(), st = $('saveStatus');
+    if (!name) { st.innerText = 'Please give your design a name.'; return; }
+    const r = await api('/templates', 'POST', { template_name: name, html_content: JSON.stringify({ v: 3, design, entries }) });
+    if (r.success) { st.innerText = 'Saved!'; loadSaved(); loadOverview(); } else st.innerText = 'Error: ' + r.error;
+  }
+  async function deleteSaved(id) {
+    const s = savedDesigns.find(x => x.id === id);
+    if (!s || !confirm(T('Delete "' + s.name + '"?'))) return;
+    await api('/templates/' + id, 'DELETE');
+    loadSaved(); loadOverview();
+  }
+
+  /* ---------- history ---------- */
+  async function loadHistory() {
+    const listDiv = $('historyList');
+    listDiv.innerHTML = '<p>Loading...</p>';
+    const data = await api('/history');
+    if (!data.success || data.generations.length === 0) { listDiv.innerHTML = '<p>No images yet.</p>'; return; }
+    listDiv.innerHTML = '';
+    data.generations.forEach(g => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = '<img src="' + esc(g.image_url) + '"><div class="meta"><div class="name">' + esc(g.template_name) + '</div><div class="date" translate="no">' + new Date(g.created_at).toLocaleString(loc()) + '</div></div><a href="' + esc(g.image_url) + '" download="media-engine-image.png"><button>Download</button></a>';
+      listDiv.appendChild(item);
+    });
+  }
+
+  /* ---------- profile ---------- */
+  function renderProfile() {
+    const d = lastOverview;
+    if (!d) return;
+    const name = d.name || (d.email || '').split('@')[0];
+    setAvatar($('profAvatar'), avatarUrl, name);
+    $('profName').innerText = name;
+    $('profMail').innerText = d.email || '';
+    $('profPlan').innerText = d.subscription ? d.subscription.planLabel : 'No active pass';
+    const stats = [
+      { cls: 'c1', label: 'Images made', value: d.totalImages },
+      { cls: 'c2', label: 'Saved designs', value: d.templatesCount },
+      { cls: 'c3', label: 'Orders', value: d.ordersCount },
+      { cls: 'c4', label: 'Member since', value: d.memberSince ? new Date(d.memberSince).toLocaleDateString(loc(), { year: 'numeric', month: 'short' }) : '-' }
+    ];
+    $('profStats').innerHTML = stats.map(x => '<div class="stat ' + x.cls + '"><div class="v" translate="no">' + x.value + '</div><div class="l">' + x.label + '</div></div>').join('');
+    $('infoName').value = d.name || '';
+    $('infoPhone').value = d.phone || '';
+    $('infoCountry').value = d.country || '';
+  }
+  async function uploadAvatar(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const st = $('infoStatus');
+    st.innerText = 'Uploading...';
+    try {
+      const r = await uploadImage(file, true);
+      if (!r.success) throw new Error(r.error);
+      avatarUrl = r.url;
+      setAvatar($('profAvatar'), avatarUrl, $('infoName').value);
+      st.innerText = 'Photo ready. Click Save Personal Information to keep it.';
+    } catch (e) { st.innerText = e.message || 'Upload failed.'; }
+  }
+  function removeAvatar() { avatarUrl = ''; setAvatar($('profAvatar'), '', $('infoName').value); $('infoStatus').innerText = 'Photo ready. Click Save Personal Information to keep it.'; }
+  async function saveInfo() {
+    const st = $('infoStatus');
+    const data = await api('/profile-info', 'POST', { fullName: $('infoName').value, phone: $('infoPhone').value, country: $('infoCountry').value, avatarUrl });
+    if (data.success) { st.innerText = 'Saved!'; await loadOverview(); renderProfile(); } else { st.innerText = 'Error: ' + data.error; }
+  }
+
+  /* ---------- brand ---------- */
+  async function loadBrand() {
+    const data = await api('/profile');
+    brand = (data.success && data.profile) ? data.profile : {};
+    detectedColor = brand.brand_color || '';
+  }
+  function setBrandColor(v) { detectedColor = v; $('swatchHex').innerText = v; }
+  function renderBrand() {
+    $('brLogoUrl').value = brand.logo_url || '';
+    $('brSigUrl').value = brand.signature_url || '';
+    previewImg('brLogoPrev', brand.logo_url);
+    previewImg('brSigPrev', brand.signature_url);
+    $('brName').value = brand.business_name || '';
+    $('brTagline').value = brand.brand_tagline || '';
+    $('brPhone').value = brand.brand_phone || '';
+    $('brEmail').value = brand.brand_email || '';
+    $('brWebsite').value = brand.brand_website || '';
+    $('brAddress').value = brand.brand_address || '';
+    $('brSigner').value = brand.signer_name || '';
+    $('brSignerTitle').value = brand.signer_title || '';
+    if (detectedColor) { $('brColor').value = detectedColor; $('swatchHex').innerText = detectedColor; } else { $('swatchHex').innerText = ''; }
+  }
+  function previewImg(id, url) { const el = $(id); if (url) { el.src = url; el.style.display = 'block'; } else el.style.display = 'none'; }
+
+  async function uploadBrandLogo(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const st = $('brandStatus');
+    st.innerText = 'Uploading...';
+    try {
+      const r = await uploadImage(file, false);
+      if (!r.success) throw new Error(r.error);
+      $('brLogoUrl').value = r.url; previewImg('brLogoPrev', r.url);
+      st.innerText = 'Logo uploaded. Click Save Brand Settings to keep it.';
+    } catch (e) { st.innerText = e.message || 'Upload failed.'; }
+  }
+  async function uploadSignature(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const st = $('brandStatus');
+    st.innerText = 'Uploading...';
+    try {
+      const r = await uploadImage(file, false);
+      if (!r.success) throw new Error(r.error);
+      $('brSigUrl').value = r.url; previewImg('brSigPrev', r.url);
+      st.innerText = 'Logo uploaded. Click Save Brand Settings to keep it.';
+    } catch (e) { st.innerText = e.message || 'Upload failed.'; }
+  }
+  async function extractBrandColor() {
+    const url = $('brLogoUrl').value;
+    const st = $('brandStatus');
+    if (!url) { st.innerText = 'Please upload a logo first.'; return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = img.width; cv.height = img.height;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try {
+        const px = ctx.getImageData(0, 0, cv.width, cv.height).data;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < px.length; i += 40) { if (px[i + 3] > 200) { r += px[i]; g += px[i + 1]; b += px[i + 2]; n++; } }
+        if (!n) { st.innerText = 'Could not detect a color from this image.'; return; }
+        const hex = '#' + [r, g, b].map(x => Math.round(x / n).toString(16).padStart(2, '0')).join('');
+        setBrandColor(hex); $('brColor').value = hex;
+        st.innerText = 'Color detected! Save to keep it.';
+      } catch (err) { st.innerText = 'Could not read this image.'; }
+    };
+    img.onerror = () => { st.innerText = 'Could not load that image.'; };
+    img.src = url;
+  }
+  async function saveBrand() {
+    const body = {
+      business_name: $('brName').value, brand_tagline: $('brTagline').value, brand_phone: $('brPhone').value,
+      brand_email: $('brEmail').value, brand_website: $('brWebsite').value, brand_address: $('brAddress').value,
+      signer_name: $('brSigner').value, signer_title: $('brSignerTitle').value,
+      logo_url: $('brLogoUrl').value, signature_url: $('brSigUrl').value, brand_color: detectedColor
+    };
+    const data = await api('/profile', 'POST', body);
+    if (data.success) { brand = data.profile || body; detectedColor = brand.brand_color || ''; $('brandStatus').innerText = 'Brand settings saved!'; }
+    else { $('brandStatus').innerText = 'Error: ' + data.error; }
+  }
+
+  /* ---------- settings ---------- */
+  function renderSettings() {
+    $('prefLang').value = curLang();
+    if (PLANS.length) $('prefCurrency').value = currentCurrency();
+  }
+  async function updateAccount() {
+    const currentPassword = $('currentPassword').value;
+    const newEmail = $('newEmail').value;
+    const newPassword = $('newPassword').value;
+    const st = $('settingsStatus');
+    if (!currentPassword) { st.innerText = 'Please enter your current password.'; return; }
+    if (!newEmail && !newPassword) { st.innerText = 'Enter a new email or a new password.'; return; }
+    if (newPassword && newPassword.length < 8) { st.innerText = 'New password must be at least 8 characters.'; return; }
+    const data = await api('/account', 'POST', { currentPassword, newEmail, newPassword });
+    if (data.success) {
+      st.innerText = 'Account updated! Please log in again with your new details.';
+      ['currentPassword', 'newEmail', 'newPassword'].forEach(id => { $(id).value = ''; });
+    } else { st.innerText = 'Error: ' + data.error; }
+  }
+
+  /* ---------- admin ---------- */
+  function adminCard(p) {
+    const actions = (p.status === 'submitted' || p.status === 'awaiting')
+      ? '<button class="sm" style="background:#0a9e6e" onclick="adminDecide(' + p.id + ',\'approve\',' + p.amount + ',\'' + p.code + '\')">Approve</button>' +
+        '<button class="sm" style="background:#ef233c" onclick="adminDecide(' + p.id + ',\'reject\',' + p.amount + ',\'' + p.code + '\')">Reject</button>' : '';
+    return '<div class="saved-item" style="display:block;"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">' +
+      '<div><b style="font-size:20px;">&yen;' + p.amount + '</b> <b style="font-family:monospace;background:#eef0ff;padding:2px 8px;border-radius:6px;">' + esc(p.code) + '</b></div>' +
+      '<div style="text-align:right;"><b>' + esc(p.what) + '</b><div class="hint">' + new Date(p.created_at).toLocaleString() + ' &middot; ' + esc(p.status) + '</div></div></div>' +
+      '<div class="hint" style="margin-top:6px;">' + esc(p.user.name) + ' &middot; ' + esc(p.user.email) + ' &middot; ' + esc(p.user.phone) + '</div>' +
+      (p.payer_note ? '<div style="margin-top:4px;">Payer note: <b>' + esc(p.payer_note) + '</b></div>' : '') + actions + '</div>';
+  }
+  async function loadAdmin() {
+    const body = $('adminBody');
+    const [o, p] = await Promise.all([api('/admin/overview'), api('/admin/payments')]);
+    if (!o.success) { body.innerHTML = '<p class="hint">' + esc(o.error || 'Not allowed.') + '</p>'; return; }
+    const s = o.stats;
+    const cards = [
+      { cls: 'c1', label: 'Users', value: s.totalUsers }, { cls: 'c2', label: 'Active passes', value: s.activePasses },
+      { cls: 'c3', label: 'Images today', value: s.imagesToday }, { cls: 'c4', label: 'Alipay waiting', value: s.waitingPayments },
+      { cls: 'c1', label: 'New users (7 days)', value: s.newUsers7d }, { cls: 'c2', label: 'Images in total', value: s.imagesTotal },
+      { cls: 'c3', label: 'Failed orders', value: s.failedOrders }
+    ];
+    const pays = (p.payments || []);
+    const sub = pays.filter(x => x.status === 'submitted'), aw = pays.filter(x => x.status === 'awaiting');
+    const done = pays.filter(x => x.status === 'approved' || x.status === 'rejected').slice(0, 15);
+    const planOpts = PLANS.map(x => '<option value="' + x.id + '">' + esc(x.label) + '</option>').join('');
+    body.innerHTML =
+      '<div class="stats">' + cards.map(x => '<div class="stat ' + x.cls + '"><div class="v">' + x.value + '</div><div class="l">' + x.label + '</div></div>').join('') + '</div>' +
+      '<div class="card"><h2>Alipay: customer says "I have paid" (' + sub.length + ')</h2><p class="hint">Approve only after you can see the money in your Alipay app: check the amount and the remark code.</p>' + (sub.map(adminCard).join('') || '<p class="hint">Nothing waiting.</p>') +
+      '<h2 style="margin-top:18px;">Started, not confirmed yet (' + aw.length + ')</h2>' + (aw.map(adminCard).join('') || '<p class="hint">None.</p>') +
+      '<h2 style="margin-top:18px;">Recently decided</h2>' + (done.map(adminCard).join('') || '<p class="hint">None yet.</p>') + '</div>' +
+      '<div class="card"><h2>Users (' + o.users.length + ')</h2><div class="table-wrap"><table class="tbl"><tr><th>Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Joined</th><th>Pass</th><th>Give a pass</th></tr>' +
+      o.users.map(u => '<tr><td>' + esc(u.name) + '</td><td>' + esc(u.email) + '</td><td>' + esc(u.phone) + '</td><td>' + esc(u.country) + '</td><td>' + new Date(u.joined).toLocaleDateString() + '</td><td>' +
+        (u.pass ? esc(u.pass) + (u.passUntil ? ' (until ' + new Date(u.passUntil).toLocaleDateString() + ')' : '') : '-') + '</td><td style="white-space:nowrap;"><select style="display:inline-block;width:auto;margin:0;padding:6px;">' + planOpts + '</select> <button class="sm" onclick="adminGrant(\'' + u.id + '\', this)">Give pass</button></td></tr>').join('') +
+      '</table></div></div>';
+  }
+  async function adminDecide(id, what, amount, code) {
+    if (!confirm((what === 'approve' ? 'Approve' : 'Reject') + ' payment of ¥' + amount + ' (code ' + code + ')?' + (what === 'approve' ? '\n\nOnly approve if you can see this money in your Alipay.' : ''))) return;
+    const r = await api('/admin/payments/' + id + '/' + what, 'POST');
+    if (!r.success) alert(r.error || 'Failed');
+    loadAdmin();
+  }
+  async function adminGrant(userId, btn) {
+    const plan = btn.previousElementSibling.value;
+    if (!confirm('Give this customer a free ' + plan + ' pass?')) return;
+    const r = await api('/admin/grant', 'POST', { userId, plan });
+    if (!r.success) alert(r.error || 'Failed');
+    loadAdmin();
+  }
+
+  /* ---------- language switch ---------- */
+  window.addEventListener('melangchange', e => {
+    swapSamples(e.detail.prev, e.detail.lang);
+    if (design && design.lang === e.detail.prev) design.lang = e.detail.lang;
+    renderStudio();
+    loadOverview();
+    renderSettings();
+  });
+
+  /* ---------- start ---------- */
+  async function init() {
+    await Promise.all([loadPlans(), loadOverview(), loadBrand()]);
+    loadSaved();
+    renderStudio();
+    const h = location.hash.slice(1);
+    go(TITLES[h] && (h !== 'admin' || isAdmin) ? h : 'overview');
+    const qs = new URLSearchParams(location.search);
+    if (qs.get('paid')) { await handlePaidReturn(qs.get('reference') || qs.get('trxref')); }
+    else { const o = await api('/orders/open'); if (o.success && o.order) trackOrder(o.order.id); }
+    checkManual();
+  }
+  window.addEventListener('resize', schedulePreview);
+  init();
+</script>
 </body>
 </html>

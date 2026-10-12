@@ -245,7 +245,8 @@ async function handleCharge(d) {
     const { error } = await supabase.from('subscriptions').insert([{
       user_id: userId, plan: meta.plan, status: 'active', paystack_reference: reference,
       generation_limit: p.generations, extra_credits: 0,
-      expires_at: new Date(Date.now() + p.days * 86400000).toISOString()
+      expires_at: new Date(Date.now() + p.days * 86400000).toISOString(),
+      paid_text: String(d.currency || '') + ' ' + (Number(d.amount) / 100)
     }]);
     if (error) throw error;
     return { kind };
@@ -378,6 +379,9 @@ app.get('/overview', requireAuth, async (req, res) => {
   }
 
   const { count: templatesCount } = await supabase.from('templates').select('*', { count: 'exact', head: true }).eq('user_id', req.user.id);
+  const { count: totalImages } = await supabase.from('generations').select('*', { count: 'exact', head: true }).eq('user_id', req.user.id);
+  const { count: ordersCount } = await supabase.from('orders').select('*', { count: 'exact', head: true })
+    .eq('user_id', req.user.id).in('status', ['done', 'processing', 'paid']);
 
   const since = new Date(Date.now() - 6 * 86400000);
   since.setUTCHours(0, 0, 0, 0);
@@ -391,7 +395,9 @@ app.get('/overview', requireAuth, async (req, res) => {
   res.json({
     success: true,
     email: req.user.email, name: meta.full_name || '', phone: meta.phone || '', country: meta.country || '',
-    memberSince: req.user.created_at, subscription, expiredAt, templatesCount: templatesCount || 0, daily,
+    avatar: meta.avatar_url || '',
+    memberSince: req.user.created_at, subscription, expiredAt,
+    templatesCount: templatesCount || 0, totalImages: totalImages || 0, ordersCount: ordersCount || 0, daily,
     isAdmin: ADMIN_IDS.includes(req.user.id)
   });
 });
@@ -400,7 +406,11 @@ app.post('/profile-info', requireAuth, async (req, res) => {
   const clean = v => String(v || '').trim().slice(0, 80);
   const fullName = clean(req.body.fullName);
   if (!fullName) return res.status(400).json({ success: false, error: 'Please enter your name.' });
-  const meta = { ...(req.user.user_metadata || {}), full_name: fullName, phone: clean(req.body.phone), country: clean(req.body.country) };
+  const avatar = isAllowedImage(req.body.avatarUrl) ? req.body.avatarUrl : '';
+  const meta = {
+    ...(req.user.user_metadata || {}),
+    full_name: fullName, phone: clean(req.body.phone), country: clean(req.body.country), avatar_url: avatar
+  };
   const { error } = await supabase.auth.admin.updateUserById(req.user.id, { user_metadata: meta });
   if (error) return res.status(500).json({ success: false, error: error.message });
   res.json({ success: true });
@@ -427,13 +437,27 @@ app.get('/profile', requireAuth, async (req, res) => {
 });
 
 app.post('/profile', requireAuth, async (req, res) => {
-  const { logo_url, business_name, brand_color } = req.body;
-  const { data: existing } = await supabase.from('profiles').select('*').eq('user_id', req.user.id).limit(1);
+  const b = req.body || {};
+  const t = (v, n) => String(v || '').trim().slice(0, n || 120);
+  const row = {
+    business_name: t(b.business_name),
+    brand_tagline: t(b.brand_tagline),
+    brand_phone: t(b.brand_phone, 40),
+    brand_email: t(b.brand_email),
+    brand_website: t(b.brand_website),
+    brand_address: t(b.brand_address, 200),
+    signer_name: t(b.signer_name),
+    signer_title: t(b.signer_title),
+    brand_color: /^#[0-9a-fA-F]{6}$/.test(b.brand_color || '') ? b.brand_color : '',
+    logo_url: isAllowedImage(b.logo_url) ? b.logo_url : '',
+    signature_url: isAllowedImage(b.signature_url) ? b.signature_url : ''
+  };
+  const { data: existing } = await supabase.from('profiles').select('user_id').eq('user_id', req.user.id).limit(1);
   let result;
   if (existing && existing.length > 0) {
-    result = await supabase.from('profiles').update({ logo_url, business_name, brand_color }).eq('user_id', req.user.id).select();
+    result = await supabase.from('profiles').update(row).eq('user_id', req.user.id).select();
   } else {
-    result = await supabase.from('profiles').insert([{ user_id: req.user.id, logo_url, business_name, brand_color }]).select();
+    result = await supabase.from('profiles').insert([{ user_id: req.user.id, ...row }]).select();
   }
   if (result.error) return res.status(500).json({ success: false, error: result.error.message });
   res.json({ success: true, profile: result.data[0] });
@@ -458,7 +482,7 @@ app.post('/upload', requireAuth, uploadLimiter, async (req, res) => {
 /* ---------------- saved designs ---------------- */
 app.post('/templates', requireAuth, async (req, res) => {
   const { template_name, html_content } = req.body;
-  if (!template_name || !html_content || html_content.length > 30000) return res.status(400).json({ success: false, error: 'Invalid design.' });
+  if (!template_name || !html_content || html_content.length > 200000) return res.status(400).json({ success: false, error: 'Invalid design.' });
   const { count } = await supabase.from('templates').select('*', { count: 'exact', head: true }).eq('user_id', req.user.id);
   if ((count || 0) >= MAX_TEMPLATES) return res.status(400).json({ success: false, error: `You can keep up to ${MAX_TEMPLATES} saved designs. Delete one to add another.` });
   const { data, error } = await supabase.from('templates')
@@ -477,6 +501,40 @@ app.delete('/templates/:id', requireAuth, async (req, res) => {
   const { error } = await supabase.from('templates').delete().eq('id', req.params.id).eq('user_id', req.user.id);
   if (error) return res.status(500).json({ success: false, error: error.message });
   res.json({ success: true });
+});
+
+/* ---------------- billing history ---------------- */
+app.get('/billing', requireAuth, async (req, res) => {
+  const { data: subs } = await supabase.from('subscriptions')
+    .select('plan,created_at,expires_at,paystack_reference,paid_text')
+    .eq('user_id', req.user.id).order('id', { ascending: false }).limit(30);
+  const { data: orders } = await supabase.from('orders')
+    .select('id,created_at,label,quantity,currency,amount_subunits,status,payment')
+    .eq('user_id', req.user.id).neq('payment', 'pass').order('id', { ascending: false }).limit(30);
+
+  const now = Date.now();
+  const items = [];
+  (subs || []).forEach(s => {
+    const ref = s.paystack_reference || '';
+    items.push({
+      date: s.created_at,
+      item: (PLANS[s.plan] && PLANS[s.plan].label) || 'Starter Plan',
+      amount: s.paid_text || '',
+      method: ref.startsWith('ALIPAY-') ? 'Alipay' : ref.startsWith('GRANT-') ? 'Admin grant' : 'Card / M-PESA',
+      status: (!s.expires_at || new Date(s.expires_at).getTime() > now) ? 'Active' : 'Expired'
+    });
+  });
+  (orders || []).forEach(o => {
+    items.push({
+      date: o.created_at,
+      item: 'Order: ' + o.quantity + ' x ' + o.label,
+      amount: (o.currency || '') + ' ' + (Number(o.amount_subunits || 0) / 100),
+      method: o.payment === 'manual' ? 'Alipay' : 'Card / M-PESA',
+      status: o.status === 'done' ? 'Completed' : o.status === 'failed' ? 'Failed' : o.status === 'pending' ? 'Pending' : 'In progress'
+    });
+  });
+  items.sort((a, b) => new Date(b.date) - new Date(a.date));
+  res.json({ success: true, items });
 });
 
 /* ---------------- Alipay QR payments (approved by hand) ---------------- */
@@ -510,7 +568,8 @@ async function fulfilManual(p) {
     const { error } = await supabase.from('subscriptions').insert([{
       user_id: p.user_id, plan: p.plan, status: 'active', paystack_reference: 'ALIPAY-' + p.code,
       generation_limit: plan.generations, extra_credits: 0,
-      expires_at: new Date(Date.now() + plan.days * 86400000).toISOString()
+      expires_at: new Date(Date.now() + plan.days * 86400000).toISOString(),
+      paid_text: 'CNY ' + Number(p.amount_cny)
     }]);
     if (error) throw error;
   } else if (p.kind === 'credits') {
@@ -621,6 +680,68 @@ async function decideManual(req, res, newStatus) {
 }
 app.post('/admin/payments/:id/approve', requireAuth, requireAdmin, (req, res) => decideManual(req, res, 'approved'));
 app.post('/admin/payments/:id/reject', requireAuth, requireAdmin, (req, res) => decideManual(req, res, 'rejected'));
+
+app.get('/admin/overview', requireAuth, requireAdmin, async (req, res) => {
+  const { data: ud, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 200 });
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  const users = (ud && ud.users) || [];
+
+  const { data: subs } = await supabase.from('subscriptions').select('user_id, plan, expires_at, id')
+    .eq('status', 'active').order('id', { ascending: false });
+  const latest = {};
+  (subs || []).forEach(s => { if (!latest[s.user_id]) latest[s.user_id] = s; });
+
+  const now = Date.now();
+  const rows = users
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .map(u => {
+      const s = latest[u.id];
+      const active = !!s && (!s.expires_at || new Date(s.expires_at).getTime() > now);
+      const m = u.user_metadata || {};
+      return {
+        id: u.id, email: u.email, name: m.full_name || '', phone: m.phone || '', country: m.country || '',
+        joined: u.created_at,
+        pass: active ? ((PLANS[s.plan] && PLANS[s.plan].label) || 'Starter Plan') : '',
+        passUntil: active ? s.expires_at : null
+      };
+    });
+
+  const dayAgo = new Date(now - 86400000).toISOString();
+  const [a, b, c, d] = await Promise.all([
+    supabase.from('generations').select('*', { count: 'exact', head: true }).gte('created_at', dayAgo),
+    supabase.from('generations').select('*', { count: 'exact', head: true }),
+    supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'failed'),
+    supabase.from('manual_payments').select('*', { count: 'exact', head: true }).eq('status', 'submitted')
+  ]);
+
+  res.json({
+    success: true,
+    stats: {
+      totalUsers: rows.length,
+      newUsers7d: rows.filter(r => now - new Date(r.joined).getTime() < 7 * 86400000).length,
+      activePasses: rows.filter(r => r.pass).length,
+      imagesToday: a.count || 0,
+      imagesTotal: b.count || 0,
+      failedOrders: c.count || 0,
+      waitingPayments: d.count || 0
+    },
+    users: rows
+  });
+});
+
+app.post('/admin/grant', requireAuth, requireAdmin, async (req, res) => {
+  const p = PLANS[req.body.plan];
+  if (!p || !req.body.userId) return res.status(400).json({ success: false, error: 'Choose a customer and a pass.' });
+  const { error } = await supabase.from('subscriptions').insert([{
+    user_id: req.body.userId, plan: req.body.plan, status: 'active',
+    paystack_reference: 'GRANT-' + crypto.randomBytes(4).toString('hex'),
+    generation_limit: p.generations, extra_credits: 0,
+    expires_at: new Date(Date.now() + p.days * 86400000).toISOString(),
+    paid_text: 'Free (admin)'
+  }]);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  res.json({ success: true });
+});
 
 /* ---------------- orders ---------------- */
 app.post('/orders', requireAuth, async (req, res) => {

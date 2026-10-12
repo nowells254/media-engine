@@ -2,76 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin - Media Engine</title>
-  <style>
-    body { font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:#f4f5fb; max-width:900px; margin:0 auto; padding:20px; color:#2b2d42; }
-    h1 { font-size:22px; }
-    h2 { font-size:16px; margin:26px 0 10px; }
-    .hint { font-size:13px; color:#666; }
-    .card { background:white; border:1px solid #e2e4ec; border-radius:12px; padding:16px; margin-bottom:12px; }
-    .row { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .amt { font-size:26px; font-weight:800; }
-    .code { font-family:monospace; font-size:18px; font-weight:700; background:#eef0ff; padding:2px 8px; border-radius:6px; }
-    button { padding:10px 18px; border:none; border-radius:10px; font-weight:700; cursor:pointer; color:white; margin:10px 8px 0 0; }
-    .ok { background:#0a9e6e; }
-    .no { background:#ef233c; }
-    a { color:#4361ee; }
-  </style>
+  <meta http-equiv="refresh" content="0; url=/dashboard.html#admin">
+  <title>Admin</title>
 </head>
-<body>
-  <a href="/dashboard.html">&larr; Back to dashboard</a>
-  <h1>Alipay payments</h1>
-  <p class="hint">Approve a payment only after you can see the money in your Alipay app. Check the amount, and that the remark contains the code.</p>
-  <div id="msg" class="hint"></div>
-  <div id="list"></div>
-
-  <script>
-    const token = localStorage.getItem('mediaEngineToken') || '';
-    if (!token) location.href = '/login.html';
-
-    function esc(s) {
-      return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-    }
-    async function api(path, method) {
-      const r = await fetch(path, { method: method || 'GET', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } });
-      if (r.status === 401) { location.href = '/login.html'; return { success: false }; }
-      return r.json();
-    }
-
-    function card(p) {
-      const actions = (p.status === 'submitted' || p.status === 'awaiting')
-        ? '<button class="ok" onclick="decide(' + p.id + ',\'approve\',' + p.amount + ',\'' + p.code + '\')">Approve</button>' +
-          '<button class="no" onclick="decide(' + p.id + ',\'reject\',' + p.amount + ',\'' + p.code + '\')">Reject</button>'
-        : '';
-      return '<div class="card"><div class="row"><div><div class="amt">&yen;' + p.amount + '</div><div><span class="code">' + esc(p.code) + '</span></div></div>' +
-        '<div style="text-align:right;"><div><b>' + esc(p.what) + '</b></div><div class="hint">' + new Date(p.created_at).toLocaleString() + '</div><div class="hint">Status: ' + esc(p.status) + '</div></div></div>' +
-        '<div class="hint" style="margin-top:8px;">' + esc(p.user.name) + ' &middot; ' + esc(p.user.email) + ' &middot; ' + esc(p.user.phone) + '</div>' +
-        (p.payer_note ? '<div style="margin-top:6px;">Payer note: <b>' + esc(p.payer_note) + '</b></div>' : '') + actions + '</div>';
-    }
-
-    async function load() {
-      const d = await api('/admin/payments');
-      if (!d.success) { document.getElementById('msg').innerText = d.error || 'Could not load.'; return; }
-      document.getElementById('msg').innerText = '';
-      const sub = d.payments.filter(p => p.status === 'submitted');
-      const aw = d.payments.filter(p => p.status === 'awaiting');
-      const done = d.payments.filter(p => p.status === 'approved' || p.status === 'rejected').slice(0, 20);
-      document.getElementById('list').innerHTML =
-        '<h2>Customer says "I have paid": check your Alipay (' + sub.length + ')</h2>' + (sub.map(card).join('') || '<p class="hint">Nothing waiting.</p>') +
-        '<h2>Started, not confirmed by the customer yet (' + aw.length + ')</h2>' + (aw.map(card).join('') || '<p class="hint">None.</p>') +
-        '<h2>Recently decided</h2>' + (done.map(card).join('') || '<p class="hint">None yet.</p>');
-    }
-
-    async function decide(id, what, amount, code) {
-      if (!confirm((what === 'approve' ? 'Approve' : 'Reject') + ' payment of ¥' + amount + ' (code ' + code + ')?' +
-        (what === 'approve' ? '\n\nOnly approve if you can see this money in your Alipay.' : ''))) return;
-      const r = await api('/admin/payments/' + id + '/' + what, 'POST');
-      if (!r.success) alert(r.error || 'Failed');
-      load();
-    }
-    load();
-    setInterval(load, 30000);
-  </script>
-</body>
+<body></body>
 </html>
