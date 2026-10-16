@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Certificate verification - Media Engine</title>
+  <style>
+    :root { --brand:#4361ee; --dark:#2b2d42; --border:#e2e4ec; --radius:10px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',Roboto,Arial,sans-serif; background:linear-gradient(135deg,#4361ee 0%,#7209b7 55%,#f72585 100%); color:var(--dark); padding:32px 16px; }
+    .wrap { max-width:520px; margin:0 auto; }
+    .brand { text-align:center; color:white; margin-bottom:18px; }
+    .brand h1 { margin:0; font-size:28px; }
+    .brand p { margin:6px 0 0; opacity:.9; font-size:14px; }
+    .card { background:white; border-radius:16px; padding:26px; box-shadow:0 20px 50px rgba(0,0,0,.25); margin-bottom:16px; text-align:center; }
+    .icon { width:64px; height:64px; border-radius:50%; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:34px; color:white; }
+    .ok { background:#0a9e6e; }
+    .bad { background:#ef233c; }
+    h2 { margin:6px 0 4px; font-size:22px; }
+    .hint { font-size:13px; color:#777; margin:4px 0 14px; }
+    table { width:100%; border-collapse:collapse; text-align:left; margin-top:6px; }
+    td { padding:9px 4px; border-bottom:1px solid #f0f1f5; font-size:14px; vertical-align:top; }
+    td.k { color:#888; width:36%; }
+    td.v { font-weight:600; word-break:break-word; }
+    label { display:block; font-size:13px; font-weight:600; text-align:left; }
+    input { width:100%; padding:12px 14px; margin:6px 0; font-size:15px; border:1px solid var(--border); border-radius:var(--radius); font-family:inherit; }
+    button { width:100%; margin-top:8px; padding:13px; font-size:15px; font-weight:700; color:white; border:none; border-radius:var(--radius); cursor:pointer; background:linear-gradient(90deg,#4361ee,#7209b7); }
+    .note { text-align:center; color:rgba(255,255,255,.85); font-size:12px; line-height:1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><h1>Media Engine</h1><p>Certificate verification</p></div>
+    <div class="card" id="result"><p>Enter a certificate ID</p></div>
+    <div class="card">
+      <label>Certificate ID</label>
+      <input id="serial" type="text" placeholder="e.g. PEL-2026-7K3QZ9" autocomplete="off">
+      <button onclick="lookup()">Check</button>
+    </div>
+    <p class="note">This confirms the certificate was created on Media Engine by the issuer shown. It does not confirm any accreditation or qualification.</p>
+  </div>
+
+  <script>
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
+    function row(k, v) { return v ? '<tr><td class="k">' + k + '</td><td class="v" translate="no">' + esc(v) + '</td></tr>' : ''; }
+
+    async function lookup() {
+      const serial = document.getElementById('serial').value.trim().toUpperCase();
+      const box = document.getElementById('result');
+      if (!serial) { box.innerHTML = '<p>Enter a certificate ID</p>'; return; }
+      box.innerHTML = '<p>Checking...</p>';
+      try {
+        const r = await (await fetch('/api/verify/' + encodeURIComponent(serial))).json();
+        if (!r.success) { box.innerHTML = '<p>' + esc(r.error || 'Something went wrong. Please try again.') + '</p>'; return; }
+        if (!r.found) {
+          box.innerHTML = '<div class="icon bad">&#10007;</div><h2>Certificate not found</h2><p class="hint">Check the certificate ID and try again.</p>';
+          return;
+        }
+        if (r.revoked) {
+          box.innerHTML = '<div class="icon bad">&#10007;</div><h2>Certificate not found</h2><p class="hint">This certificate has been revoked by the issuer.</p>';
+          return;
+        }
+        box.innerHTML = '<div class="icon ok">&#10003;</div><h2>Certificate verified</h2>' +
+          '<p class="hint">This certificate was created on Media Engine by the issuer shown below.</p><table>' +
+          row('Issued to', r.recipient) + row('For', r.title) + row('Issued by', r.issuer) + row('Date', r.issuedText) + row('Certificate ID', r.serial) + '</table>';
+      } catch (e) {
+        box.innerHTML = '<p>Could not reach the server. Please try again.</p>';
+      }
+    }
+    document.getElementById('serial').addEventListener('keydown', e => { if (e.key === 'Enter') lookup(); });
+    const c = new URLSearchParams(location.search).get('c');
+    if (c && c.toUpperCase() !== 'PREVIEW') { document.getElementById('serial').value = c; lookup(); }
+  </script>
+  <script src="/i18n.js"></script>
+</body>
+</html>

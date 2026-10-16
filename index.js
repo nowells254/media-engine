@@ -7,6 +7,7 @@ const axios = require('axios');
 const { generateImage } = require('./render');
 const { supabase, authClient } = require('./supabaseClient');
 const Designs = require('./public/designs.js');
+const QRCode = require('qrcode');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -151,7 +152,8 @@ async function renderAndStore(userId, design) {
     allowed: [
       `${SUPABASE_URL}/storage/v1/object/public/`,
       `${BASE_URL}/assets/`,
-      `http://127.0.0.1:${PORT}/assets/`
+      `http://127.0.0.1:${PORT}/assets/`,
+      `http://127.0.0.1:${PORT}/qr.svg`
     ]
   });
   const filename = `${userId}/${crypto.randomUUID()}.png`;
@@ -173,6 +175,16 @@ async function processOrder(orderId) {
     for (let i = results.length; i < o.quantity; i++) {
       const row = (o.rows && o.rows[i]) || {};
       const design = { ...o.design, fields: { ...o.design.fields, ...row } };
+      if (design.product === 'certificate') {
+        try {
+          const serial = await issueSerial(o, design.fields);
+          design.fields.certid = serial;
+          design.fields.verifyUrl = `${BASE_URL}/verify.html?c=${serial}`;
+        } catch (e) {
+          await supabase.from('orders').update({ status: 'failed', note: 'Could not create a certificate ID' }).eq('id', orderId);
+          return;
+        }
+      }
       let url = null, lastErr = null;
       for (let attempt = 0; attempt < 2 && !url; attempt++) {
         try { url = await renderAndStore(o.user_id, design); } catch (e) { lastErr = e; }
@@ -741,6 +753,53 @@ app.post('/admin/grant', requireAuth, requireAdmin, async (req, res) => {
   }]);
   if (error) return res.status(500).json({ success: false, error: error.message });
   res.json({ success: true });
+});
+
+/* ---------------- certificate verification and QR codes ---------------- */
+const verifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false,
+  message: { success: false, error: 'Too many checks. Please wait a few minutes.' }
+});
+
+async function issueSerial(order, fields) {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const prefix = Designs.serialPrefix(fields.company);
+  const year = new Date().getFullYear();
+  for (let i = 0; i < 6; i++) {
+    const bytes = crypto.randomBytes(6);
+    let code = '';
+    for (let j = 0; j < 6; j++) code += chars[bytes[j] % chars.length];
+    const serial = `${prefix}-${year}-${code}`;
+    const { error } = await supabase.from('certificates').insert([{
+      serial, user_id: order.user_id, order_id: order.id,
+      recipient: String(fields.recipient || '').slice(0, 120),
+      title: String(fields.course || fields.heading || '').slice(0, 160),
+      issuer: String(fields.company || '').slice(0, 120),
+      issued_text: String(fields.date || '').slice(0, 60)
+    }]);
+    if (!error) return serial;
+    if (error.code !== '23505') throw error;
+  }
+  throw new Error('Could not create a certificate ID');
+}
+
+app.get('/qr.svg', async (req, res) => {
+  const data = String(req.query.data || '');
+  if (data.length > 200 || !/^https?:\/\/[^\s]+\/verify\.html\?c=[A-Za-z0-9-]*$/.test(data)) return res.status(400).end();
+  try {
+    const svg = await QRCode.toString(data, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
+    res.set('Cache-Control', 'public, max-age=86400').type('image/svg+xml').send(svg);
+  } catch (e) { res.status(500).end(); }
+});
+
+app.get('/api/verify/:serial', verifyLimiter, async (req, res) => {
+  const serial = String(req.params.serial || '').toUpperCase();
+  if (!/^[A-Z0-9-]{6,32}$/.test(serial)) return res.json({ success: true, found: false });
+  const { data } = await supabase.from('certificates')
+    .select('serial,recipient,title,issuer,issued_text,created_at,revoked').eq('serial', serial).limit(1);
+  if (!data || !data.length) return res.json({ success: true, found: false });
+  const c = data[0];
+  res.json({ success: true, found: true, revoked: !!c.revoked, serial: c.serial, recipient: c.recipient, title: c.title, issuer: c.issuer, issuedText: c.issued_text, createdAt: c.created_at });
 });
 
 /* ---------------- orders ---------------- */

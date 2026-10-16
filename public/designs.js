@@ -12,17 +12,33 @@
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
   function on(hex) { return lum(hex) > 0.6 ? '#2b2d42' : '#ffffff'; }
+  function shade(hex, amt) {
+    var n = parseInt(String(hex).slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    var t = amt < 0 ? 0 : 255, p = Math.abs(amt);
+    function m(v) { return Math.round((t - v) * p + v); }
+    return '#' + [m(r), m(g), m(b)].map(function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+  }
+  // rough text width in em units (Latin capitals about 0.68, Chinese characters 1)
+  function tw(s) {
+    var w = 0;
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      w += c > 0x2e7f ? 1 : (s.charAt(i) === ' ' ? 0.35 : 0.68);
+    }
+    return w;
+  }
 
   var CJK = "'ME CJK'";
-  var FONTS = {
-    modern: CJK + ",'Helvetica Neue',Helvetica,Arial,'Liberation Sans','DejaVu Sans',sans-serif",
-    classic: CJK + ",Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',serif"
-  };
+  var SANS = CJK + ",'Helvetica Neue',Helvetica,Arial,'Liberation Sans','DejaVu Sans',sans-serif";
+  var SERIF = CJK + ",Georgia,'Times New Roman','Liberation Serif','DejaVu Serif',serif";
+  var FONTS = { modern: SANS, classic: SERIF };
 
-  function F(key, label, type, ph, hint) { return { key: key, label: label, type: type || 'text', ph: ph || '', hint: hint || '' }; }
+  function F(key, label, type, ph, hint, draw) {
+    return { key: key, label: label, type: type || 'text', ph: ph || '', hint: hint || '', draw: !!draw };
+  }
   var LOGO_HINT = 'PNG or JPG. A transparent PNG looks best.';
   var PHOTO_HINT = 'Passport-style photo. A plain background works best.';
-  var SIG_HINT = 'Sign on white paper, take a photo or scan it, then upload.';
+  var SIG_HINT = 'Draw it with your mouse or finger, or upload a photo of a signature on white paper.';
 
   var PRODUCTS = {
     business_card: {
@@ -40,9 +56,11 @@
     certificate: {
       label: 'Certificate', size: 'A4 landscape, 297 x 210 mm', w: 1123, h: 794, scale: 3, styles: ['modern', 'classic'],
       fields: [F('company', 'Organisation name'), F('heading', 'Certificate title'), F('recipient', 'Recipient name'),
-        F('body', 'What is it for?', 'textarea'), F('date', 'Date'), F('location', 'Location'),
-        F('signer', 'First signer name'), F('signerrole', 'First signer title'), F('signature', 'First signature', 'image', '', SIG_HINT),
-        F('signer2', 'Second signer name (optional)'), F('signerrole2', 'Second signer title'), F('signature2', 'Second signature', 'image', '', SIG_HINT),
+        F('course', 'Course / programme name'), F('duration', 'Duration / credits (optional)'),
+        F('body', 'Description (optional)', 'textarea'), F('date', 'Date'), F('location', 'Location'),
+        F('accred', 'Registration / accreditation line (optional)'),
+        F('signer', 'First signer name'), F('signerrole', 'First signer title'), F('signature', 'First signature', 'image', '', SIG_HINT, true),
+        F('signer2', 'Second signer name (optional)'), F('signerrole2', 'Second signer title'), F('signature2', 'Second signature', 'image', '', SIG_HINT, true),
         F('logo', 'Logo', 'image', '', LOGO_HINT)]
     },
     poster: {
@@ -59,24 +77,25 @@
     }
   };
 
+  var TEXT = {
+    en: { presented: 'This certificate is proudly presented to', cert: 'Certificate of Achievement', completing: 'for successfully completing', idlabel: 'Certificate ID', scan: 'Scan to verify' },
+    zh: { presented: '兹授予', cert: '荣誉证书', completing: '完成了', idlabel: '证书编号', scan: '扫码验证' }
+  };
+
   var SAMPLES = {
     business_card: { company: 'Pinnacle Edge Ltd', name: 'Jane Wanjiru', title: 'Marketing Director', phone: '+254 700 000 000', email: 'jane@example.com', website: 'www.example.com', address: 'Nairobi, Kenya', tagline: 'Creative solutions that grow your brand' },
     id_card: { company: 'Pinnacle Edge Ltd', name: 'Jane Wanjiru', title: 'Marketing Department', idno: 'ID: PE-0042', valid: 'Valid until: 31 Dec 2027', phone: '+254 700 000 000', email: 'jane@example.com', address: 'Nairobi, Kenya' },
-    certificate: { company: 'Pinnacle Edge Academy', heading: 'Certificate of Achievement', recipient: 'Jane Wanjiru', body: 'For outstanding performance and dedication during the 2026 training programme.', date: '12 October 2026', location: 'Nairobi, Kenya', signer: 'John Otieno', signerrole: 'Director' },
+    certificate: { company: 'Pinnacle Edge Academy', heading: 'Certificate of Achievement', recipient: 'Jane Wanjiru', course: 'Advanced Electrical Systems Engineering', duration: '40 hours  |  4 CPD credits', body: 'Awarded for outstanding performance and dedication throughout the programme.', date: '12 October 2026', location: 'Nairobi, Kenya', accred: '', signer: 'John Otieno', signerrole: 'Director' },
     poster: { headline: 'Annual Business Summit 2026', subtitle: 'Innovate. Connect. Grow.', details: 'Join industry leaders for a full day of talks, workshops and networking.', date: '15 November 2026', location: 'KICC, Nairobi', company: 'Pinnacle Edge Ltd', phone: '+254 700 000 000', email: 'hello@example.com', website: 'www.example.com' },
     banner: { headline: 'Big Season Sale', subtitle: 'Up to 50% off selected products this week only', offer: 'Shop now', company: 'Pinnacle Edge Ltd', website: 'www.example.com', phone: '+254 700 000 000' }
   };
 
-    var SAMPLES_ZH = {
+  var SAMPLES_ZH = {
     business_card: { company: '示例科技有限公司', name: '王小明', title: '市场总监', phone: '+86 138 0000 0000', email: 'wang@example.com', website: 'www.example.com', address: '深圳市南山区科技园', tagline: '创意方案,助力品牌成长' },
     id_card: { company: '示例科技有限公司', name: '王小明', title: '市场部', idno: '工号:PR-0042', valid: '有效期至:2027年12月31日', phone: '+86 138 0000 0000', email: 'wang@example.com', address: '深圳市南山区科技园' },
-    certificate: { company: '示例培训学院', heading: '荣誉证书', recipient: '王小明', body: '表彰其在2026年度培训项目中表现突出、勤奋努力。', date: '2026年10月12日', location: '深圳', signer: '李明', signerrole: '院长' },
+    certificate: { company: '示例培训学院', heading: '荣誉证书', recipient: '王小明', course: '高级电气系统工程培训课程', duration: '40 学时  |  4 学分', body: '表彰其在培训项目中表现突出、勤奋努力。', date: '2026年10月12日', location: '深圳', accred: '', signer: '李明', signerrole: '院长' },
     poster: { headline: '2026 年度商业峰会', subtitle: '创新 · 连接 · 成长', details: '与行业领袖相聚,共享一整天的演讲、工作坊与交流。', date: '2026年11月15日', location: '深圳会展中心', company: '示例科技有限公司', phone: '+86 138 0000 0000', email: 'hello@example.com', website: 'www.example.com' },
     banner: { headline: '年度大促', subtitle: '精选商品低至五折,仅限本周', offer: '立即选购', company: '示例科技有限公司', website: 'www.example.com', phone: '+86 138 0000 0000' }
-  };
-  var TEXT = {
-    en: { presented: 'This certificate is proudly presented to', cert: 'Certificate of Achievement' },
-    zh: { presented: '兹授予', cert: '荣誉证书' }
   };
 
   var PALETTES = [
@@ -98,6 +117,121 @@
     return items.filter(Boolean).map(function (x) { return '<' + tag + '>' + esc(x) + '</' + tag + '>'; }).join('');
   }
 
+  function serialPrefix(name) {
+    var words = String(name || '').match(/[A-Za-z0-9]+/g) || [];
+    var p = words.slice(0, 3).map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
+    return p || 'CERT';
+  }
+
+  function star(cx, cy, r1, r2) {
+    var pts = [];
+    for (var i = 0; i < 10; i++) {
+      var r = i % 2 === 0 ? r1 : r2, a = -Math.PI / 2 + i * Math.PI / 5;
+      pts.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1));
+    }
+    return pts.join(' ');
+  }
+
+  // Round seal made from the organisation name (very long names are shortened at a word boundary)
+  function fitSeal(label) {
+    var fs;
+    for (;;) {
+      fs = (300 - 1.5 * label.length) / Math.max(1, tw(label) * 1.3);
+      if (fs >= 8 || label.length <= 6) break;
+      var sp = label.lastIndexOf(' ');
+      label = sp > 0 ? label.slice(0, sp) : label.slice(0, -1);
+    }
+    return { label: label, fs: Math.max(8, Math.min(15, fs)) };
+  }
+  function seal(name, color, size) {
+    var fit = fitSeal(String(name || '').toUpperCase().trim());
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 200 200">' +
+      '<defs><path id="sealPath" d="M 100,170 a 70,70 0 1,1 0,-140 a 70,70 0 1,1 0,140"/></defs>' +
+      '<circle cx="100" cy="100" r="96" fill="none" stroke="' + color + '" stroke-width="5"/>' +
+      '<circle cx="100" cy="100" r="88" fill="none" stroke="' + color + '" stroke-width="1.6"/>' +
+      '<circle cx="100" cy="100" r="50" fill="none" stroke="' + color + '" stroke-width="1.6"/>' +
+      '<text font-size="' + fit.fs.toFixed(1) + '" font-weight="700" letter-spacing="1.5" fill="' + color + '" text-anchor="middle" style="font-family:' + SERIF + '">' +
+      '<textPath href="#sealPath" startOffset="50%">' + esc(fit.label) + '</textPath></text>' +
+      '<polygon points="' + star(100, 100, 30, 12) + '" fill="' + color + '"/></svg>';
+  }
+
+  // Split "Pinnacle Edge Ltd" into the main name and the ending (LTD)
+  function splitCompany(name) {
+    name = String(name || '').trim();
+    var m = /^(.*?)[\s,]+(ltd\.?|limited|inc\.?|llc|plc|corp\.?|corporation|co\.?|gmbh)$/i.exec(name);
+    if (m && m[1]) return { main: m[1].trim(), suffix: m[2].replace(/\.$/, '').toUpperCase() };
+    var z = /^(.+?)(有限责任公司|股份有限公司|有限公司)$/.exec(name);
+    if (z) return { main: z[1], suffix: z[2] };
+    return { main: name, suffix: '' };
+  }
+  function nameLines(main) {
+    var s = main.toUpperCase();
+    if (tw(s) <= 15) return [s];
+    var idx = [], i;
+    for (i = 0; i < s.length; i++) if (s.charAt(i) === ' ') idx.push(i);
+    if (idx.length) {
+      var mid = s.length / 2, best = idx[0];
+      idx.forEach(function (k) { if (Math.abs(k - mid) < Math.abs(best - mid)) best = k; });
+      return [s.slice(0, best).trim(), s.slice(best + 1).trim()];
+    }
+    if (s.length > 6) { var h = Math.ceil(s.length / 2); return [s.slice(0, h), s.slice(h)]; }
+    return [s];
+  }
+
+  // Shield and mountain emblem that takes its text from the company name
+  var EFONT = "Georgia,'Times New Roman','Songti SC',SimSun,'Noto Serif CJK SC','Liberation Serif','DejaVu Serif',serif";
+  function emblem(opt) {
+    opt = opt || {};
+    var navy = /^#[0-9a-fA-F]{6}$/.test(opt.primary || '') ? opt.primary : '#0b1f4b';
+    var gold = /^#[0-9a-fA-F]{6}$/.test(opt.accent || '') ? opt.accent : '#d4af37';
+    var size = opt.size || 300;
+    var parts = splitCompany(opt.name || 'Your Company');
+    var given = opt.suffix == null ? '' : String(opt.suffix).trim();
+    var suffix = given === '' ? parts.suffix : (given.toLowerCase() === 'none' ? '' : given.toUpperCase());
+    var lines = nameLines(parts.main || 'Your Company');
+    var light = shade(gold, 0.55), dark = shade(gold, -0.35);
+
+    var fs = Infinity;
+    lines.forEach(function (l) { fs = Math.min(fs, (222 - 2 * l.length) / Math.max(1, tw(l))); });
+    fs = Math.max(10, Math.min(lines.length === 1 ? 38 : 32, fs));
+    var ys = lines.length === 1 ? [208] : [186, 186 + fs * 1.15 + 6];
+    var texts = lines.map(function (l, i) {
+      return '<text x="300" y="' + ys[i].toFixed(0) + '" text-anchor="middle" font-size="' + fs.toFixed(1) + '" font-weight="700" letter-spacing="2" fill="' + gold + '" style="font-family:' + EFONT + '">' + esc(l) + '</text>';
+    }).join('');
+
+    var suf = '';
+    if (suffix) {
+      var sfs = 26, sw = tw(suffix) * sfs + 5 * suffix.length;
+      if (sw > 120) { sfs = Math.max(14, sfs * 120 / sw); sw = 120; }
+      suf = '<text x="300" y="480" text-anchor="middle" font-size="' + sfs.toFixed(1) + '" font-weight="600" letter-spacing="5" fill="' + gold + '" style="font-family:' + EFONT + '">' + esc(suffix) + '</text>';
+      var lx2 = 300 - (sw / 2 + 14), lx1 = Math.max(216, lx2 - 34);
+      if (lx2 - lx1 >= 10) {
+        suf += '<line x1="' + lx1 + '" y1="471" x2="' + lx2 + '" y2="471" stroke="' + gold + '" stroke-width="2"/>' +
+               '<line x1="' + (600 - lx2) + '" y1="471" x2="' + (600 - lx1) + '" y2="471" stroke="' + gold + '" stroke-width="2"/>';
+      }
+    }
+
+    var shield = 'M150,132 Q230,128 300,96 Q370,128 450,132 L450,330 C450,430 380,500 300,545 C220,500 150,430 150,330 Z';
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 600 600">' +
+      '<defs><linearGradient id="emL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + light + '"/><stop offset="1" stop-color="' + gold + '"/></linearGradient>' +
+      '<linearGradient id="emD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + gold + '"/><stop offset="1" stop-color="' + dark + '"/></linearGradient></defs>' +
+      '<circle cx="300" cy="300" r="290" fill="none" stroke="' + gold + '" stroke-width="5"/>' +
+      '<circle cx="300" cy="300" r="272" fill="none" stroke="' + navy + '" stroke-width="24"/>' +
+      '<circle cx="300" cy="300" r="253" fill="none" stroke="' + gold + '" stroke-width="4"/>' +
+      '<path d="' + shield + '" fill="' + navy + '" stroke="' + gold + '" stroke-width="8" stroke-linejoin="round"/>' +
+      '<path d="' + shield + '" transform="translate(300 330) scale(0.93) translate(-300 -330)" fill="none" stroke="' + gold + '" stroke-width="2"/>' +
+      texts +
+      '<polygon points="165,395 225,315 268,395" fill="url(#emD)"/>' +
+      '<polygon points="332,395 378,325 435,395" fill="url(#emD)"/>' +
+      '<polygon points="205,395 300,250 300,395" fill="url(#emL)"/>' +
+      '<polygon points="300,250 395,395 300,395" fill="url(#emD)"/>' +
+      '<polyline points="300,250 318,305 300,335 284,395" fill="none" stroke="' + dark + '" stroke-width="2" stroke-linejoin="round"/>' +
+      '<path d="M190,418 Q245,396 300,418 T410,418" fill="none" stroke="' + gold + '" stroke-width="3"/>' +
+      '<path d="M208,436 Q252,422 300,436 T392,436" fill="none" stroke="' + gold + '" stroke-width="2"/>' +
+      suf + '</svg>';
+  }
+
+  /* ---------------- product layouts ---------------- */
   function businessCard(d, o) {
     var c = d.colors, f = d.fields, ff = FONTS[d.style] || FONTS.modern, onP = on(c.primary);
     var logo = img(f.logo, 'max-width:64px;max-height:46px;object-fit:contain;', o);
@@ -134,27 +268,52 @@
 
   function certificate(d, o) {
     var c = d.colors, f = d.fields, ff = FONTS[d.style] || FONTS.modern, classic = d.style === 'classic';
-    var logo = img(f.logo, 'max-height:80px;max-width:240px;object-fit:contain;', o);
+    var tx = TEXT[d.lang] || TEXT.en;
+    var origin = (o && o.origin) || '';
+    var serial = f.certid || (serialPrefix(f.company) + '-' + new Date().getFullYear() + '-XXXXXX');
+    var verify = f.verifyUrl || (origin + '/verify.html?c=PREVIEW');
+    var qr = origin + '/qr.svg?data=' + encodeURIComponent(verify);
+    var faint = c.accent + '66';
+
+    var logo = img(f.logo, 'max-height:66px;max-width:240px;object-fit:contain;display:block;margin:0 auto;', o);
+    var bodyLen = String(f.body || '').length;
+    var bfs = bodyLen > 300 ? 13 : bodyLen > 180 ? 14.5 : 16;
+    var cfs = String(f.course || '').length > 50 ? 22 : 28;
+
     function sig(image, name, role) {
-      if (!name && !image) return '<div style="min-width:220px;"></div>';
-      return '<div style="text-align:center;min-width:220px;">' +
-        (image ? img(image, 'height:58px;max-width:190px;object-fit:contain;mix-blend-mode:multiply;display:block;margin:0 auto -6px;', o) : '<div style="height:52px;"></div>') +
+      if (!name && !image) return '';
+      return '<div style="text-align:center;min-width:210px;">' +
+        (image ? img(image, 'height:54px;max-width:190px;object-fit:contain;mix-blend-mode:multiply;display:block;margin:0 auto -6px;', o) : '<div style="height:48px;"></div>') +
         '<div style="border-top:2px solid ' + c.text + ';padding-top:6px;font-size:15px;font-weight:700;">' + esc(name) + '</div>' +
         '<div style="font-size:12px;opacity:.75;">' + esc(role) + '</div></div>';
     }
-    return '<div style="width:1123px;height:794px;padding:34px;background:' + c.background + ';font-family:' + ff + ';color:' + c.text + ';">' +
-      '<div style="height:100%;border:' + (classic ? '5px double ' : '12px solid ') + c.primary + ';padding:10px;">' +
-      '<div style="height:100%;border:2px solid ' + c.accent + ';display:flex;flex-direction:column;align-items:center;text-align:center;padding:30px 70px 28px;">' + logo +
-        '<div style="font-size:15px;letter-spacing:5px;text-transform:uppercase;color:' + c.primary + ';font-weight:700;margin-top:8px;">' + esc(f.company) + '</div>' +
-        '<div style="font-size:54px;font-weight:700;margin-top:20px;letter-spacing:2px;color:' + c.primary + ';' + (classic ? 'font-style:italic;' : '') + '">' + esc(f.heading || TEXT[d.lang].cert) + '</div>' +
-        '<div style="font-size:16px;margin-top:18px;opacity:.7;">' + esc(TEXT[d.lang].presented) + '</div>' +
-        '<div style="font-size:56px;font-weight:700;margin:12px 0 4px;border-bottom:3px solid ' + c.accent + ';padding:0 40px 8px;">' + esc(f.recipient) + '</div>' +
-        '<div style="font-size:19px;line-height:1.5;max-width:780px;margin-top:16px;white-space:pre-line;">' + esc(f.body) + '</div>' +
-        '<div style="margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end;">' +
-          sig(f.signature, f.signer, f.signerrole) +
-          '<div style="font-size:14px;line-height:1.7;opacity:.85;">' + list([f.date, f.location], 'div') + '</div>' +
-          sig(f.signature2, f.signer2, f.signerrole2) +
-        '</div></div></div></div>';
+    var sigs = sig(f.signature, f.signer, f.signerrole) + sig(f.signature2, f.signer2, f.signerrole2);
+    var meta = [f.date, f.location, f.accred].filter(Boolean).map(esc).join('  &middot;  ');
+
+    return '<div style="width:1123px;height:794px;padding:30px;background:' + c.background + ';font-family:' + ff + ';color:' + c.text + ';">' +
+      '<div style="height:100%;border:' + (classic ? '5px double ' : '10px solid ') + c.primary + ';padding:8px;">' +
+      '<div style="height:100%;border:2px solid ' + c.accent + ';display:flex;flex-direction:column;align-items:center;text-align:center;padding:22px 64px 14px;">' +
+        logo +
+        '<div style="font-family:' + SERIF + ';font-size:15px;letter-spacing:5px;text-transform:uppercase;color:' + c.primary + ';font-weight:700;margin-top:6px;">' + esc(f.company) + '</div>' +
+        '<div style="font-family:' + SERIF + ';font-size:50px;font-weight:700;margin-top:12px;color:' + c.primary + ';' + (classic ? 'font-style:italic;' : '') + '">' + esc(f.heading || tx.cert) + '</div>' +
+        '<div style="flex:1 1 auto;min-height:6px;"></div>' +
+        '<div style="font-size:14px;opacity:.7;">' + esc(tx.presented) + '</div>' +
+        '<div style="font-family:' + SERIF + ';font-size:52px;font-weight:700;margin:6px 0 2px;border-bottom:3px solid ' + c.accent + ';padding:0 40px 6px;">' + esc(f.recipient) + '</div>' +
+        (f.course ? '<div style="font-size:15px;margin-top:12px;opacity:.7;">' + esc(tx.completing) + '</div>' +
+          '<div style="font-family:' + SERIF + ';font-size:' + cfs + 'px;font-weight:700;margin-top:4px;color:' + c.text + ';max-width:860px;">' + esc(f.course) + '</div>' : '') +
+        (f.duration ? '<div style="font-size:14px;margin-top:4px;color:' + c.primary + ';font-weight:600;">' + esc(f.duration) + '</div>' : '') +
+        (f.body ? '<div style="font-size:' + bfs + 'px;line-height:1.45;max-width:780px;margin-top:12px;white-space:pre-line;">' + esc(f.body) + '</div>' : '') +
+        '<div style="flex:1.2 1 auto;min-height:6px;"></div>' +
+        '<div style="width:100%;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;">' +
+            '<div style="width:104px;">' + seal(f.company, c.primary, 104) + '</div>' +
+            '<div style="display:flex;gap:56px;justify-content:center;align-items:flex-end;">' + sigs + '</div>' +
+            '<div style="width:104px;text-align:center;"><img src="' + esc(qr) + '" style="width:84px;height:84px;display:block;margin:0 auto;"><div style="font-size:9px;opacity:.7;margin-top:2px;">' + esc(tx.scan) + '</div></div>' +
+          '</div>' +
+          '<div style="margin-top:10px;padding-top:8px;border-top:1px solid ' + faint + ';font-size:12px;opacity:.85;">' +
+            '<b>' + esc(tx.idlabel) + ':</b> ' + esc(serial) + (meta ? '  &middot;  ' + meta : '') + '</div>' +
+        '</div>' +
+      '</div></div></div>';
   }
 
   function poster(d, o) {
@@ -211,7 +370,10 @@
       BUILDERS[d.product](d, opts) + '</body></html>';
   }
 
-  var api = { PRODUCTS: PRODUCTS, SAMPLES: SAMPLES, SAMPLES_ZH: SAMPLES_ZH, PALETTES: PALETTES, build: build, esc: esc };
+  var api = {
+    PRODUCTS: PRODUCTS, SAMPLES: SAMPLES, SAMPLES_ZH: SAMPLES_ZH, PALETTES: PALETTES,
+    build: build, esc: esc, emblem: emblem, splitCompany: splitCompany, serialPrefix: serialPrefix
+  };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Designs = api;
 })(typeof window !== 'undefined' ? window : this);
