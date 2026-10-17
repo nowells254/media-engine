@@ -484,6 +484,11 @@ app.post('/upload', requireAuth, uploadLimiter, async (req, res) => {
   const isPng = buf.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
   const isJpg = buf.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
   if (!isPng && !isJpg) return res.status(400).json({ success: false, error: 'That file is not a valid PNG or JPG image.' });
+  const sub = await getActiveSubscription(req.user.id);
+  const { data: existing } = await supabase.storage.from('assets').list(req.user.id, { limit: 400 });
+  if ((existing || []).length >= (sub ? 400 : 60)) {
+    return res.status(400).json({ success: false, error: 'You have reached your upload limit. Please contact support.' });
+  }
   const name = `${req.user.id}/${crypto.randomUUID()}.${isPng ? 'png' : 'jpg'}`;
   const { error } = await supabase.storage.from('assets').upload(name, buf, { contentType: isPng ? 'image/png' : 'image/jpeg' });
   if (error) return res.status(500).json({ success: false, error: 'Upload failed. Please try again.' });
@@ -802,6 +807,24 @@ app.get('/api/verify/:serial', verifyLimiter, async (req, res) => {
   res.json({ success: true, found: true, revoked: !!c.revoked, serial: c.serial, recipient: c.recipient, title: c.title, issuer: c.issuer, issuedText: c.issued_text, createdAt: c.created_at });
 });
 
+app.get('/admin/certificates', requireAuth, requireAdmin, async (req, res) => {
+  const q = String(req.query.q || '').trim().replace(/[%,()*\\]/g, '').slice(0, 60);
+  let query = supabase.from('certificates')
+    .select('id,serial,recipient,title,issuer,issued_text,revoked,created_at')
+    .order('id', { ascending: false }).limit(30);
+  if (q) query = /^[A-Za-z0-9-]+$/.test(q) ? query.ilike('serial', `%${q}%`) : query.ilike('recipient', `%${q}%`);
+  const { data, error } = await query;
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  res.json({ success: true, certificates: data });
+});
+
+app.post('/admin/certificates/:id/revoke', requireAuth, requireAdmin, async (req, res) => {
+  const revoked = req.body.revoked !== false;
+  const { error } = await supabase.from('certificates').update({ revoked }).eq('id', req.params.id);
+  if (error) return res.status(500).json({ success: false, error: error.message });
+  res.json({ success: true });
+});
+
 /* ---------------- orders ---------------- */
 app.post('/orders', requireAuth, async (req, res) => {
   try {
@@ -947,7 +970,21 @@ app.get('/history', requireAuth, async (req, res) => {
   res.json({ success: true, generations: generations.map(g => ({ ...g, template_name: g.label || map[g.template_id] || 'Design' })) });
 });
 
+app.get('/health', (req, res) => res.json({ ok: true }));
+
+// Tidy up: Alipay payments the customer never confirmed, after 7 days
+async function cleanupStale() {
+  try {
+    const sevenDays = new Date(Date.now() - 7 * 86400000).toISOString();
+    await supabase.from('manual_payments')
+      .update({ status: 'rejected', decided_at: new Date().toISOString() })
+      .eq('status', 'awaiting').lt('created_at', sevenDays);
+  } catch (e) { console.error('Cleanup failed:', e.message); }
+}
+
 app.listen(PORT, '0.0.0.0', () => {
+  setInterval(cleanupStale, 60 * 60 * 1000);
+  cleanupStale();
   console.log(`Server is running on port ${PORT}`);
   resumeOrders();
   setInterval(resumeOrders, 5 * 60 * 1000);

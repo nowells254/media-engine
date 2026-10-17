@@ -1526,5 +1526,36 @@ saveBrand = async function () {
 };
 $('brName').addEventListener('input', refreshEmblem);
 </script>
+<script>
+const _loadAdmin = loadAdmin;
+loadAdmin = async function () {
+  await _loadAdmin();
+  const body = $('adminBody');
+  if (!body || !isAdmin) return;
+  body.insertAdjacentHTML('beforeend',
+    '<div class="card" id="certCard"><h2>Certificates</h2>' +
+    '<p class="hint">Search by certificate ID or recipient name. Revoking a certificate makes its QR code show "not found".</p>' +
+    '<input id="certQ" type="text" placeholder="Certificate ID or recipient name" onkeydown="if(event.key===\'Enter\')loadCerts()">' +
+    '<button class="sm" onclick="loadCerts()">Search</button><div id="certList" style="margin-top:10px;"></div></div>');
+  loadCerts();
+};
+async function loadCerts() {
+  const box = $('certList');
+  if (!box) return;
+  const r = await api('/admin/certificates?q=' + encodeURIComponent($('certQ').value || ''));
+  if (!r.success) { box.innerHTML = '<p class="hint">' + esc(r.error || 'Could not load.') + '</p>'; return; }
+  if (!r.certificates.length) { box.innerHTML = '<p class="hint">No certificates found.</p>'; return; }
+  box.innerHTML = '<div class="table-wrap"><table class="tbl"><tr><th>ID</th><th>Recipient</th><th>For</th><th>Issuer</th><th>Date</th><th>Status</th><th></th></tr>' +
+    r.certificates.map(c => '<tr><td style="font-family:monospace;">' + esc(c.serial) + '</td><td>' + esc(c.recipient) + '</td><td>' + esc(c.title) + '</td><td>' + esc(c.issuer) + '</td><td>' + new Date(c.created_at).toLocaleDateString() + '</td><td>' + (c.revoked ? 'Revoked' : 'Valid') + '</td><td>' +
+      '<button class="sm ' + (c.revoked ? '' : 'light') + '" onclick="revokeCert(' + c.id + ',' + (c.revoked ? 'false' : 'true') + ')">' + (c.revoked ? 'Restore' : 'Revoke') + '</button></td></tr>').join('') +
+    '</table></div>';
+}
+async function revokeCert(id, revoked) {
+  if (!confirm((revoked ? 'Revoke' : 'Restore') + ' this certificate?')) return;
+  const r = await api('/admin/certificates/' + id + '/revoke', 'POST', { revoked });
+  if (!r.success) alert(r.error || 'Failed');
+  loadCerts();
+}
+</script>
 </body>
 </html>

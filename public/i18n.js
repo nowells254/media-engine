@@ -205,7 +205,9 @@
     'Certificate not found': '未找到该证书', 'Check the certificate ID and try again.': '请核对证书编号后重试。',
     'This certificate has been revoked by the issuer.': '该证书已被颁发方撤销。',
     'Check': '查询', 'Enter a certificate ID': '请输入证书编号', 'e.g. PEL-2026-7K3QZ9': '例如:PEL-2026-7K3QZ9',
-    'This confirms the certificate was created on Media Engine by the issuer shown. It does not confirm any accreditation or qualification.': '此验证仅确认该证书由所示颁发方在 Media Engine 上创建,并不证明任何认证或资质。'
+    'This confirms the certificate was created on Media Engine by the issuer shown. It does not confirm any accreditation or qualification.': '此验证仅确认该证书由所示颁发方在 Media Engine 上创建,并不证明任何认证或资质。',
+    'You have reached your upload limit. Please contact support.': '您已达到上传数量上限,请联系客服。',
+    'Report a problem with a certificate': '举报证书问题'
   };
 
   var PATTERNS = [
