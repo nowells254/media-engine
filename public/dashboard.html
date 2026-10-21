@@ -182,6 +182,7 @@
     <div class="navgroup">Workspace</div>
     <a class="nav-item active" data-tab="overview" onclick="go('overview')">Overview</a>
     <a class="nav-item" data-tab="studio" onclick="go('studio')">Studio</a>
+<a class="nav-item" data-tab="requests" onclick="go('requests')">Requests</a>
     <a class="nav-item" data-tab="history" onclick="go('history')">History</a>
     <a class="nav-item" data-tab="plans" onclick="go('plans')">Plans &amp; Billing</a>
 
@@ -244,6 +245,17 @@
         <h2>My saved designs</h2>
         <div id="savedList"><p class="hint">Loading...</p></div>
       </div>
+    </section>
+
+    <!-- REQUESTS -->
+    <section id="requestsTab" class="tab-content">
+      <div class="card">
+        <h2>Collect details from your clients</h2>
+        <p class="hint">Send one link to as many clients as you like. Each client fills in their own details on their phone, and you can then create all the documents in one go.</p>
+        <div id="rqForm"></div>
+      </div>
+      <div class="card"><h2>My requests</h2><div id="rqList"></div></div>
+      <div class="card" id="rqRepliesCard" style="display:none;"></div>
     </section>
 
     <!-- HISTORY -->
@@ -1557,5 +1569,7 @@ async function revokeCert(id, revoked) {
   loadCerts();
 }
 </script>
+<script src="/requests.js"></script>
+<script src="/pwa.js"></script>
 </body>
 </html>

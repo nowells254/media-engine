@@ -825,6 +825,13 @@ app.post('/admin/certificates/:id/revoke', requireAuth, requireAdmin, async (req
   res.json({ success: true });
 });
 
+/* ---------------- client links (collect.js) ---------------- */
+const collectApi = require('./collect')(app, {
+  supabase, rateLimit, requireAuth, crypto, Designs, cleanFields, cleanDesign, UserError,
+  MAX_ORDER, BASE_URL, activeOrders, renderAndStore, issueSerial
+});
+processOrder = collectApi.processOrder;
+
 /* ---------------- orders ---------------- */
 app.post('/orders', requireAuth, async (req, res) => {
   try {

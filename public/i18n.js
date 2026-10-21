@@ -376,6 +376,9 @@
 
    window.ME_LANG = function () { return lang; };
   window.ME_SETLANG = setLang;
+  window.ME_DICT = ZH;
+  window.ME_PATTERNS = PATTERNS;
+  window.ME_REAPPLY = apply;
   window.ME_T = function (s) { if (lang !== 'zh') return s; var t = tr(s); return t === null ? s : t; };
 
   var obs = new MutationObserver(function (muts) {
