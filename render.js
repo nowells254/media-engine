@@ -1,7 +1,21 @@
 const puppeteer = require('puppeteer');
 
 let browserPromise = null;
-let queue = Promise.resolve();
+
+// How many images may be drawn at the same time. 1 is safest on the free server.
+const LIMIT = Math.max(1, Math.min(4, parseInt(process.env.RENDER_CONCURRENCY || '1', 10) || 1));
+let running = 0;
+const waiting = [];
+function acquire() {
+  return new Promise(resolve => {
+    if (running < LIMIT) { running++; resolve(); } else waiting.push(resolve);
+  });
+}
+function release() {
+  running--;
+  const next = waiting.shift();
+  if (next) { running++; next(); }
+}
 
 function getBrowser() {
   if (!browserPromise) {
@@ -40,11 +54,8 @@ async function renderOnce(html, opts) {
   }
 }
 
-// One image at a time so the small free server never runs out of memory
 function generateImage(html, opts) {
-  const job = queue.then(() => renderOnce(html, opts));
-  queue = job.catch(() => {});
-  return job;
+  return acquire().then(() => renderOnce(html, opts)).finally(release);
 }
 
 module.exports = { generateImage };
