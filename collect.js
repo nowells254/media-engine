@@ -286,6 +286,7 @@ module.exports = function (app, d) {
     }
   }
 
+
   /* ---------------- app icons: drawn by the server, so there are no image files to copy ---------------- */
   const zlib = require('zlib');
   const crcTable = (() => {
